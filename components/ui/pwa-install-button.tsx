@@ -66,7 +66,10 @@ export function PWAInstallButton() {
   };
 
   // Debug logging
-  console.log('PWAInstallButton render:', { showInstallButton, deferredPrompt: !!deferredPrompt });
+  console.log('PWAInstallButton render:', {
+    showInstallButton,
+    deferredPrompt: !!deferredPrompt,
+  });
 
   if (!showInstallButton) {
     console.log('PWA install button not showing - showInstallButton is false');

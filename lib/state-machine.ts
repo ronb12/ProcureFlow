@@ -77,15 +77,27 @@ export const TERMINAL_STATES: RequestStatus[] = ['Closed', 'Denied'];
 export const EDITABLE_STATES: RequestStatus[] = ['Draft', 'Returned'];
 
 // States that require approval
-export const APPROVAL_REQUIRED_STATES: RequestStatus[] = ['Submitted', 'AO Review'];
+export const APPROVAL_REQUIRED_STATES: RequestStatus[] = [
+  'Submitted',
+  'AO Review',
+];
 
 // States that require cardholder action
-export const CARDHOLDER_ACTION_STATES: RequestStatus[] = ['Cardholder Purchasing', 'Purchased'];
+export const CARDHOLDER_ACTION_STATES: RequestStatus[] = [
+  'Cardholder Purchasing',
+  'Purchased',
+];
 
 // States that are considered "active" (not terminal)
 export const ACTIVE_STATES: RequestStatus[] = [
-  'Draft', 'Submitted', 'AO Review', 'Approved', 
-  'Cardholder Purchasing', 'Purchased', 'Reconciled', 'Returned'
+  'Draft',
+  'Submitted',
+  'AO Review',
+  'Approved',
+  'Cardholder Purchasing',
+  'Purchased',
+  'Reconciled',
+  'Returned',
 ];
 
 export class RequestStateMachine {
@@ -109,9 +121,9 @@ export class RequestStateMachine {
     currentState: RequestStatus,
     userRole: UserRole
   ): RequestStatus[] {
-    return STATE_TRANSITIONS
-      .filter(t => t.from === currentState && t.requiredRole.includes(userRole))
-      .map(t => t.to);
+    return STATE_TRANSITIONS.filter(
+      t => t.from === currentState && t.requiredRole.includes(userRole)
+    ).map(t => t.to);
   }
 
   // Get all valid previous states for a given current state and user role
@@ -119,9 +131,9 @@ export class RequestStateMachine {
     currentState: RequestStatus,
     userRole: UserRole
   ): RequestStatus[] {
-    return STATE_TRANSITIONS
-      .filter(t => t.to === currentState && t.requiredRole.includes(userRole))
-      .map(t => t.from);
+    return STATE_TRANSITIONS.filter(
+      t => t.to === currentState && t.requiredRole.includes(userRole)
+    ).map(t => t.from);
   }
 
   // Check if state is terminal
@@ -161,10 +173,7 @@ export class RequestStateMachine {
   }
 
   // Get required roles for transition
-  static getRequiredRoles(
-    from: RequestStatus,
-    to: RequestStatus
-  ): UserRole[] {
+  static getRequiredRoles(from: RequestStatus, to: RequestStatus): UserRole[] {
     const transition = STATE_TRANSITIONS.find(
       t => t.from === from && t.to === to
     );
@@ -226,16 +235,16 @@ export class RequestStateMachine {
   // Get status priority for sorting
   static getStatusPriority(state: RequestStatus): number {
     const priorities: Record<RequestStatus, number> = {
-      'Draft': 1,
-      'Submitted': 2,
+      Draft: 1,
+      Submitted: 2,
       'AO Review': 3,
-      'Approved': 4,
+      Approved: 4,
       'Cardholder Purchasing': 5,
-      'Purchased': 6,
-      'Reconciled': 7,
-      'Closed': 8,
-      'Returned': 9,
-      'Denied': 10,
+      Purchased: 6,
+      Reconciled: 7,
+      Closed: 8,
+      Returned: 9,
+      Denied: 10,
     };
     return priorities[state] || 0;
   }

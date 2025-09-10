@@ -1,5 +1,5 @@
 import { getFirestore } from 'firebase-admin/firestore';
-import { AuditEvent } from './types';
+// import { AuditEvent } from './types';
 
 const db = getFirestore();
 

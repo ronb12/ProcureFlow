@@ -39,7 +39,7 @@ export function FileDropzone({
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (disabled) return;
-      
+
       // Check file count limit
       const totalFiles = files.length + acceptedFiles.length;
       if (totalFiles > maxFiles) {
@@ -86,10 +86,8 @@ export function FileDropzone({
 
   return (
     <div className="space-y-4">
-      {label && (
-        <label className="form-label">{label}</label>
-      )}
-      
+      {label && <label className="form-label">{label}</label>}
+
       <div
         {...getRootProps()}
         className={cn(
@@ -102,7 +100,7 @@ export function FileDropzone({
         )}
       >
         <input {...getInputProps()} />
-        
+
         <div className="space-y-2">
           <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
           <div>
@@ -113,12 +111,7 @@ export function FileDropzone({
               Max {maxFiles} files, up to {formatFileSize(maxSize)} each
             </p>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={disabled}
-          >
+          <Button type="button" variant="outline" size="sm" disabled={disabled}>
             Select Files
           </Button>
         </div>
@@ -160,9 +153,7 @@ export function FileDropzone({
         </div>
       )}
 
-      {error && (
-        <p className="form-error">{error}</p>
-      )}
+      {error && <p className="form-error">{error}</p>}
     </div>
   );
 }

@@ -13,7 +13,7 @@ This is a **demonstration system** for educational and evaluation purposes only.
 ProcureFlow streamlines the MWR procurement process through a digital workflow:
 
 - **Requester** → Creates and submits purchase requests for MWR facilities
-- **Approver (AO)** → Reviews and approves/denies requests  
+- **Approver (AO)** → Reviews and approves/denies requests
 - **Cardholder** → Processes approved purchases and uploads receipts
 - **Reconciliation** → Monthly cycle closure with CSV + receipts ZIP exports
 
@@ -139,6 +139,7 @@ Visit `http://localhost:3000` to see the application.
 ### State Machine
 
 Valid request transitions:
+
 ```
 Draft → Submitted → AO Review → Approved → Cardholder Purchasing → Purchased → Reconciled → Closed
 ```
@@ -146,29 +147,34 @@ Draft → Submitted → AO Review → Approved → Cardholder Purchasing → Pur
 ## 🎯 Key Features
 
 ### For MWR Requesters
+
 - Create and manage purchase requests for MWR facilities
 - Add items with SKU, quantity, and pricing
 - Upload supporting documents
 - Track request status and history
 
 ### For MWR Approvers
+
 - Review pending requests
 - Approve, deny, or return requests
 - Add approval comments
 - View policy compliance warnings
 
 ### For MWR Cardholders
+
 - Process approved purchases
 - Record order details and final totals
 - Upload receipt images
 - Manage reconciliation cycles
 
 ### For MWR Auditors
+
 - View comprehensive audit logs
 - Track all system activities
 - Generate compliance reports
 
 ### For MWR Administrators
+
 - Manage users and organizations
 - Configure system settings
 - Set approval limits and blocked merchants

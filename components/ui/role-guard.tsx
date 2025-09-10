@@ -11,11 +11,11 @@ interface RoleGuardProps {
   requireAll?: boolean;
 }
 
-export function RoleGuard({ 
-  children, 
-  requiredRoles, 
-  fallback = null, 
-  requireAll = false 
+export function RoleGuard({
+  children,
+  requiredRoles,
+  fallback = null,
+  requireAll = false,
 }: RoleGuardProps) {
   const { user, loading } = useAuth();
 
@@ -43,7 +43,13 @@ export function RoleGuard({
 }
 
 // Convenience components for specific roles
-export function AdminOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
+export function AdminOnly({
+  children,
+  fallback,
+}: {
+  children: ReactNode;
+  fallback?: ReactNode;
+}) {
   return (
     <RoleGuard requiredRoles={['admin']} fallback={fallback}>
       {children}
@@ -51,7 +57,13 @@ export function AdminOnly({ children, fallback }: { children: ReactNode; fallbac
   );
 }
 
-export function ApproverOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
+export function ApproverOnly({
+  children,
+  fallback,
+}: {
+  children: ReactNode;
+  fallback?: ReactNode;
+}) {
   return (
     <RoleGuard requiredRoles={['approver', 'admin']} fallback={fallback}>
       {children}
@@ -59,7 +71,13 @@ export function ApproverOnly({ children, fallback }: { children: ReactNode; fall
   );
 }
 
-export function CardholderOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
+export function CardholderOnly({
+  children,
+  fallback,
+}: {
+  children: ReactNode;
+  fallback?: ReactNode;
+}) {
   return (
     <RoleGuard requiredRoles={['cardholder', 'admin']} fallback={fallback}>
       {children}
@@ -67,7 +85,13 @@ export function CardholderOnly({ children, fallback }: { children: ReactNode; fa
   );
 }
 
-export function AuditorOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
+export function AuditorOnly({
+  children,
+  fallback,
+}: {
+  children: ReactNode;
+  fallback?: ReactNode;
+}) {
   return (
     <RoleGuard requiredRoles={['auditor', 'admin']} fallback={fallback}>
       {children}
@@ -75,9 +99,24 @@ export function AuditorOnly({ children, fallback }: { children: ReactNode; fallb
   );
 }
 
-export function RequesterOnly({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
+export function RequesterOnly({
+  children,
+  fallback,
+}: {
+  children: ReactNode;
+  fallback?: ReactNode;
+}) {
   return (
-    <RoleGuard requiredRoles={['requester', 'approver', 'cardholder', 'auditor', 'admin']} fallback={fallback}>
+    <RoleGuard
+      requiredRoles={[
+        'requester',
+        'approver',
+        'cardholder',
+        'auditor',
+        'admin',
+      ]}
+      fallback={fallback}
+    >
       {children}
     </RoleGuard>
   );

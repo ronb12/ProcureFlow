@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithEmail, signInWithGoogle, signInWithMicrosoft } from '@/lib/auth';
+import {
+  signInWithEmail,
+  signInWithGoogle,
+  signInWithMicrosoft,
+} from '@/lib/auth';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -109,7 +113,7 @@ export default function LoginPage() {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="form-input"
                   placeholder="Enter your email"
                 />
@@ -128,7 +132,7 @@ export default function LoginPage() {
                   autoComplete="current-password"
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className="form-input pr-10"
                   placeholder="Enter your password"
                 />
@@ -145,11 +149,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
+              <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -171,7 +171,9 @@ export default function LoginPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white text-gray-500">
+                  Or continue with
+                </span>
               </div>
             </div>
 

@@ -1,12 +1,12 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
+// import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
-import { getAuth } from 'firebase-admin/auth';
-import { RequestStatus, UserRole, PolicyCheck } from '../types';
-import { RequestStateMachine } from '../state-machine';
+// import { getAuth } from 'firebase-admin/auth';
+import { RequestStatus, UserRole, PolicyCheck } from './types';
+import { RequestStateMachine } from './state-machine';
 import { createCSV, createReceiptsZip } from './exports';
 import { sendNotification } from './notifications';
 import { auditEvent } from './audit';
@@ -15,10 +15,10 @@ import { auditEvent } from './audit';
 initializeApp();
 const db = getFirestore();
 const storage = getStorage();
-const auth = getAuth();
+// const auth = getAuth();
 
 // State transition function
-export const stateTransition = onCall(async (request) => {
+export const stateTransition = onCall(async request => {
   const { reqId, targetState, payload, comment } = request.data;
   const uid = request.auth?.uid;
 
@@ -56,23 +56,31 @@ export const stateTransition = onCall(async (request) => {
     );
 
     if (!validation.valid) {
-      throw new HttpsError('failed-precondition', validation.reason || 'Invalid transition');
+      throw new HttpsError(
+        'failed-precondition',
+        validation.reason || 'Invalid transition'
+      );
     }
 
     // Perform policy checks
     const policyChecks = await performPolicyChecks(requestData, user);
     const hasErrors = policyChecks.some(check => check.severity === 'error');
-    
+
     if (hasErrors) {
-      throw new HttpsError('failed-precondition', 'Policy checks failed', { policyChecks });
+      throw new HttpsError('failed-precondition', 'Policy checks failed', {
+        policyChecks,
+      });
     }
 
     // Update request status
-    await db.collection('requests').doc(reqId).update({
-      status: targetState,
-      updatedAt: new Date(),
-      ...payload,
-    });
+    await db
+      .collection('requests')
+      .doc(reqId)
+      .update({
+        status: targetState,
+        updatedAt: new Date(),
+        ...payload,
+      });
 
     // Create audit event
     await auditEvent({
@@ -104,7 +112,7 @@ export const stateTransition = onCall(async (request) => {
 });
 
 // Create approval function
-export const createApproval = onCall(async (request) => {
+export const createApproval = onCall(async request => {
   const { reqId, action, comment } = request.data;
   const uid = request.auth?.uid;
 
@@ -121,7 +129,10 @@ export const createApproval = onCall(async (request) => {
 
     const user = userDoc.data();
     if (!['approver', 'admin'].includes(user?.role)) {
-      throw new HttpsError('permission-denied', 'User not authorized to create approvals');
+      throw new HttpsError(
+        'permission-denied',
+        'User not authorized to create approvals'
+      );
     }
 
     // Create approval document
@@ -150,8 +161,9 @@ export const createApproval = onCall(async (request) => {
 });
 
 // Record purchase function
-export const recordPurchase = onCall(async (request) => {
-  const { reqId, orderNumber, finalTotal, tax, purchasedAt, receiptFileName } = request.data;
+export const recordPurchase = onCall(async request => {
+  const { reqId, orderNumber, finalTotal, tax, purchasedAt, receiptFileName } =
+    request.data;
   const uid = request.auth?.uid;
 
   if (!uid) {
@@ -167,7 +179,10 @@ export const recordPurchase = onCall(async (request) => {
 
     const user = userDoc.data();
     if (!['cardholder', 'admin'].includes(user?.role)) {
-      throw new HttpsError('permission-denied', 'User not authorized to record purchases');
+      throw new HttpsError(
+        'permission-denied',
+        'User not authorized to record purchases'
+      );
     }
 
     // Get request data
@@ -178,16 +193,19 @@ export const recordPurchase = onCall(async (request) => {
 
     const requestData = requestDoc.data();
     if (requestData?.status !== 'Cardholder Purchasing') {
-      throw new HttpsError('failed-precondition', 'Request must be in Cardholder Purchasing status');
+      throw new HttpsError(
+        'failed-precondition',
+        'Request must be in Cardholder Purchasing status'
+      );
     }
 
     // Upload receipt if provided
     let receiptUrl = '';
-    if (receiptFileName) {
+    if (receiptFileName && user?.orgId) {
       const bucket = storage.bucket();
       const fileName = `receipts/${user.orgId}/${reqId}/${receiptFileName}`;
-      const file = bucket.file(fileName);
-      
+      // const file = bucket.file(fileName);
+
       // Generate signed URL for upload (this would be done client-side)
       receiptUrl = `gs://${bucket.name}/${fileName}`;
     }
@@ -230,7 +248,7 @@ export const recordPurchase = onCall(async (request) => {
 });
 
 // Export cycle CSV function
-export const exportCycleCsv = onCall(async (request) => {
+export const exportCycleCsv = onCall(async request => {
   const { cycleId } = request.data;
   const uid = request.auth?.uid;
 
@@ -247,7 +265,10 @@ export const exportCycleCsv = onCall(async (request) => {
 
     const user = userDoc.data();
     if (!['cardholder', 'admin'].includes(user?.role)) {
-      throw new HttpsError('permission-denied', 'User not authorized to export data');
+      throw new HttpsError(
+        'permission-denied',
+        'User not authorized to export data'
+      );
     }
 
     // Get cycle data
@@ -271,7 +292,10 @@ export const exportCycleCsv = onCall(async (request) => {
     const exportData = [];
     for (const purchaseDoc of purchasesSnapshot.docs) {
       const purchase = purchaseDoc.data();
-      const requestDoc = await db.collection('requests').doc(purchase.reqId).get();
+      const requestDoc = await db
+        .collection('requests')
+        .doc(purchase.reqId)
+        .get();
       const requestData = requestDoc.data();
 
       exportData.push({
@@ -293,7 +317,7 @@ export const exportCycleCsv = onCall(async (request) => {
     const bucket = storage.bucket();
     const fileName = `exports/cycles/${cycleId}/recon.csv`;
     const file = bucket.file(fileName);
-    
+
     await file.save(csvContent, {
       metadata: {
         contentType: 'text/csv',
@@ -314,7 +338,7 @@ export const exportCycleCsv = onCall(async (request) => {
 });
 
 // Export cycle receipts ZIP function
-export const exportCycleReceiptsZip = onCall(async (request) => {
+export const exportCycleReceiptsZip = onCall(async request => {
   const { cycleId } = request.data;
   const uid = request.auth?.uid;
 
@@ -331,7 +355,10 @@ export const exportCycleReceiptsZip = onCall(async (request) => {
 
     const user = userDoc.data();
     if (!['cardholder', 'admin'].includes(user?.role)) {
-      throw new HttpsError('permission-denied', 'User not authorized to export data');
+      throw new HttpsError(
+        'permission-denied',
+        'User not authorized to export data'
+      );
     }
 
     // Get cycle data
@@ -359,7 +386,7 @@ export const exportCycleReceiptsZip = onCall(async (request) => {
     const bucket = storage.bucket();
     const fileName = `exports/cycles/${cycleId}/receipts.zip`;
     const file = bucket.file(fileName);
-    
+
     await file.save(zipBuffer, {
       metadata: {
         contentType: 'application/zip',
@@ -386,7 +413,7 @@ export const scheduleMonthlyClose = onSchedule('55 23 L * *', async () => {
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+
     const cycleQuery = await db
       .collection('cycles')
       .where('status', '==', 'open')
@@ -411,7 +438,7 @@ export const scheduleMonthlyClose = onSchedule('55 23 L * *', async () => {
     // Create next month's cycle
     const nextMonth = new Date(currentYear, currentMonth + 1, 1);
     const nextMonthEnd = new Date(currentYear, currentMonth + 2, 0);
-    
+
     const nextCycleRef = db.collection('cycles').doc();
     batch.set(nextCycleRef, {
       startDate: nextMonth,
@@ -429,7 +456,10 @@ export const scheduleMonthlyClose = onSchedule('55 23 L * *', async () => {
 });
 
 // Policy checks function
-async function performPolicyChecks(requestData: any, user: any): Promise<PolicyCheck[]> {
+async function performPolicyChecks(
+  requestData: any,
+  user: any
+): Promise<PolicyCheck[]> {
   const checks: PolicyCheck[] = [];
 
   // Get global settings
@@ -468,7 +498,9 @@ async function performPolicyChecks(requestData: any, user: any): Promise<PolicyC
   // Split purchase check
   if (settings.splitPurchaseWindowDays > 0) {
     const windowStart = new Date();
-    windowStart.setDate(windowStart.getDate() - settings.splitPurchaseWindowDays);
+    windowStart.setDate(
+      windowStart.getDate() - settings.splitPurchaseWindowDays
+    );
 
     const recentRequestsSnapshot = await db
       .collection('requests')
@@ -483,7 +515,7 @@ async function performPolicyChecks(requestData: any, user: any): Promise<PolicyC
       }, 0);
 
       const combinedTotal = recentTotal + requestData.totalEstimate;
-      
+
       if (combinedTotal > settings.microPurchaseLimit) {
         checks.push({
           type: 'split_purchase',

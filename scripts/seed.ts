@@ -3,7 +3,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 
 // Initialize Firebase Admin
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY 
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
   ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
   : undefined;
 
@@ -125,18 +125,21 @@ async function seedData() {
 
     // Create global settings
     console.log('Creating global settings...');
-    await db.collection('settings').doc('global').set({
-      microPurchaseLimit: 10000,
-      blockedMerchants: ['Blocked Vendor Inc.'],
-      splitPurchaseWindowDays: 1,
-      taxRatesByState: {
-        'CA': 0.0875,
-        'NY': 0.08,
-        'TX': 0.0625,
-        'FL': 0.06,
-      },
-      updatedAt: new Date(),
-    });
+    await db
+      .collection('settings')
+      .doc('global')
+      .set({
+        microPurchaseLimit: 10000,
+        blockedMerchants: ['Blocked Vendor Inc.'],
+        splitPurchaseWindowDays: 1,
+        taxRatesByState: {
+          CA: 0.0875,
+          NY: 0.08,
+          TX: 0.0625,
+          FL: 0.06,
+        },
+        updatedAt: new Date(),
+      });
     console.log('✅ Created global settings');
 
     // Create sample request
@@ -151,7 +154,7 @@ async function seedData() {
       status: 'Approved',
       accountingCode: 'ACCT-001',
       suspectedSplit: false,
-      totalEstimate: 2500.00,
+      totalEstimate: 2500.0,
       createdAt: new Date('2024-01-10'),
       updatedAt: new Date('2024-01-12'),
     };
@@ -165,29 +168,34 @@ async function seedData() {
         sku: 'HD-001',
         desc: 'Office Desk Chair',
         qty: 2,
-        estUnitPrice: 150.00,
-        lineTotal: 300.00,
+        estUnitPrice: 150.0,
+        lineTotal: 300.0,
       },
       {
         id: 'item_2',
         sku: 'HD-002',
         desc: 'Standing Desk',
         qty: 1,
-        estUnitPrice: 800.00,
-        lineTotal: 800.00,
+        estUnitPrice: 800.0,
+        lineTotal: 800.0,
       },
       {
         id: 'item_3',
         sku: 'HD-003',
         desc: 'Office Supplies Kit',
         qty: 5,
-        estUnitPrice: 280.00,
-        lineTotal: 1400.00,
+        estUnitPrice: 280.0,
+        lineTotal: 1400.0,
       },
     ];
 
     for (const item of items) {
-      await db.collection('requests').doc(requestId).collection('items').doc(item.id).set(item);
+      await db
+        .collection('requests')
+        .doc(requestId)
+        .collection('items')
+        .doc(item.id)
+        .set(item);
     }
 
     // Create sample approval
@@ -204,13 +212,16 @@ async function seedData() {
     // Create sample cycle
     console.log('Creating sample cycle...');
     const cycleId = 'cycle_2024_01';
-    await db.collection('cycles').doc(cycleId).set({
-      startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-01-31'),
-      status: 'open',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+    await db
+      .collection('cycles')
+      .doc(cycleId)
+      .set({
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-01-31'),
+        status: 'open',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
     console.log('✅ Created sample cycle');
 
     console.log('🎉 Data seeding completed successfully!');
@@ -220,7 +231,6 @@ async function seedData() {
     console.log('Approver: approver@procureflow.demo / demo123');
     console.log('Cardholder: cardholder@procureflow.demo / demo123');
     console.log('Auditor: auditor@procureflow.demo / demo123');
-
   } catch (error) {
     console.error('❌ Error seeding data:', error);
     process.exit(1);

@@ -119,7 +119,7 @@ export function getFileSize(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   if (bytes === 0) return '0 Bytes';
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+  return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
 export function sleep(ms: number): Promise<void> {
@@ -143,12 +143,15 @@ export function groupBy<T, K extends keyof T>(
   array: T[],
   key: K
 ): Record<string, T[]> {
-  return array.reduce((groups, item) => {
-    const group = String(item[key]);
-    groups[group] = groups[group] || [];
-    groups[group].push(item);
-    return groups;
-  }, {} as Record<string, T[]>);
+  return array.reduce(
+    (groups, item) => {
+      const group = String(item[key]);
+      groups[group] = groups[group] || [];
+      groups[group].push(item);
+      return groups;
+    },
+    {} as Record<string, T[]>
+  );
 }
 
 export function sortBy<T>(
@@ -159,7 +162,7 @@ export function sortBy<T>(
   return [...array].sort((a, b) => {
     const aVal = a[key];
     const bVal = b[key];
-    
+
     if (aVal < bVal) return direction === 'asc' ? -1 : 1;
     if (aVal > bVal) return direction === 'asc' ? 1 : -1;
     return 0;
@@ -216,12 +219,18 @@ export function isNotEmpty(value: any): boolean {
   return !isEmpty(value);
 }
 
-export function safeParseInt(value: string | number, defaultValue: number = 0): number {
+export function safeParseInt(
+  value: string | number,
+  defaultValue: number = 0
+): number {
   const parsed = parseInt(String(value), 10);
   return isNaN(parsed) ? defaultValue : parsed;
 }
 
-export function safeParseFloat(value: string | number, defaultValue: number = 0): number {
+export function safeParseFloat(
+  value: string | number,
+  defaultValue: number = 0
+): number {
   const parsed = parseFloat(String(value));
   return isNaN(parsed) ? defaultValue : parsed;
 }

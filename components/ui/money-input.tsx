@@ -4,7 +4,10 @@ import { forwardRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface MoneyInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'> {
+  extends Omit<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    'onChange' | 'value' | 'onBlur'
+  > {
   value?: number;
   onChange?: (value: number) => void;
   onBlur?: (value: number) => void;
@@ -14,18 +17,30 @@ export interface MoneyInputProps
 }
 
 export const MoneyInput = forwardRef<HTMLInputElement, MoneyInputProps>(
-  ({ className, value = 0, onChange, onBlur, error, label, required, ...props }, ref) => {
+  (
+    {
+      className,
+      value = 0,
+      onChange,
+      onBlur,
+      error,
+      label,
+      required,
+      ...props
+    },
+    ref
+  ) => {
     const [displayValue, setDisplayValue] = useState(
       value > 0 ? value.toFixed(2) : ''
     );
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = e.target.value;
-      
+
       // Allow empty string, numbers, and one decimal point
       if (inputValue === '' || /^\d*\.?\d{0,2}$/.test(inputValue)) {
         setDisplayValue(inputValue);
-        
+
         // Convert to number for onChange callback
         const numericValue = inputValue === '' ? 0 : parseFloat(inputValue);
         if (!isNaN(numericValue)) {

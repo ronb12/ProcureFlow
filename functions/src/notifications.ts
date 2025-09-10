@@ -1,11 +1,15 @@
 import { getFirestore } from 'firebase-admin/firestore';
-import { getAuth } from 'firebase-admin/auth';
+// import { getAuth } from 'firebase-admin/auth';
 
 const db = getFirestore();
-const auth = getAuth();
+// const auth = getAuth();
 
 export interface NotificationData {
-  type: 'status_change' | 'approval_needed' | 'purchase_completed' | 'reconciliation_due';
+  type:
+    | 'status_change'
+    | 'approval_needed'
+    | 'purchase_completed'
+    | 'reconciliation_due';
   requestId: string;
   newStatus?: string;
   actorUid: string;
@@ -15,7 +19,10 @@ export interface NotificationData {
 export async function sendNotification(data: NotificationData): Promise<void> {
   try {
     // Get request data
-    const requestDoc = await db.collection('requests').doc(data.requestId).get();
+    const requestDoc = await db
+      .collection('requests')
+      .doc(data.requestId)
+      .get();
     if (!requestDoc.exists) {
       console.error('Request not found for notification:', data.requestId);
       return;
@@ -83,16 +90,16 @@ function generateNotificationMessage(
   switch (data.type) {
     case 'status_change':
       return `Your request for ${vendor} ($${total.toFixed(2)}) has been updated to "${data.newStatus}" by ${actorName}.`;
-    
+
     case 'approval_needed':
       return `Your request for ${vendor} ($${total.toFixed(2)}) is ready for approval.`;
-    
+
     case 'purchase_completed':
       return `Your request for ${vendor} ($${total.toFixed(2)}) has been purchased by ${actorName}.`;
-    
+
     case 'reconciliation_due':
       return `Your request for ${vendor} ($${total.toFixed(2)}) is ready for reconciliation.`;
-    
+
     default:
       return data.message || `Update for your request ${data.requestId}`;
   }
@@ -105,15 +112,15 @@ async function sendEmailNotification(
 ): Promise<void> {
   // This is a placeholder for email sending
   // In a real implementation, you would use SendGrid, Resend, or another email service
-  
+
   console.log('Email notification would be sent to:', email);
   console.log('Message:', message);
   console.log('Request ID:', requestId);
-  
+
   // Example SendGrid implementation:
   // const sgMail = require('@sendgrid/mail');
   // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-  // 
+  //
   // const msg = {
   //   to: email,
   //   from: 'noreply@procureflow.com',
@@ -121,6 +128,6 @@ async function sendEmailNotification(
   //   text: message,
   //   html: `<p>${message}</p><p><a href="https://your-app.com/requests/${requestId}">View Request</a></p>`,
   // };
-  // 
+  //
   // await sgMail.send(msg);
 }

@@ -1,5 +1,5 @@
 import * as csvWriter from 'csv-writer';
-import * as JSZip from 'jszip';
+import JSZip from 'jszip';
 import { getStorage } from 'firebase-admin/storage';
 import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
@@ -30,29 +30,34 @@ export async function createCSV(data: ExportData[]): Promise<string> {
   });
 
   await writer.writeRecords(data);
-  
+
   // Read the file content
   const fs = require('fs');
   return fs.readFileSync('/tmp/export.csv', 'utf8');
 }
 
-export async function createReceiptsZip(purchases: QueryDocumentSnapshot[]): Promise<Buffer> {
+export async function createReceiptsZip(
+  purchases: QueryDocumentSnapshot[]
+): Promise<Buffer> {
   const zip = new JSZip();
   const storage = getStorage();
   const bucket = storage.bucket();
 
   for (const purchaseDoc of purchases) {
     const purchase = purchaseDoc.data();
-    
+
     if (!purchase.receiptUrl) continue;
 
     try {
       // Download receipt from storage
-      const fileName = purchase.receiptFileName || `receipt_${purchaseDoc.id}.pdf`;
-      const file = bucket.file(purchase.receiptUrl.replace('gs://', '').split('/').slice(1).join('/'));
-      
+      const fileName =
+        purchase.receiptFileName || `receipt_${purchaseDoc.id}.pdf`;
+      const file = bucket.file(
+        purchase.receiptUrl.replace('gs://', '').split('/').slice(1).join('/')
+      );
+
       const [fileBuffer] = await file.download();
-      
+
       // Add to ZIP
       zip.file(fileName, fileBuffer);
     } catch (error) {

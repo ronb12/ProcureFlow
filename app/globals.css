@@ -124,7 +124,8 @@
 
 /* Pulse animation for loading states */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -274,11 +275,11 @@
   .mobile-hidden {
     @apply hidden;
   }
-  
+
   .mobile-full {
     @apply w-full;
   }
-  
+
   .mobile-stack {
     @apply flex-col space-y-2;
   }
@@ -289,7 +290,7 @@
   .print-hidden {
     @apply hidden;
   }
-  
+
   .print-visible {
     @apply block;
   }

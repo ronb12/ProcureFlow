@@ -3,19 +3,25 @@
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { 
-  FileText, 
-  CheckCircle, 
-  ShoppingCart, 
-  BarChart3, 
+import {
+  FileText,
+  CheckCircle,
+  ShoppingCart,
+  BarChart3,
   Plus,
   Clock,
   AlertCircle,
-  TrendingUp
+  TrendingUp,
 } from 'lucide-react';
 
 // Mock data - in real app this would come from API
@@ -42,7 +48,7 @@ const mockRecentRequests = [
   {
     id: '1',
     vendor: 'Home Depot',
-    total: 1250.00,
+    total: 1250.0,
     status: 'AO Review' as const,
     createdAt: new Date('2024-01-15'),
     needBy: new Date('2024-01-20'),
@@ -50,15 +56,15 @@ const mockRecentRequests = [
   {
     id: '2',
     vendor: 'Office Depot',
-    total: 450.00,
+    total: 450.0,
     status: 'Purchased' as const,
     createdAt: new Date('2024-01-14'),
     needBy: new Date('2024-01-18'),
   },
   {
     id: '3',
-    vendor: 'Lowe\'s',
-    total: 2100.00,
+    vendor: "Lowe's",
+    total: 2100.0,
     status: 'Draft' as const,
     createdAt: new Date('2024-01-13'),
     needBy: new Date('2024-01-25'),
@@ -97,10 +103,26 @@ export default function DashboardPage() {
       icon: FileText,
       href: '/requests',
       stats: [
-        { label: 'Draft', value: mockStats.myRequests.draft, color: 'text-gray-600' },
-        { label: 'Submitted', value: mockStats.myRequests.submitted, color: 'text-blue-600' },
-        { label: 'In Review', value: mockStats.myRequests.inReview, color: 'text-yellow-600' },
-        { label: 'Approved', value: mockStats.myRequests.approved, color: 'text-green-600' },
+        {
+          label: 'Draft',
+          value: mockStats.myRequests.draft,
+          color: 'text-gray-600',
+        },
+        {
+          label: 'Submitted',
+          value: mockStats.myRequests.submitted,
+          color: 'text-blue-600',
+        },
+        {
+          label: 'In Review',
+          value: mockStats.myRequests.inReview,
+          color: 'text-yellow-600',
+        },
+        {
+          label: 'Approved',
+          value: mockStats.myRequests.approved,
+          color: 'text-green-600',
+        },
       ],
     });
 
@@ -140,8 +162,16 @@ export default function DashboardPage() {
         icon: BarChart3,
         href: '/recon',
         stats: [
-          { label: 'Open Cycles', value: mockStats.reconciliationStatus.open, color: 'text-blue-600' },
-          { label: 'Missing Receipts', value: mockStats.reconciliationStatus.missingReceipts, color: 'text-red-600' },
+          {
+            label: 'Open Cycles',
+            value: mockStats.reconciliationStatus.open,
+            color: 'text-blue-600',
+          },
+          {
+            label: 'Missing Receipts',
+            value: mockStats.reconciliationStatus.missingReceipts,
+            color: 'text-red-600',
+          },
         ],
       });
     }
@@ -206,14 +236,21 @@ export default function DashboardPage() {
                 <card.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{card.stats[0]?.value || 0}</div>
+                <div className="text-2xl font-bold">
+                  {card.stats[0]?.value || 0}
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {card.description}
                 </p>
                 <div className="mt-4 space-y-1">
                   {card.stats.map((stat, statIndex) => (
-                    <div key={statIndex} className="flex justify-between text-xs">
-                      <span className="text-muted-foreground">{stat.label}</span>
+                    <div
+                      key={statIndex}
+                      className="flex justify-between text-xs"
+                    >
+                      <span className="text-muted-foreground">
+                        {stat.label}
+                      </span>
                       <span className={stat.color}>{stat.value}</span>
                     </div>
                   ))}
@@ -245,7 +282,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockRecentRequests.map((request) => (
+                {mockRecentRequests.map(request => (
                   <div
                     key={request.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
@@ -257,7 +294,8 @@ export default function DashboardPage() {
                         <StatusBadge status={request.status} size="sm" />
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {formatCurrency(request.total)} • Due {formatDate(request.needBy)}
+                        {formatCurrency(request.total)} • Due{' '}
+                        {formatDate(request.needBy)}
                       </div>
                     </div>
                     <div className="text-right">
@@ -294,19 +332,25 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Total Spent</span>
                   <span className="text-lg font-bold text-green-600">
-                    {formatCurrency(15420.50)}
+                    {formatCurrency(15420.5)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Requests Submitted</span>
-                  <span className="text-lg font-bold">{mockStats.myRequests.total}</span>
+                  <span className="text-sm font-medium">
+                    Requests Submitted
+                  </span>
+                  <span className="text-lg font-bold">
+                    {mockStats.myRequests.total}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Approval Rate</span>
                   <span className="text-lg font-bold text-green-600">92%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Avg. Processing Time</span>
+                  <span className="text-sm font-medium">
+                    Avg. Processing Time
+                  </span>
                   <span className="text-lg font-bold">3.2 days</span>
                 </div>
               </div>

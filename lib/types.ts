@@ -1,19 +1,24 @@
 import { z } from 'zod';
 
 // User roles
-export type UserRole = 'requester' | 'approver' | 'cardholder' | 'auditor' | 'admin';
+export type UserRole =
+  | 'requester'
+  | 'approver'
+  | 'cardholder'
+  | 'auditor'
+  | 'admin';
 
 // Request status types
-export type RequestStatus = 
-  | 'Draft' 
-  | 'Submitted' 
-  | 'AO Review' 
-  | 'Approved' 
-  | 'Cardholder Purchasing' 
-  | 'Purchased' 
-  | 'Reconciled' 
-  | 'Closed' 
-  | 'Returned' 
+export type RequestStatus =
+  | 'Draft'
+  | 'Submitted'
+  | 'AO Review'
+  | 'Approved'
+  | 'Cardholder Purchasing'
+  | 'Purchased'
+  | 'Reconciled'
+  | 'Closed'
+  | 'Returned'
   | 'Denied';
 
 // Approval action types
@@ -54,7 +59,9 @@ export type Organization = z.infer<typeof OrganizationSchema> & {
 
 // Global settings schema
 export const GlobalSettingsSchema = z.object({
-  microPurchaseLimit: z.number().min(0, 'Micro purchase limit must be non-negative'),
+  microPurchaseLimit: z
+    .number()
+    .min(0, 'Micro purchase limit must be non-negative'),
   blockedMerchants: z.array(z.string()).default([]),
   splitPurchaseWindowDays: z.number().min(0).default(1),
   taxRatesByState: z.record(z.string(), z.number()).optional(),
@@ -95,7 +102,7 @@ export const RequestSchema = z.object({
     'Reconciled',
     'Closed',
     'Returned',
-    'Denied'
+    'Denied',
   ]),
   accountingCode: z.string().min(1, 'Accounting code is required'),
   suspectedSplit: z.boolean().default(false),

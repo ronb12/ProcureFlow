@@ -24,7 +24,10 @@ export interface CustomClaims {
 }
 
 // Sign in with email and password
-export async function signInWithEmail(email: string, password: string): Promise<UserCredential> {
+export async function signInWithEmail(
+  email: string,
+  password: string
+): Promise<UserCredential> {
   return signInWithEmailAndPassword(auth, email, password);
 }
 
@@ -76,7 +79,7 @@ export async function getCustomClaims(): Promise<CustomClaims | null> {
 
   try {
     const tokenResult = await firebaseUser.getIdTokenResult();
-    const claims = tokenResult.claims as CustomClaims;
+    const claims = tokenResult.claims as unknown as CustomClaims;
     return claims;
   } catch (error) {
     console.error('Error getting custom claims:', error);
@@ -112,7 +115,13 @@ export function isAuditor(user: User | null): boolean {
 
 // Check if user is requester
 export function isRequester(user: User | null): boolean {
-  return hasRole(user, ['requester', 'approver', 'cardholder', 'auditor', 'admin']);
+  return hasRole(user, [
+    'requester',
+    'approver',
+    'cardholder',
+    'auditor',
+    'admin',
+  ]);
 }
 
 // Check if user belongs to organization
@@ -125,7 +134,8 @@ export function belongsToOrg(user: User | null, orgId: string): boolean {
 export function canApproveAmount(user: User | null, amount: number): boolean {
   if (!user) return false;
   if (isAdmin(user)) return true;
-  if (isApprover(user) && user.approvalLimit && amount <= user.approvalLimit) return true;
+  if (isApprover(user) && user.approvalLimit && amount <= user.approvalLimit)
+    return true;
   return false;
 }
 
@@ -160,8 +170,10 @@ export async function createUserDocument(
 }
 
 // Auth state change listener
-export function onAuthStateChange(callback: (user: User | null) => void): () => void {
-  return onAuthStateChanged(auth, async (firebaseUser) => {
+export function onAuthStateChange(
+  callback: (user: User | null) => void
+): () => void {
+  return onAuthStateChanged(auth, async firebaseUser => {
     if (firebaseUser) {
       const user = await getCurrentUser();
       callback(user);
@@ -183,7 +195,7 @@ export async function refreshCustomClaims(): Promise<void> {
 export async function needsRoleAssignment(): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user) return false;
-  
+
   // Check if user has empty orgId or default role
   return !user.orgId || user.role === 'requester';
 }
@@ -215,7 +227,10 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
 };
 
 // Check if user has higher or equal role level
-export function hasRoleLevel(user: User | null, requiredRole: UserRole): boolean {
+export function hasRoleLevel(
+  user: User | null,
+  requiredRole: UserRole
+): boolean {
   if (!user) return false;
   return ROLE_HIERARCHY[user.role] >= ROLE_HIERARCHY[requiredRole];
 }

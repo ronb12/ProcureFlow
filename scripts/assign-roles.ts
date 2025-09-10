@@ -2,7 +2,7 @@ import { initializeApp, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
 // Initialize Firebase Admin
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY 
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
   ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
   : undefined;
 
@@ -70,18 +70,24 @@ async function assignRoles() {
           approvalLimit: assignment.approvalLimit || 0,
         });
 
-        console.log(`✅ Assigned role ${assignment.role} to user ${assignment.uid}`);
+        console.log(
+          `✅ Assigned role ${assignment.role} to user ${assignment.uid}`
+        );
       } catch (error: any) {
-        console.error(`❌ Error assigning role to ${assignment.uid}:`, error.message);
+        console.error(
+          `❌ Error assigning role to ${assignment.uid}:`,
+          error.message
+        );
       }
     }
 
     console.log('🎉 Role assignment completed!');
     console.log('\n📋 Custom Claims Set:');
     roleAssignments.forEach(assignment => {
-      console.log(`${assignment.uid}: ${assignment.role} (${assignment.orgId}) - Limit: $${assignment.approvalLimit}`);
+      console.log(
+        `${assignment.uid}: ${assignment.role} (${assignment.orgId}) - Limit: $${assignment.approvalLimit}`
+      );
     });
-
   } catch (error) {
     console.error('❌ Error assigning roles:', error);
     process.exit(1);

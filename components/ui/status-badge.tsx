@@ -58,7 +58,11 @@ const sizeConfig = {
   lg: 'px-3 py-1.5 text-base',
 };
 
-export function StatusBadge({ status, className, size = 'md' }: StatusBadgeProps) {
+export function StatusBadge({
+  status,
+  className,
+  size = 'md',
+}: StatusBadgeProps) {
   const config = statusConfig[status];
   const sizeClasses = sizeConfig[size];
 
@@ -81,11 +85,11 @@ interface StatusBadgeWithIconProps extends StatusBadgeProps {
   showIcon?: boolean;
 }
 
-export function StatusBadgeWithIcon({ 
-  status, 
-  className, 
-  size = 'md', 
-  showIcon = false 
+export function StatusBadgeWithIcon({
+  status,
+  className,
+  size = 'md',
+  showIcon = false,
 }: StatusBadgeWithIconProps) {
   const config = statusConfig[status];
   const sizeClasses = sizeConfig[size];
@@ -153,7 +157,10 @@ const statusOrder: RequestStatus[] = [
   'Closed',
 ];
 
-export function StatusProgress({ currentStatus, className }: StatusProgressProps) {
+export function StatusProgress({
+  currentStatus,
+  className,
+}: StatusProgressProps) {
   const currentIndex = statusOrder.indexOf(currentStatus);
   const isTerminal = ['Denied', 'Returned'].includes(currentStatus);
 
@@ -162,7 +169,9 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
       <div className={cn('flex items-center space-x-2', className)}>
         <StatusBadge status={currentStatus} size="sm" />
         <span className="text-sm text-muted-foreground">
-          {currentStatus === 'Denied' ? 'Request was denied' : 'Request was returned for revision'}
+          {currentStatus === 'Denied'
+            ? 'Request was denied'
+            : 'Request was returned for revision'}
         </span>
       </div>
     );
@@ -174,7 +183,7 @@ export function StatusProgress({ currentStatus, className }: StatusProgressProps
         {statusOrder.map((status, index) => {
           const isActive = index <= currentIndex;
           const isCurrent = status === currentStatus;
-          
+
           return (
             <div key={status} className="flex items-center">
               <div

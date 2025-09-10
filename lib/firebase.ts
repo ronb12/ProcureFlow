@@ -1,16 +1,32 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, FirebaseStorage, connectStorageEmulator } from 'firebase/storage';
-import { getFunctions, Functions, connectFunctionsEmulator } from 'firebase/functions';
+import {
+  getFirestore,
+  Firestore,
+  connectFirestoreEmulator,
+} from 'firebase/firestore';
+import {
+  getStorage,
+  FirebaseStorage,
+  connectStorageEmulator,
+} from 'firebase/storage';
+import {
+  getFunctions,
+  Functions,
+  connectFunctionsEmulator,
+} from 'firebase/functions';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-key',
+  authDomain:
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'demo.firebaseapp.com',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
+  storageBucket:
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+    'demo-project.appspot.com',
+  messagingSenderId:
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'demo-app-id',
 };
 
 // Initialize Firebase
@@ -33,14 +49,21 @@ if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   if (!auth.emulatorConfig) {
     connectAuthEmulator(auth, 'http://localhost:9099');
   }
-  if (!db._delegate._databaseId.projectId.includes('demo-')) {
+  // Skip emulator connection checks for static export
+  try {
     connectFirestoreEmulator(db, 'localhost', 8080);
+  } catch (error) {
+    // Already connected or not in emulator mode
   }
-  if (!storage._delegate._host.includes('localhost')) {
+  try {
     connectStorageEmulator(storage, 'localhost', 9199);
+  } catch (error) {
+    // Already connected or not in emulator mode
   }
-  if (!functions._delegate._url?.includes('localhost')) {
+  try {
     connectFunctionsEmulator(functions, 'localhost', 5001);
+  } catch (error) {
+    // Already connected or not in emulator mode
   }
 }
 

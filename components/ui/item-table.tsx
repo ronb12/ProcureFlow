@@ -14,7 +14,12 @@ interface ItemTableProps {
   error?: string;
 }
 
-export function ItemTable({ items, onChange, disabled = false, error }: ItemTableProps) {
+export function ItemTable({
+  items,
+  onChange,
+  disabled = false,
+  error,
+}: ItemTableProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const addItem = () => {
@@ -37,16 +42,20 @@ export function ItemTable({ items, onChange, disabled = false, error }: ItemTabl
     setErrors(newErrors);
   };
 
-  const updateItem = (id: string, field: keyof Omit<RequestItem, 'id' | 'lineTotal'>, value: string | number) => {
+  const updateItem = (
+    id: string,
+    field: keyof Omit<RequestItem, 'id' | 'lineTotal'>,
+    value: string | number
+  ) => {
     const updatedItems = items.map(item => {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };
-        
+
         // Recalculate line total
         if (field === 'qty' || field === 'estUnitPrice') {
           updatedItem.lineTotal = updatedItem.qty * updatedItem.estUnitPrice;
         }
-        
+
         return updatedItem;
       }
       return item;
@@ -115,14 +124,18 @@ export function ItemTable({ items, onChange, disabled = false, error }: ItemTabl
                 <input
                   type="text"
                   value={item.sku}
-                  onChange={(e) => updateItem(item.id, 'sku', e.target.value.toUpperCase())}
+                  onChange={e =>
+                    updateItem(item.id, 'sku', e.target.value.toUpperCase())
+                  }
                   onBlur={() => handleItemBlur(item)}
                   disabled={disabled}
                   className="form-input text-sm"
                   placeholder="SKU"
                 />
                 {errors[item.id] && (
-                  <p className="text-xs text-destructive mt-1">{errors[item.id]}</p>
+                  <p className="text-xs text-destructive mt-1">
+                    {errors[item.id]}
+                  </p>
                 )}
               </div>
 
@@ -130,7 +143,7 @@ export function ItemTable({ items, onChange, disabled = false, error }: ItemTabl
                 <input
                   type="text"
                   value={item.desc}
-                  onChange={(e) => updateItem(item.id, 'desc', e.target.value)}
+                  onChange={e => updateItem(item.id, 'desc', e.target.value)}
                   onBlur={() => handleItemBlur(item)}
                   disabled={disabled}
                   className="form-input text-sm"
@@ -143,7 +156,9 @@ export function ItemTable({ items, onChange, disabled = false, error }: ItemTabl
                   type="number"
                   min="1"
                   value={item.qty}
-                  onChange={(e) => updateItem(item.id, 'qty', parseInt(e.target.value) || 1)}
+                  onChange={e =>
+                    updateItem(item.id, 'qty', parseInt(e.target.value) || 1)
+                  }
                   onBlur={() => handleItemBlur(item)}
                   disabled={disabled}
                   className="form-input text-sm"
@@ -153,7 +168,7 @@ export function ItemTable({ items, onChange, disabled = false, error }: ItemTabl
               <div className="col-span-2">
                 <MoneyInput
                   value={item.estUnitPrice}
-                  onChange={(value) => updateItem(item.id, 'estUnitPrice', value)}
+                  onChange={value => updateItem(item.id, 'estUnitPrice', value)}
                   onBlur={() => handleItemBlur(item)}
                   disabled={disabled}
                   className="text-sm"
@@ -184,7 +199,9 @@ export function ItemTable({ items, onChange, disabled = false, error }: ItemTabl
           <div className="border-t pt-4">
             <div className="flex justify-end">
               <div className="text-right">
-                <div className="text-sm text-muted-foreground">Total Estimate</div>
+                <div className="text-sm text-muted-foreground">
+                  Total Estimate
+                </div>
                 <div className="text-lg font-semibold">
                   {formatCurrency(totalAmount)}
                 </div>
@@ -194,9 +211,7 @@ export function ItemTable({ items, onChange, disabled = false, error }: ItemTabl
         </div>
       )}
 
-      {error && (
-        <p className="form-error">{error}</p>
-      )}
+      {error && <p className="form-error">{error}</p>}
     </div>
   );
 }

@@ -3,7 +3,11 @@ import { User, UserRole, RequestStatus } from './types';
 // Role-based access control utilities
 export class RBAC {
   // Check if user can perform action on resource
-  static canAccess(user: User | null, resource: string, action: string): boolean {
+  static canAccess(
+    user: User | null,
+    resource: string,
+    action: string
+  ): boolean {
     if (!user) return false;
 
     // Admin can do everything
@@ -11,60 +15,60 @@ export class RBAC {
 
     // Define permissions by role and resource
     const permissions: Record<string, Record<string, UserRole[]>> = {
-      'users': {
-        'read': ['admin'],
-        'write': ['admin'],
-        'delete': ['admin'],
+      users: {
+        read: ['admin'],
+        write: ['admin'],
+        delete: ['admin'],
       },
-      'orgs': {
-        'read': ['admin', 'approver', 'cardholder', 'auditor'],
-        'write': ['admin'],
-        'delete': ['admin'],
+      orgs: {
+        read: ['admin', 'approver', 'cardholder', 'auditor'],
+        write: ['admin'],
+        delete: ['admin'],
       },
-      'settings': {
-        'read': ['admin', 'approver', 'cardholder'],
-        'write': ['admin'],
+      settings: {
+        read: ['admin', 'approver', 'cardholder'],
+        write: ['admin'],
       },
-      'requests': {
-        'create': ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
-        'read': ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
-        'update': ['requester', 'approver', 'cardholder', 'admin'],
-        'delete': ['admin'],
+      requests: {
+        create: ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
+        read: ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
+        update: ['requester', 'approver', 'cardholder', 'admin'],
+        delete: ['admin'],
       },
-      'approvals': {
-        'create': ['approver', 'admin'],
-        'read': ['approver', 'admin'],
-        'update': ['admin'],
-        'delete': ['admin'],
+      approvals: {
+        create: ['approver', 'admin'],
+        read: ['approver', 'admin'],
+        update: ['admin'],
+        delete: ['admin'],
       },
-      'purchases': {
-        'create': ['cardholder', 'admin'],
-        'read': ['cardholder', 'admin'],
-        'update': ['cardholder', 'admin'],
-        'delete': ['admin'],
+      purchases: {
+        create: ['cardholder', 'admin'],
+        read: ['cardholder', 'admin'],
+        update: ['cardholder', 'admin'],
+        delete: ['admin'],
       },
-      'attachments': {
-        'create': ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
-        'read': ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
-        'update': ['admin'],
-        'delete': ['admin'],
+      attachments: {
+        create: ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
+        read: ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
+        update: ['admin'],
+        delete: ['admin'],
       },
-      'cycles': {
-        'create': ['admin', 'cardholder'],
-        'read': ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
-        'update': ['admin', 'cardholder'],
-        'delete': ['admin'],
+      cycles: {
+        create: ['admin', 'cardholder'],
+        read: ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
+        update: ['admin', 'cardholder'],
+        delete: ['admin'],
       },
-      'audit': {
-        'read': ['auditor', 'admin'],
-        'create': [], // Only server-side functions
-        'update': [], // Immutable
-        'delete': [], // Immutable
+      audit: {
+        read: ['auditor', 'admin'],
+        create: [], // Only server-side functions
+        update: [], // Immutable
+        delete: [], // Immutable
       },
-      'exports': {
-        'create': ['admin', 'cardholder'],
-        'read': ['admin', 'cardholder'],
-        'download': ['admin', 'cardholder'],
+      exports: {
+        create: ['admin', 'cardholder'],
+        read: ['admin', 'cardholder'],
+        download: ['admin', 'cardholder'],
       },
     };
 
@@ -78,7 +82,10 @@ export class RBAC {
   }
 
   // Check if user can edit request based on status
-  static canEditRequest(user: User | null, requestStatus: RequestStatus): boolean {
+  static canEditRequest(
+    user: User | null,
+    requestStatus: RequestStatus
+  ): boolean {
     if (!user) return false;
     if (user.role === 'admin') return true;
 
@@ -92,7 +99,10 @@ export class RBAC {
   }
 
   // Check if user can approve request
-  static canApproveRequest(user: User | null, requestStatus: RequestStatus): boolean {
+  static canApproveRequest(
+    user: User | null,
+    requestStatus: RequestStatus
+  ): boolean {
     if (!user) return false;
     if (user.role === 'admin') return true;
 
@@ -105,12 +115,18 @@ export class RBAC {
   }
 
   // Check if user can purchase request
-  static canPurchaseRequest(user: User | null, requestStatus: RequestStatus): boolean {
+  static canPurchaseRequest(
+    user: User | null,
+    requestStatus: RequestStatus
+  ): boolean {
     if (!user) return false;
     if (user.role === 'admin') return true;
 
     // Only cardholders can purchase during Cardholder Purchasing
-    if (user.role === 'cardholder' && requestStatus === 'Cardholder Purchasing') {
+    if (
+      user.role === 'cardholder' &&
+      requestStatus === 'Cardholder Purchasing'
+    ) {
       return true;
     }
 
@@ -118,7 +134,10 @@ export class RBAC {
   }
 
   // Check if user can reconcile request
-  static canReconcileRequest(user: User | null, requestStatus: RequestStatus): boolean {
+  static canReconcileRequest(
+    user: User | null,
+    requestStatus: RequestStatus
+  ): boolean {
     if (!user) return false;
     if (user.role === 'admin') return true;
 
@@ -170,9 +189,16 @@ export class RBAC {
     if (!user) return [];
 
     const allStatuses: RequestStatus[] = [
-      'Draft', 'Submitted', 'AO Review', 'Approved', 
-      'Cardholder Purchasing', 'Purchased', 'Reconciled', 
-      'Closed', 'Returned', 'Denied'
+      'Draft',
+      'Submitted',
+      'AO Review',
+      'Approved',
+      'Cardholder Purchasing',
+      'Purchased',
+      'Reconciled',
+      'Closed',
+      'Returned',
+      'Denied',
     ];
 
     // Admin can see all statuses
@@ -181,11 +207,38 @@ export class RBAC {
     // Role-specific accessible statuses
     switch (user.role) {
       case 'requester':
-        return ['Draft', 'Submitted', 'AO Review', 'Approved', 'Cardholder Purchasing', 'Purchased', 'Reconciled', 'Closed', 'Returned', 'Denied'];
+        return [
+          'Draft',
+          'Submitted',
+          'AO Review',
+          'Approved',
+          'Cardholder Purchasing',
+          'Purchased',
+          'Reconciled',
+          'Closed',
+          'Returned',
+          'Denied',
+        ];
       case 'approver':
-        return ['Submitted', 'AO Review', 'Approved', 'Cardholder Purchasing', 'Purchased', 'Reconciled', 'Closed', 'Returned', 'Denied'];
+        return [
+          'Submitted',
+          'AO Review',
+          'Approved',
+          'Cardholder Purchasing',
+          'Purchased',
+          'Reconciled',
+          'Closed',
+          'Returned',
+          'Denied',
+        ];
       case 'cardholder':
-        return ['Approved', 'Cardholder Purchasing', 'Purchased', 'Reconciled', 'Closed'];
+        return [
+          'Approved',
+          'Cardholder Purchasing',
+          'Purchased',
+          'Reconciled',
+          'Closed',
+        ];
       case 'auditor':
         return ['Purchased', 'Reconciled', 'Closed'];
       default:
@@ -200,9 +253,19 @@ export class RBAC {
     const sections: Record<UserRole, string[]> = {
       requester: ['myRequests', 'recentActivity'],
       approver: ['pendingApprovals', 'myRequests', 'recentActivity'],
-      cardholder: ['cardholderQueue', 'recentPurchases', 'reconciliationStatus'],
+      cardholder: [
+        'cardholderQueue',
+        'recentPurchases',
+        'reconciliationStatus',
+      ],
       auditor: ['auditLogs', 'reconciliationStatus', 'complianceReports'],
-      admin: ['allRequests', 'userManagement', 'systemSettings', 'auditLogs', 'reports'],
+      admin: [
+        'allRequests',
+        'userManagement',
+        'systemSettings',
+        'auditLogs',
+        'reports',
+      ],
     };
 
     return sections[user.role] || [];
@@ -245,7 +308,10 @@ export class RBAC {
   }
 
   // Get user's organization context
-  static getUserOrgContext(user: User | null): { orgId: string; canManageOrg: boolean } {
+  static getUserOrgContext(user: User | null): {
+    orgId: string;
+    canManageOrg: boolean;
+  } {
     if (!user) return { orgId: '', canManageOrg: false };
 
     return {
@@ -255,7 +321,10 @@ export class RBAC {
   }
 
   // Check if user can access specific request
-  static canAccessRequest(user: User | null, request: { orgId: string; requesterId: string; status: RequestStatus }): boolean {
+  static canAccessRequest(
+    user: User | null,
+    request: { orgId: string; requesterId: string; status: RequestStatus }
+  ): boolean {
     if (!user) return false;
     if (user.role === 'admin') return true;
 
@@ -267,9 +336,25 @@ export class RBAC {
       case 'requester':
         return user.id === request.requesterId;
       case 'approver':
-        return ['Submitted', 'AO Review', 'Approved', 'Cardholder Purchasing', 'Purchased', 'Reconciled', 'Closed', 'Returned', 'Denied'].includes(request.status);
+        return [
+          'Submitted',
+          'AO Review',
+          'Approved',
+          'Cardholder Purchasing',
+          'Purchased',
+          'Reconciled',
+          'Closed',
+          'Returned',
+          'Denied',
+        ].includes(request.status);
       case 'cardholder':
-        return ['Approved', 'Cardholder Purchasing', 'Purchased', 'Reconciled', 'Closed'].includes(request.status);
+        return [
+          'Approved',
+          'Cardholder Purchasing',
+          'Purchased',
+          'Reconciled',
+          'Closed',
+        ].includes(request.status);
       case 'auditor':
         return ['Purchased', 'Reconciled', 'Closed'].includes(request.status);
       default:

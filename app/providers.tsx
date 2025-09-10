@@ -54,9 +54,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
           },
         }}
       />
-      {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} />
-      )}
+      {process.env.NODE_ENV === 'development' &&
+        typeof window !== 'undefined' && (
+          <ReactQueryDevtools initialIsOpen={false} />
+        )}
     </QueryClientProvider>
   );
 }

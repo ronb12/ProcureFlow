@@ -1,26 +1,41 @@
 import { z } from 'zod';
-import { RequestItemSchema, CreateRequestSchema, CreateApprovalSchema, CreatePurchaseSchema } from './types';
+import {
+  RequestItemSchema,
+  CreateRequestSchema,
+  CreateApprovalSchema,
+  CreatePurchaseSchema,
+} from './types';
 
 // Money input validation
-export const MoneyInputSchema = z.string()
+export const MoneyInputSchema = z
+  .string()
   .regex(/^\d+(\.\d{1,2})?$/, 'Invalid money format')
-  .transform((val) => parseFloat(val))
-  .refine((val) => val >= 0, 'Amount must be non-negative');
+  .transform(val => parseFloat(val))
+  .refine(val => val >= 0, 'Amount must be non-negative');
 
 // SKU validation
-export const SKUSchema = z.string()
+export const SKUSchema = z
+  .string()
   .min(1, 'SKU is required')
   .max(50, 'SKU must be 50 characters or less')
-  .regex(/^[A-Z0-9-_]+$/, 'SKU must contain only uppercase letters, numbers, hyphens, and underscores');
+  .regex(
+    /^[A-Z0-9-_]+$/,
+    'SKU must contain only uppercase letters, numbers, hyphens, and underscores'
+  );
 
 // Accounting code validation
-export const AccountingCodeSchema = z.string()
+export const AccountingCodeSchema = z
+  .string()
   .min(1, 'Accounting code is required')
   .max(20, 'Accounting code must be 20 characters or less')
-  .regex(/^[A-Z0-9-]+$/, 'Accounting code must contain only uppercase letters, numbers, and hyphens');
+  .regex(
+    /^[A-Z0-9-]+$/,
+    'Accounting code must contain only uppercase letters, numbers, and hyphens'
+  );
 
 // Vendor validation with common vendors
-export const VendorSchema = z.string()
+export const VendorSchema = z
+  .string()
   .min(1, 'Vendor is required')
   .max(100, 'Vendor name must be 100 characters or less');
 
@@ -33,15 +48,24 @@ export const ValidatedRequestItemSchema = RequestItemSchema.extend({
 export const ValidatedCreateRequestSchema = CreateRequestSchema.extend({
   accountingCode: AccountingCodeSchema,
   vendor: VendorSchema,
-  items: z.array(ValidatedRequestItemSchema).min(1, 'At least one item is required'),
+  items: z
+    .array(ValidatedRequestItemSchema)
+    .min(1, 'At least one item is required'),
 });
 
 // File upload validation
 export const FileUploadSchema = z.object({
-  file: z.instanceof(File)
-    .refine((file) => file.size <= 10 * 1024 * 1024, 'File size must be less than 10MB')
+  file: z
+    .instanceof(File)
     .refine(
-      (file) => ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'].includes(file.type),
+      file => file.size <= 10 * 1024 * 1024,
+      'File size must be less than 10MB'
+    )
+    .refine(
+      file =>
+        ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'].includes(
+          file.type
+        ),
       'File must be an image (JPEG, PNG, GIF) or PDF'
     ),
   description: z.string().optional(),
@@ -49,27 +73,36 @@ export const FileUploadSchema = z.object({
 
 // Receipt file validation
 export const ReceiptFileSchema = z.object({
-  file: z.instanceof(File)
-    .refine((file) => file.size <= 5 * 1024 * 1024, 'Receipt file must be less than 5MB')
+  file: z
+    .instanceof(File)
     .refine(
-      (file) => ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'].includes(file.type),
+      file => file.size <= 5 * 1024 * 1024,
+      'Receipt file must be less than 5MB'
+    )
+    .refine(
+      file =>
+        ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'].includes(
+          file.type
+        ),
       'Receipt must be an image (JPEG, PNG, GIF) or PDF'
     ),
 });
 
 // Date validation for need-by dates
-export const NeedByDateSchema = z.date()
-  .refine((date) => date >= new Date(), 'Need-by date must be in the future')
-  .refine((date) => {
+export const NeedByDateSchema = z
+  .date()
+  .refine(date => date >= new Date(), 'Need-by date must be in the future')
+  .refine(date => {
     const oneYearFromNow = new Date();
     oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
     return date <= oneYearFromNow;
   }, 'Need-by date must be within one year');
 
 // Enhanced create request with date validation
-export const ValidatedCreateRequestWithDateSchema = ValidatedCreateRequestSchema.extend({
-  needBy: NeedByDateSchema,
-});
+export const ValidatedCreateRequestWithDateSchema =
+  ValidatedCreateRequestSchema.extend({
+    needBy: NeedByDateSchema,
+  });
 
 // Search and filter schemas
 export const RequestFilterSchema = z.object({
@@ -96,53 +129,72 @@ export const PaginationSchema = z.object({
 export type Pagination = z.infer<typeof PaginationSchema>;
 
 // User role validation
-export const UserRoleSchema = z.enum(['requester', 'approver', 'cardholder', 'auditor', 'admin']);
+export const UserRoleSchema = z.enum([
+  'requester',
+  'approver',
+  'cardholder',
+  'auditor',
+  'admin',
+]);
 
 // Organization validation
-export const OrganizationCodeSchema = z.string()
+export const OrganizationCodeSchema = z
+  .string()
   .min(2, 'Organization code must be at least 2 characters')
   .max(10, 'Organization code must be 10 characters or less')
-  .regex(/^[A-Z0-9]+$/, 'Organization code must contain only uppercase letters and numbers');
+  .regex(
+    /^[A-Z0-9]+$/,
+    'Organization code must contain only uppercase letters and numbers'
+  );
 
 // Email validation
-export const EmailSchema = z.string()
+export const EmailSchema = z
+  .string()
   .email('Invalid email address')
   .max(255, 'Email must be 255 characters or less');
 
 // Name validation
-export const NameSchema = z.string()
+export const NameSchema = z
+  .string()
   .min(1, 'Name is required')
   .max(100, 'Name must be 100 characters or less')
   .regex(/^[a-zA-Z\s\-'\.]+$/, 'Name contains invalid characters');
 
 // Approval limit validation
-export const ApprovalLimitSchema = z.number()
+export const ApprovalLimitSchema = z
+  .number()
   .min(0, 'Approval limit must be non-negative')
   .max(1000000, 'Approval limit must be less than $1,000,000');
 
 // Settings validation
-export const MicroPurchaseLimitSchema = z.number()
+export const MicroPurchaseLimitSchema = z
+  .number()
   .min(0, 'Micro purchase limit must be non-negative')
   .max(100000, 'Micro purchase limit must be less than $100,000');
 
-export const SplitPurchaseWindowSchema = z.number()
+export const SplitPurchaseWindowSchema = z
+  .number()
   .min(0, 'Split purchase window must be non-negative')
   .max(30, 'Split purchase window must be 30 days or less');
 
 // Tax rate validation
-export const TaxRateSchema = z.number()
+export const TaxRateSchema = z
+  .number()
   .min(0, 'Tax rate must be non-negative')
   .max(1, 'Tax rate must be 1.0 (100%) or less');
 
 // State code validation (US states)
-export const StateCodeSchema = z.string()
+export const StateCodeSchema = z
+  .string()
   .length(2, 'State code must be 2 characters')
   .regex(/^[A-Z]{2}$/, 'State code must be uppercase letters');
 
 // Enhanced settings schema
 export const ValidatedGlobalSettingsSchema = z.object({
   microPurchaseLimit: MicroPurchaseLimitSchema,
-  blockedMerchants: z.array(z.string().min(1, 'Merchant name cannot be empty')).default([]),
+  blockedMerchants: z
+    .array(z.string().min(1, 'Merchant name cannot be empty'))
+    .default([]),
   splitPurchaseWindowDays: SplitPurchaseWindowSchema.default(1),
   taxRatesByState: z.record(StateCodeSchema, TaxRateSchema).optional(),
 });
@@ -156,11 +208,16 @@ export const CreateUserSchema = z.object({
   approvalLimit: ApprovalLimitSchema.optional(),
 });
 
-export const UpdateUserSchema = CreateUserSchema.partial().omit({ email: true });
+export const UpdateUserSchema = CreateUserSchema.partial().omit({
+  email: true,
+});
 
 // Organization creation/update schemas
 export const CreateOrganizationSchema = z.object({
-  name: z.string().min(1, 'Organization name is required').max(100, 'Organization name must be 100 characters or less'),
+  name: z
+    .string()
+    .min(1, 'Organization name is required')
+    .max(100, 'Organization name must be 100 characters or less'),
   code: OrganizationCodeSchema,
 });
 
@@ -181,7 +238,9 @@ export const NotificationPreferencesSchema = z.object({
   purchases: z.boolean().default(true),
 });
 
-export type NotificationPreferences = z.infer<typeof NotificationPreferencesSchema>;
+export type NotificationPreferences = z.infer<
+  typeof NotificationPreferencesSchema
+>;
 
 // API response schemas
 export const ApiResponseSchema = z.object({

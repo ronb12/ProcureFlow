@@ -1,7 +1,7 @@
 {
   "name": "procureflow",
   "version": "1.0.0",
-  "description": "Government Purchase Card workflow management system",
+  "description": "MWR Purchase Card Management System - From request to receipt, audited, automated, on time",
   "private": true,
   "scripts": {
     "dev": "next dev",

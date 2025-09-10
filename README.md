@@ -2,17 +2,17 @@
 
 **From request to receipt—audited, automated, on time.**
 
-ProcureFlow is a production-quality web application that implements a Government Purchase Card (GPC)-style purchasing workflow. It digitizes purchase requests, approvals, cardholder processing, and monthly reconciliation while maintaining strict security and compliance standards.
+ProcureFlow is a production-quality web application that implements a Purchase Card Management System for MWR (Morale, Welfare, and Recreation) facilities. It digitizes purchase requests, approvals, cardholder processing, and monthly reconciliation while maintaining strict security and compliance standards.
 
 ## ⚠️ Important Notice
 
-This is a **demonstration system** for educational and evaluation purposes only. It is **NOT** intended for production use with actual government systems or DoD IL5 compliance. No actual card numbers (PAN) are stored or processed.
+This is a **demonstration system** for educational and evaluation purposes only. It is **NOT** intended for production use with actual financial systems. No actual card numbers (PAN) are stored or processed.
 
 ## 🏢 Product Summary
 
-ProcureFlow streamlines the procurement process through a digital workflow:
+ProcureFlow streamlines the MWR procurement process through a digital workflow:
 
-- **Requester** → Creates and submits purchase requests
+- **Requester** → Creates and submits purchase requests for MWR facilities
 - **Approver (AO)** → Reviews and approves/denies requests  
 - **Cardholder** → Processes approved purchases and uploads receipts
 - **Reconciliation** → Monthly cycle closure with CSV + receipts ZIP exports
@@ -145,30 +145,30 @@ Draft → Submitted → AO Review → Approved → Cardholder Purchasing → Pur
 
 ## 🎯 Key Features
 
-### For Requesters
-- Create and manage purchase requests
+### For MWR Requesters
+- Create and manage purchase requests for MWR facilities
 - Add items with SKU, quantity, and pricing
 - Upload supporting documents
 - Track request status and history
 
-### For Approvers
+### For MWR Approvers
 - Review pending requests
 - Approve, deny, or return requests
 - Add approval comments
 - View policy compliance warnings
 
-### For Cardholders
+### For MWR Cardholders
 - Process approved purchases
 - Record order details and final totals
 - Upload receipt images
 - Manage reconciliation cycles
 
-### For Auditors
+### For MWR Auditors
 - View comprehensive audit logs
 - Track all system activities
 - Generate compliance reports
 
-### For Administrators
+### For MWR Administrators
 - Manage users and organizations
 - Configure system settings
 - Set approval limits and blocked merchants

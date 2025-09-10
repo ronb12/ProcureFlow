@@ -1,91 +1,26 @@
 {
-  "indexes": [
-    {
-      "collectionGroup": "requests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "orgId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "requests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "requesterId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "status",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "requests",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "orgId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "vendor",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "purchases",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "cardholderId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "purchasedAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "audit",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "entity",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "entityId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "at",
-          "order": "DESCENDING"
-        }
-      ]
-    }
-  ],
+  // Example:
+  //
+  // "indexes": [
+  //   {
+  //     "collectionGroup": "widgets",
+  //     "queryScope": "COLLECTION",
+  //     "fields": [
+  //       { "fieldPath": "foo", "arrayConfig": "CONTAINS" },
+  //       { "fieldPath": "bar", "mode": "DESCENDING" }
+  //     ]
+  //   },
+  //
+  //  "fieldOverrides": [
+  //    {
+  //      "collectionGroup": "widgets",
+  //      "fieldPath": "baz",
+  //      "indexes": [
+  //        { "order": "ASCENDING", "queryScope": "COLLECTION" }
+  //      ]
+  //    },
+  //   ]
+  // ]
+  "indexes": [],
   "fieldOverrides": []
 }

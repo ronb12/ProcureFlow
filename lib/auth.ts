@@ -55,7 +55,24 @@ export async function getCurrentUser(): Promise<User | null> {
     // Get user document from Firestore
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
     if (!userDoc.exists()) {
-      console.warn('User document not found in Firestore');
+      // Try to create user document if it doesn't exist
+      console.log('User document not found, attempting to create...');
+      try {
+        await createUserDocument(firebaseUser);
+        // Retry getting the user document
+        const retryDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        if (retryDoc.exists()) {
+          const userData = retryDoc.data();
+          return {
+            id: firebaseUser.uid,
+            ...userData,
+            createdAt: userData.createdAt?.toDate() || new Date(),
+            updatedAt: userData.updatedAt?.toDate() || new Date(),
+          } as User;
+        }
+      } catch (createError) {
+        console.error('Error creating user document:', createError);
+      }
       return null;
     }
 

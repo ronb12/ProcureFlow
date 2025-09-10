@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { PWAProvider } from './pwa-provider';
+import { PWAInstallButton } from '@/components/ui/pwa-install-button';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -43,7 +44,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <PWAProvider>
-          <Providers>{children}</Providers>
+          <Providers>
+            {children}
+            <PWAInstallButton />
+          </Providers>
         </PWAProvider>
       </body>
     </html>

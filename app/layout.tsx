@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: 'From request to receipt—audited, automated, on time.',
   keywords: ['procurement', 'mwr', 'purchase card', 'workflow', 'approval'],
   authors: [{ name: 'Bradley Virtual Solutions, LLC' }],
-  manifest: '/manifest.json',
+  manifest: '/manifest.json?v=2',
   icons: {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',

@@ -15,27 +15,22 @@ export function PWAInstallButton() {
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('PWA install prompt received, preventing default');
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowInstallButton(true);
-      console.log('PWA install button should now be visible');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     // Check if app is already installed
     window.addEventListener('appinstalled', () => {
-      console.log('PWA was installed, hiding button');
       setShowInstallButton(false);
       setDeferredPrompt(null);
     });
 
     // Fallback: Show install button after a delay if beforeinstallprompt doesn't fire
-    // This helps with debugging and ensures the button appears
     const fallbackTimer = setTimeout(() => {
       if (!showInstallButton && !deferredPrompt) {
-        console.log('Fallback: Showing PWA install button after timeout');
         setShowInstallButton(true);
       }
     }, 3000);
@@ -55,28 +50,13 @@ export function PWAInstallButton() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
 
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
-    }
-
     setDeferredPrompt(null);
     setShowInstallButton(false);
   };
 
-  // Debug logging
-  console.log('PWAInstallButton render:', {
-    showInstallButton,
-    deferredPrompt: !!deferredPrompt,
-  });
-
   if (!showInstallButton) {
-    console.log('PWA install button not showing - showInstallButton is false');
     return null;
   }
-
-  console.log('PWA install button rendering');
   return (
     <Button
       onClick={handleInstallClick}

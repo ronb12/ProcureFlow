@@ -84,7 +84,17 @@ export async function getCurrentUser(): Promise<User | null> {
           updatedAt: new Date(),
         } as User;
       }
-      return null;
+      // If we get here, return a minimal user object instead of null
+      return {
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName || 'Unknown User',
+        email: firebaseUser.email || '',
+        role: 'requester',
+        orgId: '',
+        approvalLimit: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as User;
     }
 
     const userData = userDoc.data();
@@ -96,7 +106,17 @@ export async function getCurrentUser(): Promise<User | null> {
     } as User;
   } catch (error) {
     console.error('Error getting current user:', error);
-    return null;
+    // Return a minimal user object instead of null to prevent auth loops
+    return {
+      id: firebaseUser.uid,
+      name: firebaseUser.displayName || 'Unknown User',
+      email: firebaseUser.email || '',
+      role: 'requester',
+      orgId: '',
+      approvalLimit: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as User;
   }
 }
 

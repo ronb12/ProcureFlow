@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,13 @@ export default function NewRequestPage() {
 
   const [attachments, setAttachments] = useState<File[]>([]);
 
+  // Handle authentication redirect
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -47,8 +54,14 @@ export default function NewRequestPage() {
   }
 
   if (!user) {
-    router.push('/login');
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
   const handleInputChange = (field: keyof CreateRequestData, value: any) => {
@@ -210,7 +223,7 @@ export default function NewRequestPage() {
             </CardHeader>
             <CardContent>
               <ItemTable
-                items={formData.items || []}
+                items={(formData.items as RequestItem[]) || []}
                 onChange={handleItemsChange}
               />
             </CardContent>
@@ -227,7 +240,7 @@ export default function NewRequestPage() {
             <CardContent>
               <FileDropzone
                 files={attachments}
-                onChange={setAttachments}
+                onFilesAccepted={setAttachments}
                 accept={{
                   'application/pdf': ['.pdf'],
                   'application/msword': ['.doc'],

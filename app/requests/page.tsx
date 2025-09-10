@@ -219,10 +219,7 @@ export default function RequestsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          // TODO: Navigate to request details
-                          toast('Request details coming soon');
-                        }}
+                        onClick={() => router.push(`/requests/${request.id}`)}
                       >
                         View Details
                       </Button>

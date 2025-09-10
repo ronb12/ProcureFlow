@@ -1,0 +1,126 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+    
+    function isApprover() {
+      return isSignedIn() && request.auth.token.role in ['approver', 'admin'];
+    }
+    
+    function isCardholder() {
+      return isSignedIn() && request.auth.token.role in ['cardholder', 'admin'];
+    }
+    
+    function isAuditor() {
+      return isSignedIn() && request.auth.token.role in ['auditor', 'admin'];
+    }
+    
+    function isRequester() {
+      return isSignedIn() && request.auth.token.role in ['requester', 'approver', 'cardholder', 'auditor', 'admin'];
+    }
+    
+    function isSameOrg(orgId) {
+      return isSignedIn() && request.auth.token.orgId == orgId;
+    }
+    
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    
+    function isValidStatusTransition(from, to) {
+      let validTransitions = {
+        'Draft': ['Submitted'],
+        'Submitted': ['AO Review'],
+        'AO Review': ['Approved', 'Denied', 'Returned'],
+        'Approved': ['Cardholder Purchasing'],
+        'Cardholder Purchasing': ['Purchased'],
+        'Purchased': ['Reconciled'],
+        'Reconciled': ['Closed'],
+        'Returned': ['Draft', 'Submitted'],
+        'Denied': [],
+        'Closed': []
+      };
+      return to in validTransitions[from];
+    }
+    
+    function canEditRequest(status) {
+      return status in ['Draft', 'Returned'];
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isSelf(userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    // Organizations collection
+    match /orgs/{orgId} {
+      allow read: if isSignedIn() && (isSameOrg(orgId) || isAdmin());
+      allow write: if isAdmin();
+    }
+    
+    // Global settings
+    match /settings/global {
+      allow read: if isAdmin() || isApprover() || isCardholder();
+      allow write: if isAdmin();
+    }
+    
+    // Requests collection
+    match /requests/{requestId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn();
+      allow update: if isSignedIn() && (
+        // Requester can edit only in Draft/Returned
+        (resource.data.requesterId == request.auth.uid && canEditRequest(resource.data.status)) ||
+        // Approver can update during AO Review
+        (isApprover() && resource.data.status == 'AO Review') ||
+        // Cardholder can update during Cardholder Purchasing
+        (isCardholder() && resource.data.status == 'Cardholder Purchasing') ||
+        // Admin can update anything
+        isAdmin()
+      );
+      allow delete: if isAdmin() && resource.data.status in ['Draft', 'Returned'];
+      
+      // Items subcollection
+      match /items/{itemId} {
+        allow read, write: if isSignedIn();
+      }
+    }
+    
+    // Approvals collection
+    match /approvals/{approvalId} {
+      allow create, read: if isApprover() || isAdmin();
+    }
+    
+    // Purchases collection
+    match /purchases/{purchaseId} {
+      allow create, read, update: if isCardholder() || isAdmin();
+    }
+    
+    // Attachments collection
+    match /attachments/{attachmentId} {
+      allow create, read: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+    
+    // Cycles collection
+    match /cycles/{cycleId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isCardholder();
+    }
+    
+    // Audit collection (immutable)
+    match /audit/{eventId} {
+      allow read: if isAuditor() || isAdmin();
+      allow create: if false; // Only server-side functions can create
+      allow update, delete: if false; // Immutable
+    }
+  }
+}

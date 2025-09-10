@@ -13,7 +13,15 @@ import {
 } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { ArrowLeft, Plus, Search, Filter } from 'lucide-react';
+import {
+  ArrowLeft,
+  Plus,
+  Search,
+  Filter,
+  X,
+  Download,
+  Edit,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // Mock data - in real app this would come from API
@@ -71,6 +79,7 @@ export default function RequestsPage() {
   const [requests, setRequests] = useState(mockRequests);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   if (loading) {
     return (
@@ -219,7 +228,7 @@ export default function RequestsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => router.push(`/requests/${request.id}`)}
+                        onClick={() => setSelectedRequest(request)}
                       >
                         View Details
                       </Button>
@@ -242,6 +251,161 @@ export default function RequestsPage() {
           )}
         </div>
       </div>
+
+      {/* Request Detail Modal */}
+      {selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Request #{selectedRequest.id}
+                </h2>
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedRequest(null)}
+                  className="flex items-center space-x-2"
+                >
+                  <X className="h-4 w-4" />
+                  <span>Close</span>
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main Content */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Request Details */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Request Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            Vendor
+                          </label>
+                          <p className="text-gray-900">
+                            {selectedRequest.vendor}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            Need By Date
+                          </label>
+                          <p className="text-gray-900">
+                            {formatDate(selectedRequest.needBy)}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            Status
+                          </label>
+                          <div className="mt-1">
+                            <StatusBadge status={selectedRequest.status} />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-500">
+                            Total Amount
+                          </label>
+                          <p className="text-lg font-semibold text-gray-900">
+                            {formatCurrency(selectedRequest.total)}
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">
+                          Justification
+                        </label>
+                        <p className="text-gray-900 mt-1">
+                          {selectedRequest.justification}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Mock Items */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Items</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-4">
+                              <span className="font-medium text-gray-900">
+                                HD-001
+                              </span>
+                              <span className="text-gray-600">
+                                Office Supplies
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-500 mt-1">
+                              Qty: 1 × {formatCurrency(selectedRequest.total)}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold text-gray-900">
+                              {formatCurrency(selectedRequest.total)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Sidebar */}
+                <div className="space-y-6">
+                  {/* Actions */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Actions</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {selectedRequest.status === 'Draft' && (
+                        <Button className="w-full" variant="outline">
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Request
+                        </Button>
+                      )}
+                      <Button className="w-full" variant="outline">
+                        <Download className="h-4 w-4 mr-2" />
+                        Export PDF
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Request Info */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Request Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">
+                          Request ID
+                        </label>
+                        <p className="text-gray-900">#{selectedRequest.id}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">
+                          Created Date
+                        </label>
+                        <p className="text-gray-900">
+                          {formatDate(selectedRequest.createdAt)}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

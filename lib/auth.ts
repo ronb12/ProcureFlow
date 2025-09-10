@@ -72,6 +72,17 @@ export async function getCurrentUser(): Promise<User | null> {
         }
       } catch (createError) {
         console.error('Error creating user document:', createError);
+        // Return a minimal user object to prevent infinite loops
+        return {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || 'Unknown User',
+          email: firebaseUser.email || '',
+          role: 'requester',
+          orgId: '',
+          approvalLimit: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as User;
       }
       return null;
     }

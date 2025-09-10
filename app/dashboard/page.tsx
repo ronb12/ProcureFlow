@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { PWAInstallButton } from '@/components/ui/pwa-install-button';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   FileText,
@@ -358,6 +359,7 @@ export default function DashboardPage() {
           </Card>
         </div>
       </div>
+      <PWAInstallButton />
     </div>
   );
 }

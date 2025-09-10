@@ -287,7 +287,7 @@ export default function DashboardPage() {
                   <div
                     key={request.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => router.push(`/requests/${request.id}`)}
+                    onClick={() => router.push('/requests')}
                   >
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">

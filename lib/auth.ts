@@ -75,7 +75,10 @@ export async function getCurrentUser(): Promise<User | null> {
         // Return a minimal user object to prevent infinite loops
         return {
           id: firebaseUser.uid,
-          name: firebaseUser.displayName || 'Unknown User',
+          name:
+            firebaseUser.displayName ||
+            firebaseUser.email?.split('@')[0] ||
+            'User',
           email: firebaseUser.email || '',
           role: 'requester',
           orgId: '',
@@ -87,7 +90,10 @@ export async function getCurrentUser(): Promise<User | null> {
       // If we get here, return a minimal user object instead of null
       return {
         id: firebaseUser.uid,
-        name: firebaseUser.displayName || 'Unknown User',
+        name:
+          firebaseUser.displayName ||
+          firebaseUser.email?.split('@')[0] ||
+          'User',
         email: firebaseUser.email || '',
         role: 'requester',
         orgId: '',
@@ -109,7 +115,8 @@ export async function getCurrentUser(): Promise<User | null> {
     // Return a minimal user object instead of null to prevent auth loops
     return {
       id: firebaseUser.uid,
-      name: firebaseUser.displayName || 'Unknown User',
+      name:
+        firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
       email: firebaseUser.email || '',
       role: 'requester',
       orgId: '',
@@ -201,7 +208,7 @@ export async function createUserDocument(
 
     try {
       await setDoc(userRef, {
-        name: displayName || 'Unknown User',
+        name: displayName || email?.split('@')[0] || 'User',
         email: email || '',
         role: 'requester', // Default role
         orgId: '', // Must be set by admin

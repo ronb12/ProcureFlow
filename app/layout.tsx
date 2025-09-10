@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -11,8 +11,6 @@ export const metadata: Metadata = {
   description: 'From request to receipt—audited, automated, on time.',
   keywords: ['procurement', 'mwr', 'purchase card', 'workflow', 'approval'],
   authors: [{ name: 'Bradley Virtual Solutions, LLC' }],
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#2563eb',
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
@@ -28,6 +26,12 @@ export const metadata: Metadata = {
     index: false, // Don't index for security
     follow: false,
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#2563eb',
 };
 
 export default function RootLayout({

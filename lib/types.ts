@@ -28,7 +28,12 @@ export type ApprovalAction = 'Approved' | 'Denied' | 'Returned';
 export type CycleStatus = 'open' | 'closed';
 
 // Entity types for audit
-export type AuditEntity = 'request' | 'approval' | 'purchase' | 'cycle';
+export type AuditEntity =
+  | 'request'
+  | 'approval'
+  | 'purchase'
+  | 'cycle'
+  | 'purchase_order';
 
 // User schema
 export const UserSchema = z.object({
@@ -116,6 +121,69 @@ export type Request = z.infer<typeof RequestSchema> & {
   items: RequestItem[];
 };
 
+// Purchase Order schema
+export const PurchaseOrderSchema = z.object({
+  reqId: z.string().min(1, 'Request ID is required'),
+  poNumber: z.string().min(1, 'PO Number is required'),
+  vendor: z.object({
+    name: z.string().min(1, 'Vendor name is required'),
+    address: z.string().min(1, 'Vendor address is required'),
+    city: z.string().min(1, 'Vendor city is required'),
+    state: z.string().min(1, 'Vendor state is required'),
+    zip: z.string().min(1, 'Vendor ZIP is required'),
+    phone: z.string().optional(),
+    email: z.string().email().optional(),
+    taxId: z.string().optional(),
+  }),
+  cardholder: z.object({
+    id: z.string().min(1, 'Cardholder ID is required'),
+    name: z.string().min(1, 'Cardholder name is required'),
+    email: z.string().email('Invalid cardholder email'),
+    cardNumber: z.string().min(1, 'Card number is required'),
+    cardType: z.string().min(1, 'Card type is required'),
+  }),
+  delivery: z.object({
+    address: z.string().min(1, 'Delivery address is required'),
+    city: z.string().min(1, 'Delivery city is required'),
+    state: z.string().min(1, 'Delivery state is required'),
+    zip: z.string().min(1, 'Delivery ZIP is required'),
+    contactName: z.string().min(1, 'Contact name is required'),
+    contactPhone: z.string().min(1, 'Contact phone is required'),
+    specialInstructions: z.string().optional(),
+  }),
+  terms: z.object({
+    paymentTerms: z.string().default('Net 30'),
+    shippingTerms: z.string().default('FOB Destination'),
+    deliveryDate: z.date(),
+    warranty: z.string().optional(),
+  }),
+  items: z.array(RequestItemSchema),
+  subtotal: z.number().min(0, 'Subtotal must be non-negative'),
+  tax: z.number().min(0, 'Tax must be non-negative'),
+  shipping: z.number().min(0, 'Shipping must be non-negative').default(0),
+  total: z.number().min(0, 'Total must be non-negative'),
+  status: z.enum([
+    'draft',
+    'sent',
+    'acknowledged',
+    'shipped',
+    'delivered',
+    'cancelled',
+  ]),
+});
+
+export type PurchaseOrder = z.infer<typeof PurchaseOrderSchema> & {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  sentAt?: Date;
+  acknowledgedAt?: Date;
+  shippedAt?: Date;
+  deliveredAt?: Date;
+  trackingNumber?: string;
+  notes?: string;
+};
+
 // Approval schema
 export const ApprovalSchema = z.object({
   reqId: z.string().min(1, 'Request ID is required'),
@@ -132,6 +200,7 @@ export type Approval = z.infer<typeof ApprovalSchema> & {
 // Purchase schema
 export const PurchaseSchema = z.object({
   reqId: z.string().min(1, 'Request ID is required'),
+  poId: z.string().min(1, 'Purchase Order ID is required'),
   cardholderId: z.string().min(1, 'Cardholder ID is required'),
   merchant: z.string().min(1, 'Merchant is required'),
   orderNumber: z.string().min(1, 'Order number is required'),
@@ -150,7 +219,7 @@ export type Purchase = z.infer<typeof PurchaseSchema> & {
 
 // Attachment schema
 export const AttachmentSchema = z.object({
-  entityType: z.enum(['request', 'purchase']),
+  entityType: z.enum(['request', 'purchase', 'purchase_order']),
   entityId: z.string().min(1, 'Entity ID is required'),
   fileName: z.string().min(1, 'File name is required'),
   fileUrl: z.string().url('Invalid file URL'),
@@ -177,7 +246,13 @@ export type Cycle = z.infer<typeof CycleSchema> & {
 
 // Audit event schema
 export const AuditEventSchema = z.object({
-  entity: z.enum(['request', 'approval', 'purchase', 'cycle']),
+  entity: z.enum([
+    'request',
+    'approval',
+    'purchase',
+    'cycle',
+    'purchase_order',
+  ]),
   entityId: z.string().min(1, 'Entity ID is required'),
   actorUid: z.string().min(1, 'Actor UID is required'),
   action: z.string().min(1, 'Action is required'),
@@ -212,8 +287,40 @@ export const CreateApprovalSchema = z.object({
 
 export type CreateApprovalData = z.infer<typeof CreateApprovalSchema>;
 
+export const CreatePurchaseOrderSchema = z.object({
+  reqId: z.string().min(1, 'Request ID is required'),
+  vendor: z.object({
+    name: z.string().min(1, 'Vendor name is required'),
+    address: z.string().min(1, 'Vendor address is required'),
+    city: z.string().min(1, 'Vendor city is required'),
+    state: z.string().min(1, 'Vendor state is required'),
+    zip: z.string().min(1, 'Vendor ZIP is required'),
+    phone: z.string().optional(),
+    email: z.string().email().optional(),
+    taxId: z.string().optional(),
+  }),
+  delivery: z.object({
+    address: z.string().min(1, 'Delivery address is required'),
+    city: z.string().min(1, 'Delivery city is required'),
+    state: z.string().min(1, 'Delivery state is required'),
+    zip: z.string().min(1, 'Delivery ZIP is required'),
+    contactName: z.string().min(1, 'Contact name is required'),
+    contactPhone: z.string().min(1, 'Contact phone is required'),
+    specialInstructions: z.string().optional(),
+  }),
+  terms: z.object({
+    paymentTerms: z.string().default('Net 30'),
+    shippingTerms: z.string().default('FOB Destination'),
+    deliveryDate: z.date(),
+    warranty: z.string().optional(),
+  }),
+});
+
+export type CreatePurchaseOrderData = z.infer<typeof CreatePurchaseOrderSchema>;
+
 export const CreatePurchaseSchema = z.object({
   reqId: z.string().min(1, 'Request ID is required'),
+  poId: z.string().min(1, 'Purchase Order ID is required'),
   merchant: z.string().min(1, 'Merchant is required'),
   orderNumber: z.string().min(1, 'Order number is required'),
   finalTotal: z.number().min(0, 'Final total must be non-negative'),

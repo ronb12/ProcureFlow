@@ -36,7 +36,7 @@ export const STATE_TRANSITIONS: StateTransition[] = [
     from: 'Approved',
     to: 'Cardholder Purchasing',
     requiredRole: ['cardholder', 'admin'],
-    description: 'Begin purchasing process',
+    description: 'Generate Purchase Order and begin purchasing process',
   },
   {
     from: 'Cardholder Purchasing',

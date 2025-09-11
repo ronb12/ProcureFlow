@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { AppHeader } from '@/components/ui/app-header';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   ArrowLeft,
@@ -113,6 +114,7 @@ export default function RequestsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AppHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

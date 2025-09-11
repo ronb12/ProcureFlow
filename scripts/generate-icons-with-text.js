@@ -15,7 +15,7 @@ async function generateIconWithText(size) {
   // Create SVG with text
   const fontSize = Math.max(size * 0.15, 12); // 15% of size, minimum 12px
   const radius = size * 0.2; // 20% of size for rounded corners
-  
+
   const svg = `
     <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -32,26 +32,24 @@ async function generateIconWithText(size) {
         </style>
       </defs>
       <rect width="${size}" height="${size}" rx="${radius}" ry="${radius}" fill="${backgroundColor}"/>
-      <rect x="2" y="2" width="${size-4}" height="${size-4}" rx="${radius-1}" ry="${radius-1}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
-      <text x="${size/2}" y="${size/2}" class="app-text">${appName}</text>
+      <rect x="2" y="2" width="${size - 4}" height="${size - 4}" rx="${radius - 1}" ry="${radius - 1}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="2"/>
+      <text x="${size / 2}" y="${size / 2}" class="app-text">${appName}</text>
     </svg>`;
 
   // Convert SVG to PNG
-  const buffer = await sharp(Buffer.from(svg))
-    .png()
-    .toBuffer();
-  
+  const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
+
   // Save the icon
   const filename = `icon-${size}x${size}.png`;
   const filepath = path.join(iconPath, filename);
   fs.writeFileSync(filepath, buffer);
-  
+
   console.log(`Generated ${filename}`);
 }
 
 async function generateAllIcons() {
   console.log('Generating icons with app name...');
-  
+
   // Ensure the icons directory exists
   if (!fs.existsSync(iconPath)) {
     fs.mkdirSync(iconPath, { recursive: true });

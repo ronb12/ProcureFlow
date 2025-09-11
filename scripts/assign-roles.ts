@@ -28,32 +28,33 @@ async function assignRoles() {
   console.log('🔐 Starting role assignment...');
 
   const roleAssignments: RoleAssignment[] = [
+    // Replace these with actual Firebase Auth UIDs
     {
-      uid: 'admin_user',
+      uid: 'YOUR_FIREBASE_UID_HERE', // Get this from Firebase Console
       role: 'admin',
       orgId: 'org_cdc',
       approvalLimit: 100000,
     },
     {
-      uid: 'requester_user',
+      uid: 'YOUR_FIREBASE_UID_HERE',
       role: 'requester',
       orgId: 'org_cdc',
       approvalLimit: 0,
     },
     {
-      uid: 'approver_user',
+      uid: 'YOUR_FIREBASE_UID_HERE',
       role: 'approver',
       orgId: 'org_cdc',
       approvalLimit: 10000,
     },
     {
-      uid: 'cardholder_user',
+      uid: 'YOUR_FIREBASE_UID_HERE',
       role: 'cardholder',
       orgId: 'org_cdc',
       approvalLimit: 0,
     },
     {
-      uid: 'auditor_user',
+      uid: 'YOUR_FIREBASE_UID_HERE',
       role: 'auditor',
       orgId: 'org_cdc',
       approvalLimit: 0,

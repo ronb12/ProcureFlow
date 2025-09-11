@@ -16,13 +16,25 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
         });
     }
 
-    // Handle install prompt - let PWAInstallButton handle this
-    // This provider only handles service worker registration and notifications
+    // Handle install prompt - store for custom handling
+    const handleBeforeInstallPrompt = (e: Event) => {
+      console.log('PWA install prompt received, storing for custom handling');
+      // Prevent the default install prompt and store for custom handling
+      e.preventDefault();
+      // Store the event for PWAInstallButton to use
+      (window as any).deferredPrompt = e;
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 
     // Handle app installed
-    window.addEventListener('appinstalled', () => {
+    const handleAppInstalled = () => {
       console.log('PWA was installed');
-    });
+      // Clear the deferred prompt
+      (window as any).deferredPrompt = null;
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     // Request notification permission
     if ('Notification' in window && Notification.permission === 'default') {
@@ -46,6 +58,11 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('offline', handleOffline);
 
     return () => {
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt
+      );
+      window.removeEventListener('appinstalled', handleAppInstalled);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };

@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui",
     "seed": "tsx scripts/seed.ts",
     "assign-roles": "tsx scripts/assign-roles.ts",
+    "get-user-uids": "tsx scripts/get-user-uids.ts",
     "deploy": "firebase deploy",
     "deploy:hosting": "firebase deploy --only hosting",
     "deploy:functions": "firebase deploy --only functions",

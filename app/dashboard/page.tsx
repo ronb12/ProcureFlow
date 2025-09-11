@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { PWAInstallButton } from '@/components/ui/pwa-install-button';
+import { AppHeader } from '@/components/ui/app-header';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
   FileText,
@@ -147,10 +148,26 @@ export default function DashboardPage() {
         title: 'Cardholder Queue',
         description: `${mockStats.cardholderQueue} approved requests`,
         icon: ShoppingCart,
-        href: '/cardholder',
+        href: '/purchases',
         stats: [
           { label: 'Ready to Purchase', value: 5, color: 'text-green-600' },
           { label: 'In Progress', value: 3, color: 'text-blue-600' },
+        ],
+      });
+    }
+
+    // Purchase Orders - for cardholders and admins
+    if (['cardholder', 'admin'].includes(user.role)) {
+      cards.push({
+        title: 'Purchase Orders',
+        description: 'Manage purchase orders',
+        icon: FileText,
+        href: '/purchase-orders',
+        stats: [
+          { label: 'Draft', value: 2, color: 'text-gray-600' },
+          { label: 'Sent', value: 3, color: 'text-blue-600' },
+          { label: 'Shipped', value: 1, color: 'text-purple-600' },
+          { label: 'Delivered', value: 4, color: 'text-green-600' },
         ],
       });
     }
@@ -184,6 +201,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AppHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

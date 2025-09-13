@@ -2,7 +2,7 @@
 
 **From request to receipt—audited, automated, on time.**
 
-*Enterprise Procurement Management System*
+*A Product of Bradley Virtual Solutions, LLC*
 
 ProcureFlow is a production-quality web application that implements a comprehensive Purchase Card Management System for MWR (Morale, Welfare, and Recreation) facilities. It digitizes the entire procurement workflow from request creation to audit package generation while maintaining strict DOD MWR compliance standards and ensuring 100% audit readiness.
 
@@ -327,13 +327,13 @@ pnpm deploy       # Deploy to Firebase
 
 ## 📄 License & Copyright
 
-**© 2024 Enterprise Procurement Management System. All rights reserved.**
+**© 2024 Bradley Virtual Solutions, LLC. All rights reserved.**
 
 This software is proprietary and is protected by copyright laws and international treaties. Unauthorized reproduction, distribution, or modification is strictly prohibited.
 
 ### **Usage Rights**
 - **Educational Use**: This demonstration system is provided for educational and evaluation purposes only
-- **Commercial Use**: Requires written permission from the copyright holder
+- **Commercial Use**: Requires written permission from Bradley Virtual Solutions, LLC
 - **Government Use**: Available under government contract terms and conditions
 - **Modification**: No modifications allowed without express written consent
 
@@ -355,19 +355,19 @@ For questions or issues:
 
 ---
 
-## 🏢 About This System
+## 🏢 About Bradley Virtual Solutions, LLC
 
-This enterprise-grade software solution is designed for government and military organizations. It provides comprehensive compliance systems, audit management, and secure document handling for MWR procurement modernization.
+**Bradley Virtual Solutions, LLC** specializes in developing enterprise-grade software solutions for government and military organizations. Our expertise in compliance systems, audit management, and secure document handling makes us the ideal partner for MWR procurement modernization.
 
-### **Key Features**
-- **Custom Software Development**: Tailored solutions for government needs
-- **Compliance Systems**: DOD, federal, and state compliance automation
-- **Audit Management**: Complete audit trail and package generation
+### **Our Services**
+- **Custom Software Development**: Tailored solutions for government and military needs
+- **Compliance Systems**: DOD, MWR, and federal regulation compliance
+- **Audit Management**: Complete audit trail and documentation systems
 - **Security Solutions**: Military-grade security and data protection
 - **System Integration**: Seamless integration with existing infrastructure
 
 ---
 
-**Built with ❤️ for Government Efficiency**
+**Built with ❤️ by Bradley Virtual Solutions, LLC**
 
 *Empowering Government Through Technology*

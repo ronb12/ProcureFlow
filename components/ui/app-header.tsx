@@ -127,6 +127,14 @@ export function AppHeader() {
                 Purchases
               </button>
             )}
+            {['auditor', 'admin'].includes(user.role) && (
+              <button
+                onClick={() => router.push('/audit-packages')}
+                className="text-gray-700 hover:text-blue-600 font-medium"
+              >
+                Audit Packages
+              </button>
+            )}
             {user.role === 'admin' && (
               <button
                 onClick={() => router.push('/admin')}
@@ -262,6 +270,17 @@ export function AppHeader() {
                 className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
               >
                 Purchases
+              </button>
+            )}
+            {['auditor', 'admin'].includes(user.role) && (
+              <button
+                onClick={() => {
+                  router.push('/audit-packages');
+                  setShowMobileMenu(false);
+                }}
+                className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
+              >
+                Audit Packages
               </button>
             )}
             {user.role === 'admin' && (

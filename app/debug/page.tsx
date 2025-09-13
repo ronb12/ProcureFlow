@@ -194,7 +194,7 @@ export default function DebugPage() {
                 <li>Open browser console (F12)</li>
                 <li>Run this command:</li>
                 <div className="bg-yellow-100 p-2 rounded mt-2">
-                  <code>createUserWithEmailAndPassword(auth, 'test@procureflow.demo', 'demo123').then(user => console.log('User created:', user))</code>
+                  <code>createUserWithEmailAndPassword(auth, &apos;test@procureflow.demo&apos;, &apos;demo123&apos;).then(user =&gt; console.log(&apos;User created:&apos;, user))</code>
                 </div>
                 <li>Or use the existing demo users:</li>
                 <ul className="list-disc list-inside ml-4 mt-2">

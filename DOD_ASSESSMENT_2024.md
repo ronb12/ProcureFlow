@@ -223,7 +223,7 @@ ProcureFlow demonstrates exceptional alignment with current DOD procurement need
 
 ---
 
-**Assessment Prepared By:** Bradley Virtual Solutions, LLC  
+**Assessment Prepared By:** Enterprise Procurement Management System  
 **Date:** September 2024  
 **Classification:** Unclassified  
 **Distribution:** Internal Use Only

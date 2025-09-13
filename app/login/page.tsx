@@ -434,7 +434,7 @@ export default function LoginPage() {
             This is a demonstration system. Not for production use.
           </p>
           <p className="text-xs text-gray-500 mt-1">
-            © 2024 Bradley Virtual Solutions, LLC
+            © 2024 Enterprise Procurement Management System
           </p>
         </div>
       </div>

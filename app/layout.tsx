@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: 'ProcureFlow - MWR Purchase Card Management',
   description: 'From request to receipt—audited, automated, on time.',
   keywords: ['procurement', 'mwr', 'purchase card', 'workflow', 'approval'],
-  authors: [{ name: 'Bradley Virtual Solutions, LLC' }],
+  authors: [{ name: 'Enterprise Procurement Management System' }],
   manifest: '/manifest.json?v=3.0.0',
   icons: {
     icon: '/favicon.ico',

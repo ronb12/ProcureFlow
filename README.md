@@ -2,7 +2,7 @@
 
 **From request to receipt—audited, automated, on time.**
 
-*A Product of Bradley Virtual Solutions, LLC*
+*Enterprise Procurement Management System*
 
 ProcureFlow is a production-quality web application that implements a comprehensive Purchase Card Management System for MWR (Morale, Welfare, and Recreation) facilities. It digitizes the entire procurement workflow from request creation to audit package generation while maintaining strict DOD MWR compliance standards and ensuring 100% audit readiness.
 
@@ -327,13 +327,13 @@ pnpm deploy       # Deploy to Firebase
 
 ## 📄 License & Copyright
 
-**© 2024 Bradley Virtual Solutions, LLC. All rights reserved.**
+**© 2024 Enterprise Procurement Management System. All rights reserved.**
 
-This software is proprietary to Bradley Virtual Solutions, LLC and is protected by copyright laws and international treaties. Unauthorized reproduction, distribution, or modification is strictly prohibited.
+This software is proprietary and is protected by copyright laws and international treaties. Unauthorized reproduction, distribution, or modification is strictly prohibited.
 
 ### **Usage Rights**
 - **Educational Use**: This demonstration system is provided for educational and evaluation purposes only
-- **Commercial Use**: Requires written permission from Bradley Virtual Solutions, LLC
+- **Commercial Use**: Requires written permission from the copyright holder
 - **Government Use**: Available under government contract terms and conditions
 - **Modification**: No modifications allowed without express written consent
 
@@ -344,7 +344,7 @@ For questions or issues:
 1. Check the documentation
 2. Review existing issues
 3. Create a new issue with detailed information
-4. Contact: support@bradleyvirtualsolutions.com
+4. Contact: See project documentation
 
 ## 🔄 Version History
 
@@ -355,25 +355,19 @@ For questions or issues:
 
 ---
 
-## 🏢 About Bradley Virtual Solutions, LLC
+## 🏢 About This System
 
-**Bradley Virtual Solutions, LLC** specializes in developing enterprise-grade software solutions for government and military organizations. Our expertise in compliance systems, audit management, and secure document handling makes us the ideal partner for MWR procurement modernization.
+This enterprise-grade software solution is designed for government and military organizations. It provides comprehensive compliance systems, audit management, and secure document handling for MWR procurement modernization.
 
-### **Our Services**
+### **Key Features**
 - **Custom Software Development**: Tailored solutions for government needs
 - **Compliance Systems**: DOD, federal, and state compliance automation
 - **Audit Management**: Complete audit trail and package generation
 - **Security Solutions**: Military-grade security and data protection
 - **System Integration**: Seamless integration with existing infrastructure
 
-### **Contact Information**
-- **Website**: [www.bradleyvirtualsolutions.com](https://www.bradleyvirtualsolutions.com)
-- **Email**: support@bradleyvirtualsolutions.com
-- **Phone**: (555) 123-4567
-- **Address**: 123 Business Park Dr, Suite 100, Anytown, ST 12345
-
 ---
 
-**Built with ❤️ by Bradley Virtual Solutions, LLC**
+**Built with ❤️ for Government Efficiency**
 
 *Empowering Government Through Technology*

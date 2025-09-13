@@ -608,7 +608,7 @@ async function generatePurchaseOrder(
         state: orgData?.deliveryState || requestData.deliveryState || 'CA',
         zip: orgData?.deliveryZip || requestData.deliveryZip || '98765',
         contactName: requestData.deliveryContact || cardholder.name || 'Contact Person',
-        contactPhone: requestData.deliveryPhone || cardholder.phone || '(555) 123-4567',
+        contactPhone: requestData.deliveryPhone || cardholder.phone || 'Contact Phone',
         specialInstructions: requestData.deliveryInstructions || '',
       },
       terms: {

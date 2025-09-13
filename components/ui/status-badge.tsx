@@ -3,8 +3,10 @@
 import { cn } from '@/lib/utils';
 import { RequestStatus } from '@/lib/types';
 
+type AuditPackageStatus = 'incomplete' | 'pending_review' | 'compliant' | 'non_compliant' | 'audit_ready';
+
 interface StatusBadgeProps {
-  status: RequestStatus;
+  status: RequestStatus | AuditPackageStatus;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -49,6 +51,27 @@ const statusConfig = {
   Denied: {
     color: 'bg-red-100 text-red-800 border-red-200',
     label: 'Denied',
+  },
+  // Audit Package Statuses
+  incomplete: {
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
+    label: 'Incomplete',
+  },
+  pending_review: {
+    color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    label: 'Pending Review',
+  },
+  compliant: {
+    color: 'bg-green-100 text-green-800 border-green-200',
+    label: 'Compliant',
+  },
+  non_compliant: {
+    color: 'bg-red-100 text-red-800 border-red-200',
+    label: 'Non-Compliant',
+  },
+  audit_ready: {
+    color: 'bg-blue-100 text-blue-800 border-blue-200',
+    label: 'Audit Ready',
   },
 };
 

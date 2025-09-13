@@ -40,7 +40,7 @@ const mockPurchaseOrders: PurchaseOrder[] = [
       city: 'Anytown',
       state: 'CA',
       zip: '12345',
-      phone: '(555) 123-4567',
+      phone: 'Contact Phone',
       email: 'orders@homedepot.com',
       taxId: '12-3456789',
     },

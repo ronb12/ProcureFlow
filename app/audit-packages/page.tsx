@@ -425,7 +425,7 @@ export default function AuditPackagesPage() {
   };
 
   const handleFixIssue = (issue: string) => {
-    toast.info(`Redirecting to fix: ${issue}`);
+    toast(`Redirecting to fix: ${issue}`);
     // TODO: Implement issue fixing workflow
   };
 
@@ -473,7 +473,7 @@ export default function AuditPackagesPage() {
             <AuditPackageViewer
               auditPackage={selectedPackage}
               onDownload={() => handleDownloadPackage(selectedPackage)}
-              onViewDocument={(docType) => toast.info(`Viewing ${docType}`)}
+              onViewDocument={(docType) => toast(`Viewing ${docType}`)}
               onFixIssue={handleFixIssue}
             />
           </div>

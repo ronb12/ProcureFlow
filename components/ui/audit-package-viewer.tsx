@@ -16,7 +16,6 @@ import {
   Shield,
   AlertCircle,
   CheckCircle2,
-  XCircle2,
   Info
 } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
@@ -57,7 +56,7 @@ export function AuditPackageViewer({
       case 'pending_review':
         return <Clock className="h-5 w-5 text-yellow-600" />;
       case 'non_compliant':
-        return <XCircle2 className="h-5 w-5 text-red-600" />;
+        return <XCircle className="h-5 w-5 text-red-600" />;
       case 'incomplete':
         return <AlertCircle className="h-5 w-5 text-orange-600" />;
       default:

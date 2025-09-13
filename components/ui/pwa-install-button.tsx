@@ -94,7 +94,7 @@ export function PWAInstallButton() {
       // Clear the deferred prompt so it can only be used once
       setDeferredPrompt(null);
       setShowInstallButton(false);
-      
+
       // If user accepted, the appinstalled event will fire
       if (outcome === 'accepted') {
         console.log('User accepted PWA installation');

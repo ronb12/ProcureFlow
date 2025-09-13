@@ -8,6 +8,15 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChange(user => {
       setUser(user);
@@ -21,5 +30,6 @@ export function useAuth() {
     user,
     loading,
     isAuthenticated: !!user,
+    refreshUser,
   };
 }

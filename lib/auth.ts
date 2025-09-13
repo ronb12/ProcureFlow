@@ -1,10 +1,12 @@
 import {
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
   OAuthProvider,
   signOut,
   onAuthStateChanged,
+  updateProfile,
   User as FirebaseUser,
   UserCredential,
 } from 'firebase/auth';
@@ -41,6 +43,38 @@ export async function signInWithMicrosoft(): Promise<UserCredential> {
   return signInWithPopup(auth, microsoftProvider);
 }
 
+// Sign up with email and password
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+  name: string
+): Promise<UserCredential> {
+  const userCredential = await createUserWithEmailAndPassword(
+    auth,
+    email,
+    password
+  );
+
+  // Update the user's display name
+  if (userCredential.user) {
+    await updateProfile(userCredential.user, {
+      displayName: name,
+    });
+  }
+
+  return userCredential;
+}
+
+// Sign up with Google
+export async function signUpWithGoogle(): Promise<UserCredential> {
+  return signInWithPopup(auth, googleProvider);
+}
+
+// Sign up with Microsoft
+export async function signUpWithMicrosoft(): Promise<UserCredential> {
+  return signInWithPopup(auth, microsoftProvider);
+}
+
 // Sign out
 export async function signOutUser(): Promise<void> {
   return signOut(auth);
@@ -49,11 +83,18 @@ export async function signOutUser(): Promise<void> {
 // Get current user with custom claims
 export async function getCurrentUser(): Promise<User | null> {
   const firebaseUser = auth.currentUser;
-  if (!firebaseUser) return null;
+  if (!firebaseUser) {
+    console.log('No Firebase user found');
+    return null;
+  }
+
+  console.log('Firebase user found:', firebaseUser.uid, firebaseUser.email);
 
   try {
     // Get user document from Firestore
     const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+    console.log('User document exists:', userDoc.exists());
+
     if (!userDoc.exists()) {
       // Try to create user document if it doesn't exist
       console.log('User document not found, attempting to create...');

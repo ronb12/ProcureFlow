@@ -6,28 +6,36 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function getUserOrgId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.orgId;
+    }
+    
     function isAdmin() {
-      return isSignedIn() && request.auth.token.role == 'admin';
+      return isSignedIn() && getUserRole() == 'admin';
     }
     
     function isApprover() {
-      return isSignedIn() && request.auth.token.role in ['approver', 'admin'];
+      return isSignedIn() && getUserRole() in ['approver', 'admin'];
     }
     
     function isCardholder() {
-      return isSignedIn() && request.auth.token.role in ['cardholder', 'admin'];
+      return isSignedIn() && getUserRole() in ['cardholder', 'admin'];
     }
     
     function isAuditor() {
-      return isSignedIn() && request.auth.token.role in ['auditor', 'admin'];
+      return isSignedIn() && getUserRole() in ['auditor', 'admin'];
     }
     
     function isRequester() {
-      return isSignedIn() && request.auth.token.role in ['requester', 'approver', 'cardholder', 'auditor', 'admin'];
+      return isSignedIn() && getUserRole() in ['requester', 'approver', 'cardholder', 'auditor', 'admin'];
     }
     
     function isSameOrg(orgId) {
-      return isSignedIn() && request.auth.token.orgId == orgId;
+      return isSignedIn() && getUserOrgId() == orgId;
     }
     
     function isSelf(uid) {
@@ -56,9 +64,9 @@ service cloud.firestore {
     
     // Users collection
     match /users/{userId} {
-      allow read: if isSelf(userId) || isAdmin();
-      allow create: if isSelf(userId) && isSignedIn();
-      allow update: if isSelf(userId) || isAdmin();
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow delete: if isAdmin();
     }
     
@@ -106,6 +114,26 @@ service cloud.firestore {
       allow create, read, update: if isCardholder() || isAdmin();
     }
     
+    // Purchase Orders collection
+    match /purchaseOrders/{poId} {
+      allow create: if isSignedIn(); // Server-side functions can create
+      allow read: if isSignedIn() && (
+        // Cardholder can read their own POs
+        (isCardholder() && resource.data.cardholder.id == request.auth.uid) ||
+        // Admin can read all POs
+        isAdmin() ||
+        // Requester can read POs for their requests
+        (isRequester() && resource.data.reqId != null)
+      );
+      allow update: if isSignedIn() && (
+        // Cardholder can update their own POs
+        (isCardholder() && resource.data.cardholder.id == request.auth.uid) ||
+        // Admin can update all POs
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+    
     // Attachments collection
     match /attachments/{attachmentId} {
       allow create, read: if isSignedIn();
@@ -123,6 +151,19 @@ service cloud.firestore {
       allow read: if isAuditor() || isAdmin();
       allow create: if false; // Only server-side functions can create
       allow update, delete: if false; // Immutable
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn(); // Server-side functions can create
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+    
+    // Notification preferences collection
+    match /notificationPreferences/{userId} {
+      allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
   }
 }

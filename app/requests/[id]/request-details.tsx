@@ -30,43 +30,94 @@ import toast from 'react-hot-toast';
 // Mock data - in real app this would come from API
 const mockRequest = {
   id: '1',
-  vendor: 'Home Depot',
-  justification: 'Office supplies and equipment for Q1 operations',
-  needBy: new Date('2024-01-20'),
+  vendor: 'Grainger Industrial Supply',
+  justification:
+    'Safety equipment and tools for MWR maintenance department to ensure OSHA compliance and operational readiness',
+  needBy: new Date('2024-01-30'),
   accountingCode: '1234-5678-9012',
   status: 'AO Review' as const,
-  createdAt: new Date('2024-01-15'),
-  total: 1250.0,
+  createdAt: new Date('2024-01-16'),
+  total: 3425.5,
   items: [
     {
-      sku: 'HD-001',
-      desc: 'Office Chairs (Set of 4)',
-      qty: 4,
-      estUnitPrice: 150.0,
+      id: 'item-15',
+      sku: 'GRA-001',
+      desc: 'Safety Hard Hats - ANSI Z89.1 Type I Class C',
+      qty: 12,
+      estUnitPrice: 25.5,
+      lineTotal: 306.0,
     },
     {
-      sku: 'HD-002',
-      desc: 'Desk Lamps',
-      qty: 2,
-      estUnitPrice: 45.0,
+      id: 'item-16',
+      sku: 'GRA-002',
+      desc: 'Safety Glasses - Clear Lens, Anti-Fog',
+      qty: 24,
+      estUnitPrice: 8.75,
+      lineTotal: 210.0,
     },
     {
-      sku: 'HD-003',
-      desc: 'Storage Bins',
-      qty: 10,
-      estUnitPrice: 12.0,
-    },
-    {
-      sku: 'HD-004',
-      desc: 'Whiteboard Markers',
+      id: 'item-17',
+      sku: 'GRA-003',
+      desc: 'Work Gloves - Cut Resistant, Size Large',
       qty: 20,
-      estUnitPrice: 2.0,
+      estUnitPrice: 12.0,
+      lineTotal: 240.0,
     },
     {
-      sku: 'HD-005',
-      desc: 'Printer Paper (Ream)',
-      qty: 10,
-      estUnitPrice: 4.0,
+      id: 'item-18',
+      sku: 'GRA-004',
+      desc: 'Steel Toe Boots - Composite Toe, Size 10',
+      qty: 8,
+      estUnitPrice: 85.0,
+      lineTotal: 680.0,
+    },
+    {
+      id: 'item-19',
+      sku: 'GRA-005',
+      desc: 'Tool Set - 150 Piece Mechanics Set',
+      qty: 2,
+      estUnitPrice: 450.0,
+      lineTotal: 900.0,
+    },
+    {
+      id: 'item-20',
+      sku: 'GRA-006',
+      desc: 'Cordless Drill - 20V Lithium Ion',
+      qty: 4,
+      estUnitPrice: 125.0,
+      lineTotal: 500.0,
+    },
+    {
+      id: 'item-21',
+      sku: 'GRA-007',
+      desc: 'Extension Cords - 25ft, 12 AWG, Yellow',
+      qty: 6,
+      estUnitPrice: 35.0,
+      lineTotal: 210.0,
+    },
+    {
+      id: 'item-22',
+      sku: 'GRA-008',
+      desc: 'First Aid Kit - Industrial, 50 Person',
+      qty: 2,
+      estUnitPrice: 89.5,
+      lineTotal: 179.0,
+    },
+    {
+      id: 'item-23',
+      sku: 'GRA-009',
+      desc: 'Fire Extinguisher - ABC Dry Chemical, 5lb',
+      qty: 4,
+      estUnitPrice: 45.0,
+      lineTotal: 180.0,
+    },
+    {
+      id: 'item-24',
+      sku: 'GRA-010',
+      desc: 'Ladder - 6ft Step Ladder, Fiberglass',
+      qty: 2,
+      estUnitPrice: 120.0,
+      lineTotal: 240.0,
     },
   ],
   attachments: [
@@ -400,46 +451,163 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
               </CardContent>
             </Card>
 
-            {/* Items */}
+            {/* Items - Federal Government Line Item Detail */}
             <Card>
               <CardHeader>
-                <CardTitle>Items</CardTitle>
+                <CardTitle>Line Item Detail</CardTitle>
                 <CardDescription>
-                  {request.items.length} item(s) in this request
+                  {request.items.length} item(s) in this request - Federal
+                  Government requires detailed itemization
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {request.items.map((item: any, index: number) => (
-                    <div
-                      key={`${item.sku}-${index}`}
-                      className="flex items-center justify-between p-4 border rounded-lg"
-                    >
-                      <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">
-                          {item.desc}
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          SKU: {item.sku} • Qty: {item.qty} • Unit Price:{' '}
-                          {formatCurrency(item.estUnitPrice)}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-gray-900">
-                          {formatCurrency(item.qty * item.estUnitPrice)}
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b bg-gray-50">
+                        <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                          Line #
+                        </th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                          SKU/Part #
+                        </th>
+                        <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                          Description
+                        </th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                          Qty
+                        </th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                          Unit Price
+                        </th>
+                        <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                          Line Total
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {request.items.map((item: any, index: number) => (
+                        <tr
+                          key={item.id || `${item.sku}-${index}`}
+                          className="border-b hover:bg-gray-50"
+                        >
+                          <td className="py-3 px-4 text-gray-600 font-medium">
+                            {index + 1}
+                          </td>
+                          <td className="py-3 px-4 text-gray-900 font-mono text-sm">
+                            {item.sku}
+                          </td>
+                          <td className="py-3 px-4 text-gray-900">
+                            {item.desc}
+                          </td>
+                          <td className="py-3 px-4 text-right text-gray-900">
+                            {item.qty}
+                          </td>
+                          <td className="py-3 px-4 text-right text-gray-900">
+                            {formatCurrency(item.estUnitPrice)}
+                          </td>
+                          <td className="py-3 px-4 text-right text-gray-900 font-semibold">
+                            {formatCurrency(
+                              item.lineTotal || item.qty * item.estUnitPrice
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 border-gray-300 bg-gray-100">
+                        <td
+                          colSpan={5}
+                          className="py-3 px-4 text-right font-semibold text-gray-900"
+                        >
+                          Subtotal:
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold text-gray-900">
+                          {formatCurrency(
+                            request.items.reduce(
+                              (sum: number, item: any) =>
+                                sum +
+                                (item.lineTotal ||
+                                  item.qty * item.estUnitPrice),
+                              0
+                            )
+                          )}
+                        </td>
+                      </tr>
+                      <tr className="border-b bg-gray-100">
+                        <td
+                          colSpan={5}
+                          className="py-3 px-4 text-right font-semibold text-gray-900"
+                        >
+                          Tax (8%):
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold text-gray-900">
+                          {formatCurrency(
+                            request.items.reduce(
+                              (sum: number, item: any) =>
+                                sum +
+                                (item.lineTotal ||
+                                  item.qty * item.estUnitPrice),
+                              0
+                            ) * 0.08
+                          )}
+                        </td>
+                      </tr>
+                      <tr className="border-b bg-gray-100">
+                        <td
+                          colSpan={5}
+                          className="py-3 px-4 text-right font-semibold text-gray-900"
+                        >
+                          Shipping:
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold text-gray-900">
+                          {formatCurrency(0)}
+                        </td>
+                      </tr>
+                      <tr className="bg-blue-50 border-t-2 border-blue-300">
+                        <td
+                          colSpan={5}
+                          className="py-3 px-4 text-right font-bold text-blue-900 text-lg"
+                        >
+                          TOTAL:
+                        </td>
+                        <td className="py-3 px-4 text-right font-bold text-blue-900 text-lg">
+                          {formatCurrency(request.total)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+
+                {/* Federal Compliance Notice */}
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0">
+                      <svg
+                        className="h-5 w-5 text-yellow-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-yellow-800">
+                        Federal Government Compliance
+                      </h3>
+                      <div className="mt-1 text-sm text-yellow-700">
+                        <p>
+                          This request includes detailed line item breakdown as
+                          required by federal procurement regulations. Each item
+                          is individually specified with SKU, description,
+                          quantity, and unit pricing for audit compliance.
                         </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-4 pt-4 border-t">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold text-gray-900">
-                      Total
-                    </span>
-                    <span className="text-lg font-bold text-gray-900">
-                      {formatCurrency(request.total)}
-                    </span>
                   </div>
                 </div>
               </CardContent>

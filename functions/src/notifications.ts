@@ -9,47 +9,67 @@ export interface NotificationData {
     | 'status_change'
     | 'approval_needed'
     | 'purchase_completed'
-    | 'reconciliation_due';
+    | 'reconciliation_due'
+    | 'purchase_order_created';
   requestId: string;
   newStatus?: string;
   actorUid: string;
   message?: string;
+  purchaseOrderId?: string;
+  poNumber?: string;
+  targetUserId?: string;
 }
 
 export async function sendNotification(data: NotificationData): Promise<void> {
   try {
-    // Get request data
+    // Determine target user ID
+    let targetUserId: string;
+    let targetEmail: string;
+
+    if (data.type === 'purchase_order_created' && data.targetUserId) {
+      // For purchase order notifications, use the specified target user (cardholder)
+      targetUserId = data.targetUserId;
+    } else {
+      // For other notifications, use the requester
+      const requestDoc = await db
+        .collection('requests')
+        .doc(data.requestId)
+        .get();
+      if (!requestDoc.exists) {
+        console.error('Request not found for notification:', data.requestId);
+        return;
+      }
+
+      const request = requestDoc.data();
+      targetUserId = request?.requesterId;
+
+      if (!targetUserId) {
+        console.error('No requester ID found for request:', data.requestId);
+        return;
+      }
+    }
+
+    // Get target user data
+    const targetUserDoc = await db.collection('users').doc(targetUserId).get();
+    if (!targetUserDoc.exists) {
+      console.error('Target user not found:', targetUserId);
+      return;
+    }
+
+    const targetUser = targetUserDoc.data();
+    targetEmail = targetUser?.email;
+
+    if (!targetEmail) {
+      console.error('No email found for target user:', targetUserId);
+      return;
+    }
+
+    // Get request data for message generation
     const requestDoc = await db
       .collection('requests')
       .doc(data.requestId)
       .get();
-    if (!requestDoc.exists) {
-      console.error('Request not found for notification:', data.requestId);
-      return;
-    }
-
-    const request = requestDoc.data();
-    const requesterId = request?.requesterId;
-
-    if (!requesterId) {
-      console.error('No requester ID found for request:', data.requestId);
-      return;
-    }
-
-    // Get requester user data
-    const requesterDoc = await db.collection('users').doc(requesterId).get();
-    if (!requesterDoc.exists) {
-      console.error('Requester not found:', requesterId);
-      return;
-    }
-
-    const requester = requesterDoc.data();
-    const requesterEmail = requester?.email;
-
-    if (!requesterEmail) {
-      console.error('No email found for requester:', requesterId);
-      return;
-    }
+    const request = requestDoc.exists ? requestDoc.data() : {};
 
     // Get actor user data
     const actorDoc = await db.collection('users').doc(data.actorUid).get();
@@ -60,9 +80,10 @@ export async function sendNotification(data: NotificationData): Promise<void> {
 
     // Store notification in database
     await db.collection('notifications').add({
-      userId: requesterId,
+      userId: targetUserId,
       type: data.type,
       requestId: data.requestId,
+      purchaseOrderId: data.purchaseOrderId,
       message,
       read: false,
       createdAt: new Date(),
@@ -70,7 +91,7 @@ export async function sendNotification(data: NotificationData): Promise<void> {
 
     // Send email notification (if configured)
     if (process.env.SENDGRID_API_KEY || process.env.RESEND_API_KEY) {
-      await sendEmailNotification(requesterEmail, message, data.requestId);
+      await sendEmailNotification(targetEmail, message, data.requestId);
     }
 
     console.log('Notification sent successfully:', data.requestId);
@@ -99,6 +120,9 @@ function generateNotificationMessage(
 
     case 'reconciliation_due':
       return `Your request for ${vendor} ($${total.toFixed(2)}) is ready for reconciliation.`;
+
+    case 'purchase_order_created':
+      return `A purchase order ${data.poNumber} has been created for your request ${data.requestId} (${vendor} - $${total.toFixed(2)}). You can now begin the purchasing process.`;
 
     default:
       return data.message || `Update for your request ${data.requestId}`;

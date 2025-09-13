@@ -17,16 +17,12 @@ import {
 } from 'firebase/functions';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-key',
-  authDomain:
-    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'demo.firebaseapp.com',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
-  storageBucket:
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
-    'demo-project.appspot.com',
-  messagingSenderId:
-    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '123456789',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || 'demo-app-id',
+  apiKey: 'AIzaSyB2LeC0_Zewi_DWdGqD7HjlqrsYypo7TnE',
+  authDomain: 'procureflow-demo.firebaseapp.com',
+  projectId: 'procureflow-demo',
+  storageBucket: 'procureflow-demo.firebasestorage.app',
+  messagingSenderId: '140102454715',
+  appId: '1:140102454715:web:13d55b4d495db8a7fd089e',
 };
 
 // Initialize Firebase

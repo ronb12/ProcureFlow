@@ -15,6 +15,7 @@ import { ItemTable } from '@/components/ui/item-table';
 import { MoneyInput } from '@/components/ui/money-input';
 import { FileDropzone } from '@/components/ui/file-dropzone';
 import { CreateRequestData, RequestItem } from '@/lib/types';
+import { notificationService } from '@/lib/notification-service';
 import { ArrowLeft, Save, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -105,6 +106,28 @@ export default function NewRequestPage() {
 
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Generate a mock request ID for notifications
+      const requestId = `req_${Date.now()}`;
+
+      if (!isDraft && user) {
+        // Send notification for request creation
+        await notificationService.notifyRequestCreated(
+          user.id,
+          requestId,
+          formData.vendor || 'Unknown Vendor',
+          formData.totalEstimate || 0
+        );
+
+        // Check if approval is needed and notify approvers
+        if (
+          formData.totalEstimate &&
+          formData.totalEstimate > (user.approvalLimit || 0)
+        ) {
+          // In a real app, this would query for approvers
+          console.log('Request exceeds approval limit, would notify approvers');
+        }
+      }
 
       toast.success(
         isDraft ? 'Request saved as draft' : 'Request submitted successfully'

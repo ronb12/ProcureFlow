@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 const db = getFirestore();
 
 export interface AuditEventData {
-  entity: 'request' | 'approval' | 'purchase' | 'cycle';
+  entity: 'request' | 'approval' | 'purchase' | 'cycle' | 'purchase_order';
   entityId: string;
   actorUid: string;
   action: string;

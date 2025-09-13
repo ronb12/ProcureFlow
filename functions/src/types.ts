@@ -12,6 +12,7 @@ export type {
   Request,
   Approval,
   Purchase,
+  PurchaseOrder,
   Attachment,
   Cycle,
   AuditEvent,

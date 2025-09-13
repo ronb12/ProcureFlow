@@ -1,27 +1,44 @@
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
+import { signOutUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from './button';
-import {
-  LogOut,
-  User,
-  Settings,
-  Bell,
-  Menu,
-  X,
-} from 'lucide-react';
-import { useState } from 'react';
+import { NotificationDropdown } from './notification-dropdown';
+import { LogOut, User, Settings, Menu, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 export function AppHeader() {
-  const { user, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowMobileMenu(false);
+      }
+    };
+
+    if (showMobileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showMobileMenu]);
 
   const handleLogout = async () => {
     try {
-      await signOut();
+      await signOutUser();
       toast.success('Signed out successfully');
       router.push('/login');
     } catch (error) {
@@ -32,18 +49,32 @@ export function AppHeader() {
 
   const handleProfile = () => {
     setShowUserMenu(false);
-    // TODO: Navigate to profile page
-    toast('Profile page coming soon');
+    router.push('/profile');
   };
 
   const handleSettings = () => {
     setShowUserMenu(false);
-    if (user?.role === 'admin') {
-      router.push('/admin');
-    } else {
-      toast('Settings page coming soon');
-    }
+    router.push('/settings');
   };
+
+  if (loading) {
+    return (
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <h1 className="text-xl font-bold text-blue-600">ProcureFlow</h1>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="animate-pulse bg-gray-200 h-8 w-8 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   if (!user) return null;
 
@@ -109,12 +140,7 @@ export function AppHeader() {
           {/* User Menu */}
           <div className="flex items-center space-x-4">
             {/* Notifications */}
-            <button className="p-2 text-gray-400 hover:text-gray-600 relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                3
-              </span>
-            </button>
+            <NotificationDropdown />
 
             {/* User Profile Dropdown */}
             <div className="relative">
@@ -127,10 +153,10 @@ export function AppHeader() {
                 </div>
                 <div className="hidden md:block text-left">
                   <div className="text-sm font-medium text-gray-900">
-                    {user.name}
+                    {user.name || user.email?.split('@')[0] || 'User'}
                   </div>
                   <div className="text-xs text-gray-500 capitalize">
-                    {user.role}
+                    {user.role || 'requester'}
                   </div>
                 </div>
               </button>
@@ -140,11 +166,13 @@ export function AppHeader() {
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
                   <div className="px-4 py-2 border-b border-gray-100">
                     <div className="text-sm font-medium text-gray-900">
-                      {user.name}
+                      {user.name || user.email?.split('@')[0] || 'User'}
                     </div>
-                    <div className="text-xs text-gray-500">{user.email}</div>
+                    <div className="text-xs text-gray-500">
+                      {user.email || 'No email'}
+                    </div>
                   </div>
-                  
+
                   <button
                     onClick={handleProfile}
                     className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
@@ -152,7 +180,7 @@ export function AppHeader() {
                     <User className="h-4 w-4 mr-2" />
                     Profile
                   </button>
-                  
+
                   <button
                     onClick={handleSettings}
                     className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
@@ -160,9 +188,9 @@ export function AppHeader() {
                     <Settings className="h-4 w-4 mr-2" />
                     Settings
                   </button>
-                  
+
                   <div className="border-t border-gray-100 my-1"></div>
-                  
+
                   <button
                     onClick={handleLogout}
                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center"
@@ -175,54 +203,81 @@ export function AppHeader() {
             </div>
 
             {/* Mobile Menu Button */}
-            <button className="md:hidden p-2 text-gray-400 hover:text-gray-600">
-              <Menu className="h-5 w-5" />
+            <button
+              className="md:hidden p-2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+            >
+              {showMobileMenu ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile Navigation */}
-      <div className="md:hidden border-t border-gray-200 bg-gray-50">
-        <div className="px-4 py-2 space-y-1">
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => router.push('/requests')}
-            className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
-          >
-            Requests
-          </button>
-          {['approver', 'admin'].includes(user.role) && (
+      {showMobileMenu && (
+        <div
+          ref={mobileMenuRef}
+          className="md:hidden border-t border-gray-200 bg-gray-50"
+        >
+          <div className="px-4 py-2 space-y-1">
             <button
-              onClick={() => router.push('/approvals')}
+              onClick={() => {
+                router.push('/dashboard');
+                setShowMobileMenu(false);
+              }}
               className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
             >
-              Approvals
+              Dashboard
             </button>
-          )}
-          {['cardholder', 'admin'].includes(user.role) && (
             <button
-              onClick={() => router.push('/purchases')}
+              onClick={() => {
+                router.push('/requests');
+                setShowMobileMenu(false);
+              }}
               className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
             >
-              Purchases
+              Requests
             </button>
-          )}
-          {user.role === 'admin' && (
-            <button
-              onClick={() => router.push('/admin')}
-              className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
-            >
-              Admin
-            </button>
-          )}
+            {['approver', 'admin'].includes(user.role) && (
+              <button
+                onClick={() => {
+                  router.push('/approvals');
+                  setShowMobileMenu(false);
+                }}
+                className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
+              >
+                Approvals
+              </button>
+            )}
+            {['cardholder', 'admin'].includes(user.role) && (
+              <button
+                onClick={() => {
+                  router.push('/purchases');
+                  setShowMobileMenu(false);
+                }}
+                className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
+              >
+                Purchases
+              </button>
+            )}
+            {user.role === 'admin' && (
+              <button
+                onClick={() => {
+                  router.push('/admin');
+                  setShowMobileMenu(false);
+                }}
+                className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
+              >
+                Admin
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }

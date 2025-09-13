@@ -244,6 +244,54 @@ export type Cycle = z.infer<typeof CycleSchema> & {
   updatedAt: Date;
 };
 
+// Notification schemas
+export const NotificationSchema = z.object({
+  id: z.string(),
+  userId: z.string().min(1, 'User ID is required'),
+  type: z.enum([
+    'request_created',
+    'request_updated',
+    'request_approved',
+    'request_rejected',
+    'request_returned',
+    'approval_needed',
+    'purchase_completed',
+    'reconciliation_due',
+    'system_announcement',
+    'role_assigned',
+    'limit_exceeded',
+  ]),
+  title: z.string().min(1, 'Title is required'),
+  message: z.string().min(1, 'Message is required'),
+  data: z.record(z.any()).optional(),
+  read: z.boolean().default(false),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
+  createdAt: z.date(),
+  readAt: z.date().optional(),
+  expiresAt: z.date().optional(),
+});
+
+export type Notification = z.infer<typeof NotificationSchema>;
+
+export const NotificationPreferencesSchema = z.object({
+  userId: z.string(),
+  emailNotifications: z.boolean().default(true),
+  pushNotifications: z.boolean().default(false),
+  weeklyDigest: z.boolean().default(true),
+  types: z.record(z.boolean()).default({}),
+  quietHours: z
+    .object({
+      enabled: z.boolean().default(false),
+      start: z.string().default('22:00'),
+      end: z.string().default('08:00'),
+    })
+    .default({}),
+});
+
+export type NotificationPreferences = z.infer<
+  typeof NotificationPreferencesSchema
+>;
+
 // Audit event schema
 export const AuditEventSchema = z.object({
   entity: z.enum([

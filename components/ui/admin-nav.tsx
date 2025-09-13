@@ -2,13 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from './button';
-import {
-  BarChart3,
-  Users,
-  Settings,
-  Shield,
-  ArrowLeft,
-} from 'lucide-react';
+import { BarChart3, Users, Settings, Shield, ArrowLeft } from 'lucide-react';
 
 const adminNavItems = [
   {
@@ -55,11 +49,9 @@ export function AdminNav() {
               <span>Back to Dashboard</span>
             </Button>
             <div className="h-6 w-px bg-gray-300" />
-            <h1 className="text-lg font-semibold text-gray-900">
-              Admin Panel
-            </h1>
+            <h1 className="text-lg font-semibold text-gray-900">Admin Panel</h1>
           </div>
-          
+
           <nav className="flex space-x-1">
             {adminNavItems.map(item => {
               const isActive = pathname === item.path;

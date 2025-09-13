@@ -1,25 +1,82 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   signInWithEmail,
   signInWithGoogle,
   signInWithMicrosoft,
+  signUpWithEmail,
+  signUpWithGoogle,
+  signUpWithMicrosoft,
 } from '@/lib/auth';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Loader2, Mail, Chrome, Building2 } from 'lucide-react';
+import { Loader2, Mail, Chrome, Building2, ChevronDown } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { UserRole } from '@/lib/types';
 
 export default function LoginPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<UserRole>('requester');
+  const [showRoleDropdown, setShowRoleDropdown] = useState(false);
+  const roleDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Role definitions with descriptions
+  const roles: {
+    value: UserRole;
+    label: string;
+    description: string;
+    icon: string;
+  }[] = [
+    {
+      value: 'requester',
+      label: 'Requester',
+      description: 'Submit purchase requests for approval',
+      icon: '📝',
+    },
+    {
+      value: 'approver',
+      label: 'Approving Official',
+      description: 'Review and approve purchase requests',
+      icon: '✅',
+    },
+    {
+      value: 'cardholder',
+      label: 'Purchase Card Holder',
+      description: 'Make purchases and manage purchase orders',
+      icon: '💳',
+    },
+    {
+      value: 'auditor',
+      label: 'Auditor',
+      description: 'Review transactions and compliance',
+      icon: '🔍',
+    },
+    {
+      value: 'admin',
+      label: 'Administrator',
+      description: 'Manage users and system settings',
+      icon: '⚙️',
+    },
+  ];
+
+  // Clear form when switching modes
+  const handleModeToggle = (signUp: boolean) => {
+    setIsSignUp(signUp);
+    setEmail('');
+    setPassword('');
+    setName('');
+    setSelectedRole('requester');
+  };
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -28,49 +85,107 @@ export default function LoginPage() {
     }
   }, [user, loading, router]);
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  // Close role dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        roleDropdownRef.current &&
+        !roleDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowRoleDropdown(false);
+      }
+    };
+
+    if (showRoleDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showRoleDropdown]);
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error('Please enter both email and password');
       return;
     }
 
+    if (isSignUp && !name) {
+      toast.error('Please enter your name');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await signInWithEmail(email, password);
-      toast.success('Signed in successfully');
+      if (isSignUp) {
+        await signUpWithEmail(email, password, name);
+        // Note: Role will be assigned by admin after account creation
+        toast.success(
+          `Account created successfully as ${roles.find(r => r.value === selectedRole)?.label}`
+        );
+      } else {
+        await signInWithEmail(email, password);
+        toast.success(
+          `Signed in as ${roles.find(r => r.value === selectedRole)?.label}`
+        );
+      }
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error(error.message || 'Failed to sign in');
+      console.error('Auth error:', error);
+      const errorMessage =
+        error.message ||
+        (isSignUp ? 'Failed to create account' : 'Failed to sign in');
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleAuth = async () => {
     setIsLoading(true);
     try {
-      await signInWithGoogle();
-      toast.success('Signed in with Google');
+      if (isSignUp) {
+        await signUpWithGoogle();
+        toast.success('Account created with Google');
+      } else {
+        await signInWithGoogle();
+        toast.success('Signed in with Google');
+      }
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Google login error:', error);
-      toast.error(error.message || 'Failed to sign in with Google');
+      console.error('Google auth error:', error);
+      const errorMessage =
+        error.message ||
+        (isSignUp
+          ? 'Failed to create account with Google'
+          : 'Failed to sign in with Google');
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleMicrosoftLogin = async () => {
+  const handleMicrosoftAuth = async () => {
     setIsLoading(true);
     try {
-      await signInWithMicrosoft();
-      toast.success('Signed in with Microsoft');
+      if (isSignUp) {
+        await signUpWithMicrosoft();
+        toast.success('Account created with Microsoft');
+      } else {
+        await signInWithMicrosoft();
+        toast.success('Signed in with Microsoft');
+      }
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Microsoft login error:', error);
-      toast.error(error.message || 'Failed to sign in with Microsoft');
+      console.error('Microsoft auth error:', error);
+      const errorMessage =
+        error.message ||
+        (isSignUp
+          ? 'Failed to create account with Microsoft'
+          : 'Failed to sign in with Microsoft');
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -100,7 +215,56 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleEmailLogin}>
+          {/* Toggle between Sign In and Sign Up */}
+          <div className="flex mb-6">
+            <button
+              type="button"
+              onClick={() => handleModeToggle(false)}
+              className={cn(
+                'flex-1 py-2 px-4 text-sm font-medium rounded-l-md border',
+                !isSignUp
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              )}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => handleModeToggle(true)}
+              className={cn(
+                'flex-1 py-2 px-4 text-sm font-medium rounded-r-md border-t border-r border-b',
+                isSignUp
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              )}
+            >
+              Create Account
+            </button>
+          </div>
+
+          <form className="space-y-6" onSubmit={handleEmailAuth}>
+            {isSignUp && (
+              <div>
+                <label htmlFor="name" className="form-label">
+                  Full Name
+                </label>
+                <div className="mt-1">
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    required={isSignUp}
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    className="form-input"
+                    placeholder="Enter your full name"
+                  />
+                </div>
+              </div>
+            )}
+
             <div>
               <label htmlFor="email" className="form-label">
                 Email address
@@ -148,17 +312,79 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Role Selection */}
+            <div>
+              <label htmlFor="role" className="form-label">
+                Select Your Role
+              </label>
+              <div className="mt-1 relative" ref={roleDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowRoleDropdown(!showRoleDropdown)}
+                  className="w-full form-input text-left flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-3">
+                    <span className="text-lg">
+                      {roles.find(r => r.value === selectedRole)?.icon}
+                    </span>
+                    <div>
+                      <div className="font-medium">
+                        {roles.find(r => r.value === selectedRole)?.label}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {roles.find(r => r.value === selectedRole)?.description}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </button>
+
+                {showRoleDropdown && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+                    {roles.map(role => (
+                      <button
+                        key={role.value}
+                        type="button"
+                        onClick={() => {
+                          setSelectedRole(role.value);
+                          setShowRoleDropdown(false);
+                        }}
+                        className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3"
+                      >
+                        <span className="text-lg">{role.icon}</span>
+                        <div>
+                          <div className="font-medium">{role.label}</div>
+                          <div className="text-sm text-gray-500">
+                            {role.description}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {isSignUp && (
+                <p className="mt-2 text-sm text-gray-600">
+                  <span className="font-medium">Note:</span> Your role will be
+                  verified and assigned by an administrator after account
+                  creation.
+                </p>
+              )}
+            </div>
+
             <div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Signing in...
+                    {isSignUp ? 'Creating account...' : 'Signing in...'}
                   </>
                 ) : (
                   <>
                     <Mail className="h-4 w-4 mr-2" />
-                    Sign in with Email
+                    {isSignUp
+                      ? 'Create Account with Email'
+                      : 'Sign in with Email'}
                   </>
                 )}
               </Button>
@@ -181,7 +407,7 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleGoogleLogin}
+                onClick={handleGoogleAuth}
                 disabled={isLoading}
                 className="w-full"
               >
@@ -192,7 +418,7 @@ export default function LoginPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleMicrosoftLogin}
+                onClick={handleMicrosoftAuth}
                 disabled={isLoading}
                 className="w-full"
               >

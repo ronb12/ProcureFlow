@@ -5,7 +5,7 @@ import { initializeApp } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 // import { getAuth } from 'firebase-admin/auth';
-import { RequestStatus, UserRole, PolicyCheck } from './types';
+import { RequestStatus, UserRole, PolicyCheck, PurchaseOrder } from './types';
 import { RequestStateMachine } from './state-machine';
 import { createCSV, createReceiptsZip } from './exports';
 import { sendNotification } from './notifications';
@@ -95,6 +95,17 @@ export const stateTransition = onCall(async request => {
         payload,
       },
     });
+
+    // Generate purchase order if transitioning to Cardholder Purchasing
+    if (targetState === 'Cardholder Purchasing' && currentState === 'Approved') {
+      try {
+        await generatePurchaseOrder(reqId, requestData, user);
+      } catch (poError) {
+        console.error('Purchase order generation error:', poError);
+        // Don't fail the state transition if PO generation fails
+        // Just log the error and continue
+      }
+    }
 
     // Send notification
     await sendNotification({
@@ -533,4 +544,162 @@ async function performPolicyChecks(
   }
 
   return checks;
+}
+
+// Generate purchase order from approved request
+async function generatePurchaseOrder(
+  reqId: string,
+  requestData: any,
+  user: any
+): Promise<string> {
+  try {
+    // Get cardholder information (the user who will be making the purchase)
+    // For now, we'll use the current user, but in a real system this might be assigned
+    const cardholderId = user.role === 'cardholder' ? user.uid : await getCardholderForRequest(reqId);
+    const cardholderDoc = await db.collection('users').doc(cardholderId).get();
+    
+    if (!cardholderDoc.exists) {
+      throw new Error('Cardholder not found');
+    }
+    
+    const cardholder = cardholderDoc.data();
+    if (!cardholder) {
+      throw new Error('Cardholder data not found');
+    }
+    
+    // Generate PO number
+    const poNumber = await generatePONumber();
+    
+    // Get organization settings for default delivery address
+    const orgDoc = await db.collection('orgs').doc(user.orgId).get();
+    const orgData = orgDoc.exists ? orgDoc.data() : {};
+    
+    // Calculate totals
+    const subtotal = requestData.totalEstimate || 0;
+    const taxRate = 0.08; // 8% default tax rate - should come from settings
+    const tax = subtotal * taxRate;
+    const shipping = 0; // Default to 0, can be updated later
+    const total = subtotal + tax + shipping;
+    
+    // Create purchase order data
+    const purchaseOrderData: Omit<PurchaseOrder, 'id' | 'createdAt' | 'updatedAt'> = {
+      reqId,
+      poNumber,
+      vendor: {
+        name: requestData.vendor || 'Unknown Vendor',
+        address: requestData.vendorAddress || '123 Vendor Street',
+        city: requestData.vendorCity || 'Vendor City',
+        state: requestData.vendorState || 'ST',
+        zip: requestData.vendorZip || '12345',
+        phone: requestData.vendorPhone || '',
+        email: requestData.vendorEmail || '',
+        taxId: requestData.vendorTaxId || '',
+      },
+      cardholder: {
+        id: cardholderId,
+        name: cardholder.name || cardholder.email?.split('@')[0] || 'Cardholder',
+        email: cardholder.email || '',
+        cardNumber: '****1234', // Masked card number
+        cardType: 'Government Purchase Card',
+      },
+      delivery: {
+        address: orgData?.deliveryAddress || requestData.deliveryAddress || '456 Military Base Road',
+        city: orgData?.deliveryCity || requestData.deliveryCity || 'Base City',
+        state: orgData?.deliveryState || requestData.deliveryState || 'CA',
+        zip: orgData?.deliveryZip || requestData.deliveryZip || '98765',
+        contactName: requestData.deliveryContact || cardholder.name || 'Contact Person',
+        contactPhone: requestData.deliveryPhone || cardholder.phone || '(555) 123-4567',
+        specialInstructions: requestData.deliveryInstructions || '',
+      },
+      terms: {
+        paymentTerms: 'Net 30',
+        shippingTerms: 'FOB Destination',
+        deliveryDate: requestData.needBy ? new Date(requestData.needBy) : new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+        warranty: '1 Year Manufacturer Warranty',
+      },
+      items: requestData.items || [],
+      subtotal,
+      tax,
+      shipping,
+      total,
+      status: 'draft',
+    };
+    
+    // Create purchase order document
+    const poRef = await db.collection('purchaseOrders').add({
+      ...purchaseOrderData,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    
+    // Create audit event
+    await auditEvent({
+      entity: 'purchase_order',
+      entityId: poRef.id,
+      actorUid: user.uid,
+      action: 'created',
+      details: { 
+        reqId, 
+        poNumber,
+        total: purchaseOrderData.total,
+        cardholderId: cardholderId
+      },
+    });
+    
+    // Send notification to cardholder
+    await sendNotification({
+      type: 'purchase_order_created',
+      requestId: reqId,
+      purchaseOrderId: poRef.id,
+      poNumber: poNumber,
+      targetUserId: cardholderId,
+      actorUid: user.uid,
+    });
+    
+    console.log(`Purchase order ${poNumber} created for request ${reqId}`);
+    return poRef.id;
+    
+  } catch (error) {
+    console.error('Error generating purchase order:', error);
+    throw error;
+  }
+}
+
+// Get cardholder for a request (simplified - in real system this would be more complex)
+async function getCardholderForRequest(reqId: string): Promise<string> {
+  // For now, find the first available cardholder in the same organization
+  // In a real system, this might be assigned based on workload, expertise, etc.
+  const cardholdersSnapshot = await db
+    .collection('users')
+    .where('role', '==', 'cardholder')
+    .limit(1)
+    .get();
+    
+  if (cardholdersSnapshot.empty) {
+    throw new Error('No cardholders available');
+  }
+  
+  return cardholdersSnapshot.docs[0].id;
+}
+
+// Generate unique PO number
+async function generatePONumber(): Promise<string> {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  
+  // Get the count of POs created this month
+  const startOfMonth = new Date(year, now.getMonth(), 1);
+  const endOfMonth = new Date(year, now.getMonth() + 1, 0);
+  
+  const poSnapshot = await db
+    .collection('purchaseOrders')
+    .where('createdAt', '>=', startOfMonth)
+    .where('createdAt', '<=', endOfMonth)
+    .get();
+    
+  const count = poSnapshot.size + 1;
+  const poNumber = `PO-${year}${month}-${String(count).padStart(3, '0')}`;
+  
+  return poNumber;
 }

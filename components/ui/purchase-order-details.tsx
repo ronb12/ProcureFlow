@@ -329,63 +329,142 @@ export function PurchaseOrderDetails({
         </Card>
       </div>
 
-      {/* Items */}
+      {/* Items - Federal Government Line Item Detail */}
       <Card>
         <CardHeader>
-          <CardTitle>Items</CardTitle>
+          <CardTitle>Line Item Detail</CardTitle>
           <CardDescription>
-            {purchaseOrder.items.length} item(s) in this purchase order
+            {purchaseOrder.items.length} item(s) in this purchase order -
+            Federal Government requires detailed itemization
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {purchaseOrder.items.map((item, index) => (
-              <div
-                key={`${item.sku}-${index}`}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-4">
-                    <span className="font-medium text-gray-900">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b bg-gray-50">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    Line #
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    SKU/Part #
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    Description
+                  </th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                    Qty
+                  </th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                    Unit Price
+                  </th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">
+                    Line Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {purchaseOrder.items.map((item, index) => (
+                  <tr
+                    key={`${item.sku}-${index}`}
+                    className="border-b hover:bg-gray-50"
+                  >
+                    <td className="py-3 px-4 text-gray-600 font-medium">
+                      {index + 1}
+                    </td>
+                    <td className="py-3 px-4 text-gray-900 font-mono text-sm">
                       {item.sku}
-                    </span>
-                    <span className="text-gray-600">{item.desc}</span>
-                  </div>
-                  <div className="text-sm text-gray-500 mt-1">
-                    Qty: {item.qty} × {formatCurrency(item.estUnitPrice)}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-semibold text-gray-900">
-                    {formatCurrency(item.qty * item.estUnitPrice)}
-                  </div>
-                </div>
-              </div>
-            ))}
+                    </td>
+                    <td className="py-3 px-4 text-gray-900">{item.desc}</td>
+                    <td className="py-3 px-4 text-right text-gray-900">
+                      {item.qty}
+                    </td>
+                    <td className="py-3 px-4 text-right text-gray-900">
+                      {formatCurrency(item.estUnitPrice)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-gray-900 font-semibold">
+                      {formatCurrency(item.qty * item.estUnitPrice)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-gray-300 bg-gray-100">
+                  <td
+                    colSpan={5}
+                    className="py-3 px-4 text-right font-semibold text-gray-900"
+                  >
+                    Subtotal:
+                  </td>
+                  <td className="py-3 px-4 text-right font-bold text-gray-900">
+                    {formatCurrency(purchaseOrder.subtotal)}
+                  </td>
+                </tr>
+                <tr className="border-b bg-gray-100">
+                  <td
+                    colSpan={5}
+                    className="py-3 px-4 text-right font-semibold text-gray-900"
+                  >
+                    Tax:
+                  </td>
+                  <td className="py-3 px-4 text-right font-bold text-gray-900">
+                    {formatCurrency(purchaseOrder.tax)}
+                  </td>
+                </tr>
+                <tr className="border-b bg-gray-100">
+                  <td
+                    colSpan={5}
+                    className="py-3 px-4 text-right font-semibold text-gray-900"
+                  >
+                    Shipping:
+                  </td>
+                  <td className="py-3 px-4 text-right font-bold text-gray-900">
+                    {formatCurrency(purchaseOrder.shipping)}
+                  </td>
+                </tr>
+                <tr className="bg-blue-50 border-t-2 border-blue-300">
+                  <td
+                    colSpan={5}
+                    className="py-3 px-4 text-right font-bold text-blue-900 text-lg"
+                  >
+                    TOTAL:
+                  </td>
+                  <td className="py-3 px-4 text-right font-bold text-blue-900 text-lg">
+                    {formatCurrency(purchaseOrder.total)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
           </div>
-          <div className="mt-4 pt-4 border-t">
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Subtotal:</span>
-                <span className="text-sm">
-                  {formatCurrency(purchaseOrder.subtotal)}
-                </span>
+
+          {/* Federal Compliance Notice */}
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-yellow-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Tax:</span>
-                <span className="text-sm">
-                  {formatCurrency(purchaseOrder.tax)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-500">Shipping:</span>
-                <span className="text-sm">
-                  {formatCurrency(purchaseOrder.shipping)}
-                </span>
-              </div>
-              <div className="flex justify-between text-lg font-semibold">
-                <span>Total:</span>
-                <span>{formatCurrency(purchaseOrder.total)}</span>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Federal Government Compliance
+                </h3>
+                <div className="mt-1 text-sm text-yellow-700">
+                  <p>
+                    This purchase order includes detailed line item breakdown as
+                    required by federal procurement regulations. Each item is
+                    individually specified with SKU, description, quantity, and
+                    unit pricing for audit compliance.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

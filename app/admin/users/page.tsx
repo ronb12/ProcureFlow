@@ -172,7 +172,11 @@ export default function UserManagementPage() {
     return matchesSearch && matchesRole;
   });
 
-  const handleUserAction = async (userId: string, action: string, data?: any) => {
+  const handleUserAction = async (
+    userId: string,
+    action: string,
+    data?: any
+  ) => {
     setIsProcessing(true);
     try {
       // Simulate API call
@@ -273,7 +277,9 @@ export default function UserManagementPage() {
               <div className="flex items-center">
                 <Users className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Total Users</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Total Users
+                  </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {users.length}
                   </p>
@@ -286,7 +292,9 @@ export default function UserManagementPage() {
               <div className="flex items-center">
                 <CheckCircle className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-500">Active Users</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Active Users
+                  </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {users.filter(u => u.status === 'active').length}
                   </p>
@@ -426,7 +434,9 @@ export default function UserManagementPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setSelectedUser({ ...user, editing: true })}
+                            onClick={() =>
+                              setSelectedUser({ ...user, editing: true })
+                            }
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -460,7 +470,8 @@ export default function UserManagementPage() {
             <Card className="w-full max-w-2xl">
               <CardHeader>
                 <CardTitle>
-                  {selectedUser.editing ? 'Edit User' : 'User Details'} - {selectedUser.name}
+                  {selectedUser.editing ? 'Edit User' : 'User Details'} -{' '}
+                  {selectedUser.name}
                 </CardTitle>
                 <CardDescription>
                   {selectedUser.editing
@@ -472,7 +483,9 @@ export default function UserManagementPage() {
                 {selectedUser.editing ? (
                   <UserEditForm
                     user={selectedUser}
-                    onSave={(data) => handleUserAction(selectedUser.id, 'update_role', data)}
+                    onSave={(data: any) =>
+                      handleUserAction(selectedUser.id, 'update_role', data)
+                    }
                     onCancel={() => setSelectedUser(null)}
                     isProcessing={isProcessing}
                   />
@@ -500,7 +513,7 @@ export default function UserManagementPage() {
               <CardContent>
                 <UserEditForm
                   user={null}
-                  onSave={(data) => handleUserAction('', 'add', data)}
+                  onSave={(data: any) => handleUserAction('', 'add', data)}
                   onCancel={() => setShowAddUser(false)}
                   isProcessing={isProcessing}
                 />
@@ -563,7 +576,9 @@ function UserEditForm({ user, onSave, onCancel, isProcessing }: any) {
         </label>
         <select
           value={formData.role}
-          onChange={e => setFormData({ ...formData, role: e.target.value as UserRole })}
+          onChange={e =>
+            setFormData({ ...formData, role: e.target.value as UserRole })
+          }
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {roleOptions.map(role => (
@@ -594,7 +609,12 @@ function UserEditForm({ user, onSave, onCancel, isProcessing }: any) {
           <input
             type="number"
             value={formData.approvalLimit}
-            onChange={e => setFormData({ ...formData, approvalLimit: Number(e.target.value) })}
+            onChange={e =>
+              setFormData({
+                ...formData,
+                approvalLimit: Number(e.target.value),
+              })
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             min="0"
           />
@@ -635,15 +655,23 @@ function UserDetailsView({ user, onClose }: any) {
           <p className="text-gray-900">{user.status}</p>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-500">Organization</label>
+          <label className="text-sm font-medium text-gray-500">
+            Organization
+          </label>
           <p className="text-gray-900">{user.orgId}</p>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-500">Approval Limit</label>
-          <p className="text-gray-900">${user.approvalLimit.toLocaleString()}</p>
+          <label className="text-sm font-medium text-gray-500">
+            Approval Limit
+          </label>
+          <p className="text-gray-900">
+            ${user.approvalLimit.toLocaleString()}
+          </p>
         </div>
         <div>
-          <label className="text-sm font-medium text-gray-500">Last Login</label>
+          <label className="text-sm font-medium text-gray-500">
+            Last Login
+          </label>
           <p className="text-gray-900">
             {user.lastLogin ? formatDate(user.lastLogin) : 'Never'}
           </p>

@@ -10,7 +10,7 @@ import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 export function AppHeader() {
-  const { user, loading } = useAuth();
+  const { user, loading, debugRole } = useAuth();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -165,6 +165,11 @@ export function AppHeader() {
                   </div>
                   <div className="text-xs text-gray-500 capitalize">
                     {user.role || 'requester'}
+                    {debugRole && (
+                      <span className="ml-1 text-blue-600 font-semibold">
+                        (Debug: {debugRole})
+                      </span>
+                    )}
                   </div>
                 </div>
               </button>

@@ -8,10 +8,9 @@ import { Button } from '@/components/ui/button';
 import { UserRole } from '@/lib/types';
 
 export default function DebugPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, switchRole, debugRole } = useAuth();
   const [firebaseUser, setFirebaseUser] = useState<any>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
-  const [currentRole, setCurrentRole] = useState<UserRole>('requester');
   const [testMode, setTestMode] = useState(false);
 
   useEffect(() => {
@@ -57,8 +56,8 @@ export default function DebugPage() {
 
   const roles: UserRole[] = ['requester', 'approver', 'cardholder', 'auditor', 'admin'];
 
-  const switchRole = (role: UserRole) => {
-    setCurrentRole(role);
+  const handleSwitchRole = (role: UserRole) => {
+    switchRole(role);
     addDebugInfo(`Role switched to: ${role}`);
   };
 
@@ -99,14 +98,14 @@ export default function DebugPage() {
             {testMode && (
               <div className="space-y-2">
                 <p className="text-sm text-blue-800">
-                  <strong>Current Role:</strong> {currentRole}
+                  <strong>Current Role:</strong> {debugRole || user?.role || 'None'}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {roles.map((role) => (
                     <Button
                       key={role}
-                      onClick={() => switchRole(role)}
-                      variant={currentRole === role ? "default" : "outline"}
+                      onClick={() => handleSwitchRole(role)}
+                      variant={debugRole === role ? "default" : "outline"}
                       size="sm"
                       className="capitalize"
                     >

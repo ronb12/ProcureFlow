@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Test User - ProcureFlow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Create Test User</h1>
+        <p>This tool will create a test user for ProcureFlow with the ability to switch between all roles.</p>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" value="test@procureflow.demo" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" value="demo123" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label for="name">Display Name:</label>
+            <input type="text" id="name" value="Test User (All Roles)" readonly>
+        </div>
+        
+        <button onclick="createUser()">Create Test User</button>
+        
+        <div id="status"></div>
+        
+        <div class="info" style="margin-top: 20px;">
+            <h3>📋 After Creating User:</h3>
+            <ol>
+                <li>Go to <a href="/debug" target="_blank">/debug</a> page</li>
+                <li>Enable Test Mode</li>
+                <li>Switch between roles to test different features</li>
+                <li>Navigate to different pages to see role-based functionality</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration (replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2LeC0_Zewi_DWdGqD7HjlqrsYypo7TnE",
+            authDomain: "procureflow-demo.firebaseapp.com",
+            projectId: "procureflow-demo",
+            storageBucket: "procureflow-demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.createUser = async function() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const name = document.getElementById('name').value;
+            const statusDiv = document.getElementById('status');
+
+            try {
+                statusDiv.innerHTML = '<div class="info">Creating user...</div>';
+
+                // Create user in Firebase Auth
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+
+                // Update display name
+                await user.updateProfile({
+                    displayName: name
+                });
+
+                // Create user document in Firestore
+                await setDoc(doc(db, 'users', user.uid), {
+                    name: name,
+                    email: email,
+                    role: 'requester', // Default role
+                    orgId: 'org_cdc',
+                    approvalLimit: 5000,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+
+                statusDiv.innerHTML = '<div class="success">✅ Test user created successfully!<br>You can now login with: ' + email + ' / ' + password + '</div>';
+
+            } catch (error) {
+                if (error.code === 'auth/email-already-in-use') {
+                    statusDiv.innerHTML = '<div class="info">ℹ️ User already exists. You can login with: ' + email + ' / ' + password + '</div>';
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+                }
+            }
+        };
+    </script>
+</body>
+</html>

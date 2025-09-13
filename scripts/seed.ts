@@ -52,6 +52,14 @@ async function seedData() {
     console.log('Creating users...');
     const users = [
       {
+        uid: 'test_user',
+        email: 'test@procureflow.demo',
+        name: 'Test User (All Roles)',
+        role: 'requester', // Default role, can be switched in debug mode
+        orgId: 'org_cdc',
+        approvalLimit: 5000,
+      },
+      {
         uid: 'admin_user',
         email: 'admin@procureflow.demo',
         name: 'System Administrator',

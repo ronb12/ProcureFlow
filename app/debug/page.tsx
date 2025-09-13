@@ -183,6 +183,31 @@ export default function DebugPage() {
             </ul>
           </div>
         </div>
+
+        {/* Test User Creation */}
+        {!user && (
+          <div className="bg-yellow-50 p-4 rounded-lg shadow border border-yellow-200">
+            <h2 className="text-lg font-semibold mb-2 text-yellow-900">⚠️ Test User Not Found</h2>
+            <div className="space-y-2 text-sm text-yellow-800">
+              <p><strong>To create the test user:</strong></p>
+              <ol className="list-decimal list-inside space-y-1 ml-4">
+                <li>Open browser console (F12)</li>
+                <li>Run this command:</li>
+                <div className="bg-yellow-100 p-2 rounded mt-2">
+                  <code>createUserWithEmailAndPassword(auth, 'test@procureflow.demo', 'demo123').then(user => console.log('User created:', user))</code>
+                </div>
+                <li>Or use the existing demo users:</li>
+                <ul className="list-disc list-inside ml-4 mt-2">
+                  <li><code>admin@procureflow.demo</code> / <code>demo123</code></li>
+                  <li><code>requester@procureflow.demo</code> / <code>demo123</code></li>
+                  <li><code>approver@procureflow.demo</code> / <code>demo123</code></li>
+                  <li><code>cardholder@procureflow.demo</code> / <code>demo123</code></li>
+                  <li><code>auditor@procureflow.demo</code> / <code>demo123</code></li>
+                </ul>
+              </ol>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

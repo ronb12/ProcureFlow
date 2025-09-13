@@ -267,7 +267,7 @@ export class AuditPackageBuilder {
     isCompliant: boolean = true,
     issues: string[] = []
   ): this {
-    this.auditPackage.documents![documentType] = {
+    (this.auditPackage.documents as any)[documentType] = {
       present: true,
       complete: isComplete,
       compliant: isCompliant,
@@ -288,7 +288,7 @@ export class AuditPackageBuilder {
       [key: string]: any;
     }
   ): this {
-    this.auditPackage.complianceChecks![checkType] = {
+    (this.auditPackage.complianceChecks as any)[checkType] = {
       ...result,
       issues: result.issues || []
     };
@@ -475,6 +475,8 @@ export class MWRPolicyComplianceChecker {
     passed: boolean;
     compliant: boolean;
     issues: string[];
+    amount: number;
+    limit: number;
   } {
     const passed = amount <= limit;
     const compliant = passed;
@@ -484,7 +486,7 @@ export class MWRPolicyComplianceChecker {
       issues.push(`Amount $${amount} exceeds micro purchase limit $${limit}`);
     }
 
-    return { passed, compliant, issues, value: amount, limit };
+    return { passed, compliant, issues, amount, limit };
   }
 
   static checkSplitPurchase(requests: Request[], timeWindowDays: number = 1): {

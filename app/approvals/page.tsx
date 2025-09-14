@@ -92,6 +92,22 @@ export default function ApprovalsPage() {
   const [denyReason, setDenyReason] = useState('');
   const [returnReason, setReturnReason] = useState('');
 
+  // Calculate processed requests today
+  const processedToday = requests.filter(req => {
+    if (!req.approvedAt && !req.deniedAt && !req.returnedAt) return false;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const processedDate = req.approvedAt || req.deniedAt || req.returnedAt;
+    if (!processedDate) return false;
+    
+    const processed = new Date(processedDate);
+    processed.setHours(0, 0, 0, 0);
+    
+    return processed.getTime() === today.getTime();
+  }).length;
+
   // Reason options for deny and return actions
   const denyReasons = [
     'Insufficient justification',
@@ -170,6 +186,7 @@ export default function ApprovalsPage() {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Update request status
+      const now = new Date();
       setRequests(prev =>
         prev.map(req =>
           req.id === requestId
@@ -184,7 +201,9 @@ export default function ApprovalsPage() {
                 approvalComment: comments,
                 approvalReason: reason,
                 approvedBy: user?.name || 'Approver',
-                approvedAt: new Date(),
+                ...(action === 'approve' && { approvedAt: now }),
+                ...(action === 'deny' && { deniedAt: now }),
+                ...(action === 'return' && { returnedAt: now }),
               }
             : req
         )
@@ -313,7 +332,7 @@ export default function ApprovalsPage() {
                   <p className="text-sm font-medium text-gray-500">
                     Processed Today
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">0</p>
+                  <p className="text-2xl font-bold text-gray-900">{processedToday}</p>
                 </div>
               </div>
             </CardContent>

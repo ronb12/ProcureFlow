@@ -344,7 +344,7 @@ export default function ApprovalsPage() {
                 <AlertCircle className="h-8 w-8 text-orange-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">
-                    Overdue (>5 days)
+                    Overdue (&gt;5 days)
                   </p>
                   <p className="text-2xl font-bold text-gray-900">
                     {pendingRequests.filter(req => calculateBusinessDays(req.createdAt) > 5).length}

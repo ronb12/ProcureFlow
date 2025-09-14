@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function HomePage() {
+  console.log('HomePage component rendered');
   const { user, loading, originalUser } = useAuth();
   const router = useRouter();
 

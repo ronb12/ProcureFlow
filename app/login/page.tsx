@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 import { UserRole } from '@/lib/types';
 
 export default function LoginPage() {
+  console.log('LoginPage component rendered');
   const router = useRouter();
   const { user, loading } = useAuth();
   const [email, setEmail] = useState('');
@@ -81,8 +82,14 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (user && !loading) {
+      // Use original user role for routing, not debug role
+      const actualRole = user.role; // Login page doesn't have debug role override
+      
+      // Debug logging
+      console.log('LoginPage routing - User:', user.email, 'Role:', actualRole);
+      
       // Route users to role-specific pages instead of generic dashboard
-      switch (user.role) {
+      switch (actualRole) {
         case 'requester':
           router.push('/requests');
           break;
@@ -99,6 +106,7 @@ export default function LoginPage() {
           router.push('/admin');
           break;
         default:
+          console.log('LoginPage routing default to /dashboard, role was:', actualRole);
           router.push('/dashboard');
       }
     }

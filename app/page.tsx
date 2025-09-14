@@ -5,17 +5,20 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
+  const { user, loading, originalUser } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!loading) {
       if (user) {
+        // Use original user role for routing, not debug role
+        const actualRole = originalUser?.role || user.role;
+        
         // Debug logging
-        console.log('HomePage routing - User:', user.email, 'Role:', user.role);
+        console.log('HomePage routing - User:', user.email, 'Actual Role:', actualRole, 'Effective Role:', user.role);
         
         // Route users to role-specific pages instead of generic dashboard
-        switch (user.role) {
+        switch (actualRole) {
           case 'requester':
             console.log('Routing requester to /requests');
             router.push('/requests');
@@ -37,7 +40,7 @@ export default function HomePage() {
             router.push('/admin');
             break;
           default:
-            console.log('Routing default to /dashboard, role was:', user.role);
+            console.log('Routing default to /dashboard, role was:', actualRole);
             router.push('/dashboard');
         }
       } else {

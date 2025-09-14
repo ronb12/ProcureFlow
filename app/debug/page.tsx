@@ -61,6 +61,11 @@ export default function DebugPage() {
     addDebugInfo(`Role switched to: ${role}`);
   };
 
+  const clearDebugRole = () => {
+    switchRole(null as any); // This will clear the debug role
+    addDebugInfo('Debug role cleared - using actual user role');
+  };
+
   const toggleTestMode = () => {
     setTestMode(!testMode);
     addDebugInfo(`Test mode ${!testMode ? 'enabled' : 'disabled'}`);
@@ -112,6 +117,14 @@ export default function DebugPage() {
                       {role}
                     </Button>
                   ))}
+                  <Button
+                    onClick={clearDebugRole}
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 border-red-300 hover:bg-red-50"
+                  >
+                    Clear Debug Role
+                  </Button>
                 </div>
                 <div className="text-xs text-blue-700 mt-2">
                   💡 <strong>Testing Tip:</strong> Switch roles to test different user experiences without multiple logins!

@@ -18,7 +18,7 @@ export function useAuth() {
     }
   };
 
-  const switchRole = (role: UserRole) => {
+  const switchRole = (role: UserRole | null) => {
     setDebugRole(role);
   };
 

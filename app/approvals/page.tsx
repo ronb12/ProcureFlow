@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { AppHeader } from '@/components/ui/app-header';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { RequestStatus } from '@/lib/types';
 import {
@@ -85,6 +86,31 @@ export default function ApprovalsPage() {
   const [requests, setRequests] = useState(mockPendingRequests);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [approvalAction, setApprovalAction] = useState<'approve' | 'deny' | 'return' | null>(null);
+  const [approvalComment, setApprovalComment] = useState('');
+  const [denyReason, setDenyReason] = useState('');
+  const [returnReason, setReturnReason] = useState('');
+
+  // Reason options for deny and return actions
+  const denyReasons = [
+    'Insufficient justification',
+    'Budget constraints',
+    'Policy violation',
+    'Missing documentation',
+    'Inappropriate vendor',
+    'Duplicate request',
+    'Other'
+  ];
+
+  const returnReasons = [
+    'Missing information',
+    'Incomplete documentation',
+    'Need additional justification',
+    'Incorrect accounting code',
+    'Missing approvals',
+    'Other'
+  ];
 
   // Handle authentication redirect
   useEffect(() => {
@@ -135,7 +161,8 @@ export default function ApprovalsPage() {
   const handleApprovalAction = async (
     requestId: string,
     action: 'approve' | 'deny' | 'return',
-    comments?: string
+    comments?: string,
+    reason?: string
   ) => {
     setIsProcessing(true);
     try {
@@ -154,6 +181,10 @@ export default function ApprovalsPage() {
                     : action === 'deny'
                       ? 'Denied'
                       : 'Returned',
+                approvalComment: comments,
+                approvalReason: reason,
+                approvedBy: user?.name || 'Approver',
+                approvedAt: new Date(),
               }
             : req
         )
@@ -169,12 +200,45 @@ export default function ApprovalsPage() {
         } successfully`
       );
 
+      // Reset modal state
       setSelectedRequest(null);
+      setShowApprovalModal(false);
+      setApprovalAction(null);
+      setApprovalComment('');
+      setDenyReason('');
+      setReturnReason('');
     } catch (error) {
       toast.error('Failed to process approval');
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const openApprovalModal = (action: 'approve' | 'deny' | 'return') => {
+    setApprovalAction(action);
+    setShowApprovalModal(true);
+  };
+
+  const closeApprovalModal = () => {
+    setShowApprovalModal(false);
+    setApprovalAction(null);
+    setApprovalComment('');
+    setDenyReason('');
+    setReturnReason('');
+  };
+
+  const submitApproval = () => {
+    if (!selectedRequest || !approvalAction) return;
+
+    const reason = approvalAction === 'deny' ? denyReason : 
+                   approvalAction === 'return' ? returnReason : undefined;
+
+    handleApprovalAction(
+      selectedRequest.id,
+      approvalAction,
+      approvalComment,
+      reason
+    );
   };
 
   const getPriorityColor = (priority: string) => {
@@ -196,6 +260,7 @@ export default function ApprovalsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AppHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -391,9 +456,7 @@ export default function ApprovalsPage() {
                 </div>
                 <div className="flex space-x-3 pt-4 border-t">
                   <Button
-                    onClick={() =>
-                      handleApprovalAction(selectedRequest.id, 'approve')
-                    }
+                    onClick={() => openApprovalModal('approve')}
                     disabled={isProcessing}
                     className="flex-1"
                   >
@@ -402,9 +465,7 @@ export default function ApprovalsPage() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() =>
-                      handleApprovalAction(selectedRequest.id, 'return')
-                    }
+                    onClick={() => openApprovalModal('return')}
                     disabled={isProcessing}
                     className="flex-1"
                   >
@@ -413,14 +474,140 @@ export default function ApprovalsPage() {
                   </Button>
                   <Button
                     variant="destructive"
-                    onClick={() =>
-                      handleApprovalAction(selectedRequest.id, 'deny')
-                    }
+                    onClick={() => openApprovalModal('deny')}
                     disabled={isProcessing}
                     className="flex-1"
                   >
                     <XCircle className="h-4 w-4 mr-2" />
                     Deny
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Enhanced Approval Modal */}
+        {showApprovalModal && selectedRequest && approvalAction && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <CardHeader>
+                <CardTitle>
+                  {approvalAction === 'approve' && 'Approve Request'}
+                  {approvalAction === 'deny' && 'Deny Request'}
+                  {approvalAction === 'return' && 'Return Request'}
+                </CardTitle>
+                <CardDescription>
+                  Request #{selectedRequest.id} - {selectedRequest.vendor}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Reason Selection for Deny and Return */}
+                {(approvalAction === 'deny' || approvalAction === 'return') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {approvalAction === 'deny' ? 'Reason for Denial' : 'Reason for Return'} *
+                    </label>
+                    <select
+                      value={approvalAction === 'deny' ? denyReason : returnReason}
+                      onChange={(e) => {
+                        if (approvalAction === 'deny') {
+                          setDenyReason(e.target.value);
+                        } else {
+                          setReturnReason(e.target.value);
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="">Select a reason...</option>
+                      {(approvalAction === 'deny' ? denyReasons : returnReasons).map((reason) => (
+                        <option key={reason} value={reason}>
+                          {reason}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Comments Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Comments {approvalAction === 'approve' ? '(Optional)' : '*'}
+                  </label>
+                  <textarea
+                    value={approvalComment}
+                    onChange={(e) => setApprovalComment(e.target.value)}
+                    placeholder={
+                      approvalAction === 'approve'
+                        ? 'Add any additional notes or conditions...'
+                        : approvalAction === 'deny'
+                        ? 'Please explain why this request is being denied...'
+                        : 'Please explain what information is needed...'
+                    }
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required={approvalAction !== 'approve'}
+                  />
+                </div>
+
+                {/* Action Summary */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">Action Summary:</h4>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p><strong>Action:</strong> {approvalAction.charAt(0).toUpperCase() + approvalAction.slice(1)}</p>
+                    <p><strong>Request:</strong> #{selectedRequest.id} - {selectedRequest.vendor}</p>
+                    <p><strong>Amount:</strong> {formatCurrency(selectedRequest.total)}</p>
+                    {approvalAction === 'deny' && denyReason && (
+                      <p><strong>Reason:</strong> {denyReason}</p>
+                    )}
+                    {approvalAction === 'return' && returnReason && (
+                      <p><strong>Reason:</strong> {returnReason}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex space-x-3 pt-4 border-t">
+                  <Button
+                    variant="outline"
+                    onClick={closeApprovalModal}
+                    disabled={isProcessing}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={submitApproval}
+                    disabled={
+                      isProcessing ||
+                      (approvalAction !== 'approve' && !approvalComment.trim()) ||
+                      (approvalAction === 'deny' && !denyReason) ||
+                      (approvalAction === 'return' && !returnReason)
+                    }
+                    className={`flex-1 ${
+                      approvalAction === 'deny'
+                        ? 'bg-red-600 hover:bg-red-700'
+                        : approvalAction === 'return'
+                        ? 'bg-yellow-600 hover:bg-yellow-700'
+                        : 'bg-green-600 hover:bg-green-700'
+                    }`}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        {approvalAction === 'approve' && <CheckCircle className="h-4 w-4 mr-2" />}
+                        {approvalAction === 'deny' && <XCircle className="h-4 w-4 mr-2" />}
+                        {approvalAction === 'return' && <RotateCcw className="h-4 w-4 mr-2" />}
+                        {approvalAction === 'approve' && 'Approve Request'}
+                        {approvalAction === 'deny' && 'Deny Request'}
+                        {approvalAction === 'return' && 'Return Request'}
+                      </>
+                    )}
                   </Button>
                 </div>
               </CardContent>

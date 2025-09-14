@@ -288,8 +288,13 @@ const mockRequests = [
 ];
 
 export default function RequestsPage() {
+  console.log('RequestsPage component rendered');
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, originalUser } = useAuth();
+  
+  // Use original user role for debugging
+  const actualRole = originalUser?.role || user.role;
+  console.log('RequestsPage - User:', user?.email, 'Actual Role:', actualRole, 'Effective Role:', user?.role);
   const [requests, setRequests] = useState(mockRequests);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');

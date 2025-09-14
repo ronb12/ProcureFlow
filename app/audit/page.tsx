@@ -167,7 +167,7 @@ export default function AuditPage() {
   }
 
   // Check if user has audit permissions
-  if (!['auditor', 'admin'].includes(actualRole)) {
+  if (!actualRole || !['auditor', 'admin'].includes(actualRole)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

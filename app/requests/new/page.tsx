@@ -65,6 +65,28 @@ export default function NewRequestPage() {
     );
   }
 
+  // Check if user has permission to create requests (separation of duties)
+  if (!['requester', 'admin'].includes(user.role || '')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🚫</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Access Denied
+          </h1>
+          <p className="text-gray-600 mb-4">
+            Only requesters can create new procurement requests. 
+            <br />
+            Approvers, cardholders, and auditors have different responsibilities.
+          </p>
+          <Button onClick={() => router.push('/dashboard')}>
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const handleInputChange = (field: keyof CreateRequestData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };

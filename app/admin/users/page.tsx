@@ -145,7 +145,7 @@ export default function UserManagementPage() {
   }
 
   // Check if user has admin permissions
-  if (user.role !== 'admin') {
+  if (user?.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -168,7 +168,7 @@ export default function UserManagementPage() {
     const matchesSearch =
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesRole = roleFilter === 'all' || user?.role === roleFilter;
     return matchesSearch && matchesRole;
   });
 
@@ -399,7 +399,7 @@ export default function UserManagementPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleColor(
-                            user.role
+                            user?.role
                           )}`}
                         >
                           {user.role}
@@ -648,7 +648,7 @@ function UserDetailsView({ user, onClose }: any) {
         </div>
         <div>
           <label className="text-sm font-medium text-gray-500">Role</label>
-          <p className="text-gray-900">{user.role}</p>
+          <p className="text-gray-900">{user?.role}</p>
         </div>
         <div>
           <label className="text-sm font-medium text-gray-500">Status</label>

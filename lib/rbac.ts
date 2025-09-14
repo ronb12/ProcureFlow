@@ -30,7 +30,7 @@ export class RBAC {
         write: ['admin'],
       },
       requests: {
-        create: ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
+        create: ['requester', 'admin'], // Removed approver, cardholder, auditor for separation of duties
         read: ['requester', 'approver', 'cardholder', 'auditor', 'admin'],
         update: ['requester', 'approver', 'cardholder', 'admin'],
         delete: ['admin'],

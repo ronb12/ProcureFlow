@@ -31,7 +31,7 @@ service cloud.firestore {
     }
     
     function isRequester() {
-      return isSignedIn() && getUserRole() in ['requester', 'approver', 'cardholder', 'auditor', 'admin'];
+      return isSignedIn() && getUserRole() in ['requester', 'admin'];
     }
     
     function isSameOrg(orgId) {
@@ -84,7 +84,7 @@ service cloud.firestore {
     
     // Requests collection
     match /requests/{requestId} {
-      allow create: if isSignedIn();
+      allow create: if isRequester(); // Only requesters and admins can create requests
       allow read: if isSignedIn();
       allow update: if isSignedIn() && (
         // Requester can edit only in Draft/Returned

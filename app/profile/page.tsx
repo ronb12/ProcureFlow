@@ -56,7 +56,7 @@ export default function ProfilePage() {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        role: user.role || 'requester',
+        role: user?.role || 'requester',
         orgId: user.orgId || '',
         approvalLimit: user.approvalLimit || 0,
       });
@@ -112,7 +112,7 @@ export default function ProfilePage() {
       setFormData({
         name: user.name || '',
         email: user.email || '',
-        role: user.role || 'requester',
+        role: user?.role || 'requester',
         orgId: user.orgId || '',
         approvalLimit: user.approvalLimit || 0,
       });
@@ -259,8 +259,8 @@ export default function ProfilePage() {
                     <Shield className="h-4 w-4 text-gray-400" />
                     <span className="text-gray-600 capitalize">
                       {roleDisplayNames[
-                        user.role as keyof typeof roleDisplayNames
-                      ] || user.role}
+                        user?.role as keyof typeof roleDisplayNames
+                      ] || user?.role}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
@@ -291,7 +291,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {user.role === 'approver' && (
+              {user?.role === 'approver' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Approval Limit

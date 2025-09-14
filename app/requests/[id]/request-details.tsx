@@ -229,7 +229,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
     // Draft actions
     if (
       request.status === 'Draft' &&
-      ['requester', 'admin'].includes(user.role)
+      user?.role && ['requester', 'admin'].includes(user.role)
     ) {
       actions.push({
         label: 'Submit for Approval',
@@ -242,7 +242,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
     // Submitted actions
     if (
       request.status === 'Submitted' &&
-      ['approver', 'admin'].includes(user.role)
+      user?.role && ['approver', 'admin'].includes(user.role)
     ) {
       actions.push({
         label: 'Move to Review',
@@ -255,7 +255,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
     // AO Review actions
     if (
       request.status === 'AO Review' &&
-      ['approver', 'admin'].includes(user.role)
+      user?.role && ['approver', 'admin'].includes(user.role)
     ) {
       actions.push(
         {
@@ -283,7 +283,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
     // Approved actions
     if (
       request.status === 'Approved' &&
-      ['cardholder', 'admin'].includes(user.role)
+      user?.role && ['cardholder', 'admin'].includes(user.role)
     ) {
       actions.push({
         label: 'Begin Purchasing',
@@ -300,7 +300,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
     // Cardholder Purchasing actions
     if (
       request.status === 'Cardholder Purchasing' &&
-      ['cardholder', 'admin'].includes(user.role)
+      user?.role && ['cardholder', 'admin'].includes(user.role)
     ) {
       actions.push({
         label: 'Mark as Purchased',
@@ -314,7 +314,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
     // Purchased actions
     if (
       request.status === 'Purchased' &&
-      ['cardholder', 'admin'].includes(user.role)
+      user?.role && ['cardholder', 'admin'].includes(user.role)
     ) {
       actions.push({
         label: 'Reconcile Purchase',
@@ -327,7 +327,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
     // Reconciled actions
     if (
       request.status === 'Reconciled' &&
-      ['cardholder', 'admin'].includes(user.role)
+      user?.role && ['cardholder', 'admin'].includes(user.role)
     ) {
       actions.push({
         label: 'Close Request',
@@ -340,7 +340,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
     // Returned actions
     if (
       request.status === 'Returned' &&
-      ['requester', 'admin'].includes(user.role)
+      user?.role && ['requester', 'admin'].includes(user.role)
     ) {
       actions.push(
         {

@@ -102,7 +102,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (user && !loading) {
       // Use original user role for routing, not debug role
-      const actualRole = originalUser?.role || user.role;
+      const actualRole = originalUser?.role || user?.role;
       
       // Comprehensive debug logging
       console.log('=== LOGIN PAGE ROUTING DEBUG ===');

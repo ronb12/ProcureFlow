@@ -150,7 +150,7 @@ export default function AdminPage() {
   }
 
   // Check if user has admin permissions
-  if (user.role !== 'admin') {
+  if (user?.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -429,7 +429,7 @@ export default function AdminPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
                               className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleColor(
-                                user.role
+                                user?.role
                               )}`}
                             >
                               {user.role}

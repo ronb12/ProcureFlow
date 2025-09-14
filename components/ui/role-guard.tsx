@@ -110,10 +110,7 @@ export function RequesterOnly({
     <RoleGuard
       requiredRoles={[
         'requester',
-        'approver',
-        'cardholder',
-        'auditor',
-        'admin',
+        'admin', // Only requesters and admins can create requests
       ]}
       fallback={fallback}
     >

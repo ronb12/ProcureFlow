@@ -19,7 +19,7 @@ export default function HomePage() {
     if (!loading) {
       if (user) {
         // Always use original user role for routing, never debug role
-        const actualRole = originalUser?.role || user.role;
+        const actualRole = originalUser?.role || user?.role;
         
         // Comprehensive debug logging
         console.log('=== HOMEPAGE ROUTING DEBUG ===');

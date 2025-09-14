@@ -293,7 +293,7 @@ export default function RequestsPage() {
   const { user, loading, originalUser } = useAuth();
   
   // Use original user role for debugging
-  const actualRole = originalUser?.role || user.role;
+  const actualRole = originalUser?.role || user?.role;
   console.log('RequestsPage - User:', user?.email, 'Actual Role:', actualRole, 'Effective Role:', user?.role);
   const [requests, setRequests] = useState(mockRequests);
   const [searchTerm, setSearchTerm] = useState('');

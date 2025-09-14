@@ -174,7 +174,7 @@ export default function PurchaseOrdersPage() {
   }
 
   // Check if user has cardholder permissions
-  if (!['cardholder', 'admin'].includes(user.role)) {
+  if (!user?.role || !['cardholder', 'admin'].includes(user.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

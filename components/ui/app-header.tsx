@@ -108,12 +108,15 @@ export function AppHeader() {
             >
               Dashboard
             </button>
-            <button
-              onClick={() => router.push('/requests')}
-              className="text-gray-700 hover:text-blue-600 font-medium"
-            >
-              Requests
-            </button>
+            {/* Only show Requests tab for requesters and admins */}
+            {actualRole && ['requester', 'admin'].includes(actualRole) && (
+              <button
+                onClick={() => router.push('/requests')}
+                className="text-gray-700 hover:text-blue-600 font-medium"
+              >
+                Requests
+              </button>
+            )}
             {actualRole && ['approver', 'admin'].includes(actualRole) && (
               <button
                 onClick={() => router.push('/approvals')}
@@ -249,15 +252,18 @@ export function AppHeader() {
             >
               Dashboard
             </button>
-            <button
-              onClick={() => {
-                router.push('/requests');
-                setShowMobileMenu(false);
-              }}
-              className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
-            >
-              Requests
-            </button>
+            {/* Only show Requests tab for requesters and admins */}
+            {actualRole && ['requester', 'admin'].includes(actualRole) && (
+              <button
+                onClick={() => {
+                  router.push('/requests');
+                  setShowMobileMenu(false);
+                }}
+                className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
+              >
+                Requests
+              </button>
+            )}
             {actualRole && ['approver', 'admin'].includes(actualRole) && (
               <button
                 onClick={() => {

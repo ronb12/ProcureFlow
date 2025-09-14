@@ -20,7 +20,7 @@ import { UserRole } from '@/lib/types';
 export default function LoginPage() {
   console.log('LoginPage component rendered');
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, originalUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -83,10 +83,17 @@ export default function LoginPage() {
   useEffect(() => {
     if (user && !loading) {
       // Use original user role for routing, not debug role
-      const actualRole = user.role; // Login page doesn't have debug role override
+      const actualRole = originalUser?.role || user.role;
       
-      // Debug logging
-      console.log('LoginPage routing - User:', user.email, 'Role:', actualRole);
+      // Comprehensive debug logging
+      console.log('=== LOGIN PAGE ROUTING DEBUG ===');
+      console.log('User email:', user.email);
+      console.log('User role (effective):', user.role);
+      console.log('Original user role:', originalUser?.role);
+      console.log('Actual role (for routing):', actualRole);
+      console.log('Original user object:', originalUser);
+      console.log('User object:', user);
+      console.log('================================');
       
       // Route users to role-specific pages instead of generic dashboard
       switch (actualRole) {

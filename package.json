@@ -71,7 +71,6 @@
     "@playwright/test": "^1.40.1",
     "@types/jszip": "^3.4.1",
     "@types/papaparse": "^5.3.14",
-    "@types/csv-writer": "^1.1.0",
     "@typescript-eslint/eslint-plugin": "^8.43.0",
     "@typescript-eslint/parser": "^8.43.0",
     "@vitejs/plugin-react": "^4.2.1",

@@ -6,17 +6,24 @@ import { useEffect } from 'react';
 
 export default function HomePage() {
   console.log('HomePage component rendered');
-  const { user, loading, originalUser } = useAuth();
+  const { user, loading, originalUser, switchRole } = useAuth();
   const router = useRouter();
+
+  // Force clear any debug role when home page loads
+  useEffect(() => {
+    switchRole(null);
+  }, [switchRole]);
 
   useEffect(() => {
     if (!loading) {
       if (user) {
-        // Use original user role for routing, not debug role
+        // Always use original user role for routing, never debug role
         const actualRole = originalUser?.role || user.role;
         
         // Debug logging
         console.log('HomePage routing - User:', user.email, 'Actual Role:', actualRole, 'Effective Role:', user.role);
+        console.log('HomePage - originalUser:', originalUser);
+        console.log('HomePage - user:', user);
         
         // Route users to role-specific pages instead of generic dashboard
         switch (actualRole) {

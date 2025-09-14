@@ -15,15 +15,21 @@ export default function HomePage() {
   }, [switchRole]);
 
   useEffect(() => {
+    console.log('HomePage useEffect - loading:', loading, 'user:', !!user);
     if (!loading) {
       if (user) {
         // Always use original user role for routing, never debug role
         const actualRole = originalUser?.role || user.role;
         
-        // Debug logging
-        console.log('HomePage routing - User:', user.email, 'Actual Role:', actualRole, 'Effective Role:', user.role);
-        console.log('HomePage - originalUser:', originalUser);
-        console.log('HomePage - user:', user);
+        // Comprehensive debug logging
+        console.log('=== HOMEPAGE ROUTING DEBUG ===');
+        console.log('User email:', user.email);
+        console.log('User role (effective):', user.role);
+        console.log('Original user role:', originalUser?.role);
+        console.log('Actual role (for routing):', actualRole);
+        console.log('Original user object:', originalUser);
+        console.log('User object:', user);
+        console.log('================================');
         
         // Route users to role-specific pages instead of generic dashboard
         switch (actualRole) {

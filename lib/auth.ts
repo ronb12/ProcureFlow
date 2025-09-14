@@ -247,13 +247,40 @@ export async function createUserDocument(
     const { displayName, email } = firebaseUser;
     const createdAt = new Date();
 
+    // Determine role based on email for demo users
+    let role = 'requester'; // Default role
+    let orgId = 'org_cdc'; // Default org
+    let approvalLimit = 0;
+
+    if (email) {
+      if (email === 'admin@procureflow.demo') {
+        role = 'admin';
+        approvalLimit = 100000;
+      } else if (email === 'approver@procureflow.demo') {
+        role = 'approver';
+        approvalLimit = 10000;
+      } else if (email === 'cardholder@procureflow.demo') {
+        role = 'cardholder';
+        approvalLimit = 0;
+      } else if (email === 'auditor@procureflow.demo') {
+        role = 'auditor';
+        approvalLimit = 0;
+      } else if (email === 'requester@procureflow.demo') {
+        role = 'requester';
+        approvalLimit = 0;
+      } else if (email === 'test@procureflow.demo') {
+        role = 'requester';
+        approvalLimit = 5000;
+      }
+    }
+
     try {
       await setDoc(userRef, {
         name: displayName || email?.split('@')[0] || 'User',
         email: email || '',
-        role: 'requester', // Default role
-        orgId: '', // Must be set by admin
-        approvalLimit: 0,
+        role: role,
+        orgId: orgId,
+        approvalLimit: approvalLimit,
         createdAt,
         updatedAt: createdAt,
         ...additionalData,

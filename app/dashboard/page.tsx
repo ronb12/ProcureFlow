@@ -229,14 +229,17 @@ export default function DashboardPage() {
                 <span>New Request</span>
               </Button>
             )}
-            <Button
-              variant="outline"
-              onClick={() => router.push('/requests')}
-              className="flex items-center space-x-2"
-            >
-              <FileText className="h-4 w-4" />
-              <span>View All Requests</span>
-            </Button>
+            {/* Show different buttons based on user role */}
+            {actualRole && ['requester', 'admin'].includes(actualRole) && (
+              <Button
+                variant="outline"
+                onClick={() => router.push('/requests')}
+                className="flex items-center space-x-2"
+              >
+                <FileText className="h-4 w-4" />
+                <span>View All Requests</span>
+              </Button>
+            )}
             {actualRole && ['approver', 'admin'].includes(actualRole) && (
               <Button
                 variant="outline"
@@ -244,7 +247,27 @@ export default function DashboardPage() {
                 className="flex items-center space-x-2"
               >
                 <CheckCircle className="h-4 w-4" />
-                <span>Review Approvals</span>
+                <span>Review Pending Approvals</span>
+              </Button>
+            )}
+            {actualRole && ['cardholder', 'admin'].includes(actualRole) && (
+              <Button
+                variant="outline"
+                onClick={() => router.push('/purchases')}
+                className="flex items-center space-x-2"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span>View Purchase Queue</span>
+              </Button>
+            )}
+            {actualRole && ['auditor', 'admin'].includes(actualRole) && (
+              <Button
+                variant="outline"
+                onClick={() => router.push('/audit-packages')}
+                className="flex items-center space-x-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span>View Audit Packages</span>
               </Button>
             )}
           </div>

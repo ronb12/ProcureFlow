@@ -32,6 +32,29 @@ export function formatDateTime(date: Date | string): string {
   }).format(d);
 }
 
+export function calculateBusinessDays(startDate: Date | string, endDate: Date | string = new Date()): number {
+  const start = typeof startDate === 'string' ? new Date(startDate) : startDate;
+  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+  
+  // Set time to start of day to avoid timezone issues
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  
+  let count = 0;
+  const current = new Date(start);
+  
+  while (current < end) {
+    const dayOfWeek = current.getDay();
+    // Skip weekends (Saturday = 6, Sunday = 0)
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+      count++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return count;
+}
+
 export function formatRelativeTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();

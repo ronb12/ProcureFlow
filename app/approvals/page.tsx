@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { AppHeader } from '@/components/ui/app-header';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, calculateBusinessDays } from '@/lib/utils';
 import { RequestStatus } from '@/lib/types';
 import {
   CheckCircle,
@@ -291,7 +291,7 @@ export default function ApprovalsPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -334,6 +334,21 @@ export default function ApprovalsPage() {
                     Completed Today
                   </p>
                   <p className="text-2xl font-bold text-gray-900">{processedToday}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center">
+                <AlertCircle className="h-8 w-8 text-orange-600" />
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">
+                    Overdue (>5 days)
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {pendingRequests.filter(req => calculateBusinessDays(req.createdAt) > 5).length}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -394,8 +409,16 @@ export default function ApprovalsPage() {
                           {request.requester.name}
                         </div>
                         <div>
-                          <span className="font-medium">Days Pending:</span>{' '}
-                          {request.daysPending}
+                          <span className="font-medium">Business Days Pending:</span>{' '}
+                          <span className={`font-semibold ${
+                            calculateBusinessDays(request.createdAt) > 5 
+                              ? 'text-red-600' 
+                              : calculateBusinessDays(request.createdAt) > 3 
+                              ? 'text-orange-600' 
+                              : 'text-green-600'
+                          }`}>
+                            {calculateBusinessDays(request.createdAt)}
+                          </span>
                         </div>
                         <div>
                           <span className="font-medium">Created:</span>{' '}
@@ -463,6 +486,28 @@ export default function ApprovalsPage() {
                     </label>
                     <p className="text-gray-900">
                       {selectedRequest.requester.name}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">
+                      Business Days Pending
+                    </label>
+                    <p className={`text-lg font-semibold ${
+                      calculateBusinessDays(selectedRequest.createdAt) > 5 
+                        ? 'text-red-600' 
+                        : calculateBusinessDays(selectedRequest.createdAt) > 3 
+                        ? 'text-orange-600' 
+                        : 'text-green-600'
+                    }`}>
+                      {calculateBusinessDays(selectedRequest.createdAt)} days
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500">
+                      Created
+                    </label>
+                    <p className="text-gray-900">
+                      {formatDate(selectedRequest.createdAt)}
                     </p>
                   </div>
                 </div>

@@ -82,7 +82,7 @@ export default function ApprovalsPage() {
   const { user, loading, originalUser } = useAuth();
   
   // Use original user role for access control, not debug role
-  const actualRole = originalUser?.role || user.role;
+  const actualRole = originalUser?.role || user?.role;
   const [requests, setRequests] = useState(mockPendingRequests);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -94,12 +94,13 @@ export default function ApprovalsPage() {
 
   // Calculate processed requests today
   const processedToday = requests.filter(req => {
-    if (!req.approvedAt && !req.deniedAt && !req.returnedAt) return false;
+    const reqWithTimestamps = req as any; // Type assertion for dynamic properties
+    if (!reqWithTimestamps.approvedAt && !reqWithTimestamps.deniedAt && !reqWithTimestamps.returnedAt) return false;
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const processedDate = req.approvedAt || req.deniedAt || req.returnedAt;
+    const processedDate = reqWithTimestamps.approvedAt || reqWithTimestamps.deniedAt || reqWithTimestamps.returnedAt;
     if (!processedDate) return false;
     
     const processed = new Date(processedDate);
@@ -155,7 +156,7 @@ export default function ApprovalsPage() {
   }
 
   // Check if user has approval permissions
-  if (!['approver', 'admin'].includes(actualRole)) {
+  if (!actualRole || !['approver', 'admin'].includes(actualRole)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

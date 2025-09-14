@@ -133,7 +133,7 @@ export default function AuditPage() {
   const { user, loading, originalUser } = useAuth();
   
   // Use original user role for access control, not debug role
-  const actualRole = originalUser?.role || user.role;
+  const actualRole = originalUser?.role || user?.role;
   const [auditData, setAuditData] = useState(mockAuditData);
   const [selectedAudit, setSelectedAudit] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');

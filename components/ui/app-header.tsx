@@ -10,8 +10,11 @@ import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
 export function AppHeader() {
-  const { user, loading, debugRole } = useAuth();
+  const { user, loading, debugRole, originalUser } = useAuth();
   const router = useRouter();
+  
+  // Use original user role for navigation, not debug role
+  const actualRole = originalUser?.role || actualRole;
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -111,7 +114,7 @@ export function AppHeader() {
             >
               Requests
             </button>
-            {['approver', 'admin'].includes(user.role) && (
+            {['approver', 'admin'].includes(actualRole) && (
               <button
                 onClick={() => router.push('/approvals')}
                 className="text-gray-700 hover:text-blue-600 font-medium"
@@ -119,7 +122,7 @@ export function AppHeader() {
                 Approvals
               </button>
             )}
-            {['cardholder', 'admin'].includes(user.role) && (
+            {['cardholder', 'admin'].includes(actualRole) && (
               <button
                 onClick={() => router.push('/purchases')}
                 className="text-gray-700 hover:text-blue-600 font-medium"
@@ -127,7 +130,7 @@ export function AppHeader() {
                 Purchases
               </button>
             )}
-            {['auditor', 'admin'].includes(user.role) && (
+            {['auditor', 'admin'].includes(actualRole) && (
               <button
                 onClick={() => router.push('/audit-packages')}
                 className="text-gray-700 hover:text-blue-600 font-medium"
@@ -135,7 +138,7 @@ export function AppHeader() {
                 Audit Packages
               </button>
             )}
-            {user.role === 'admin' && (
+            {actualRole === 'admin' && (
               <button
                 onClick={() => router.push('/admin')}
                 className="text-gray-700 hover:text-blue-600 font-medium"
@@ -164,7 +167,7 @@ export function AppHeader() {
                     {user.name || user.email?.split('@')[0] || 'User'}
                   </div>
                   <div className="text-xs text-gray-500 capitalize">
-                    {user.role || 'requester'}
+                    {actualRole || 'requester'}
                     {debugRole && (
                       <span className="ml-1 text-blue-600 font-semibold">
                         (Debug: {debugRole})
@@ -255,7 +258,7 @@ export function AppHeader() {
             >
               Requests
             </button>
-            {['approver', 'admin'].includes(user.role) && (
+            {['approver', 'admin'].includes(actualRole) && (
               <button
                 onClick={() => {
                   router.push('/approvals');
@@ -266,7 +269,7 @@ export function AppHeader() {
                 Approvals
               </button>
             )}
-            {['cardholder', 'admin'].includes(user.role) && (
+            {['cardholder', 'admin'].includes(actualRole) && (
               <button
                 onClick={() => {
                   router.push('/purchases');
@@ -277,7 +280,7 @@ export function AppHeader() {
                 Purchases
               </button>
             )}
-            {['auditor', 'admin'].includes(user.role) && (
+            {['auditor', 'admin'].includes(actualRole) && (
               <button
                 onClick={() => {
                   router.push('/audit-packages');
@@ -288,7 +291,7 @@ export function AppHeader() {
                 Audit Packages
               </button>
             )}
-            {user.role === 'admin' && (
+            {actualRole === 'admin' && (
               <button
                 onClick={() => {
                   router.push('/admin');

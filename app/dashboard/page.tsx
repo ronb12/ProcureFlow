@@ -74,8 +74,11 @@ const mockRecentRequests = [
 ];
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, originalUser } = useAuth();
   const router = useRouter();
+  
+  // Use original user role for role-based functionality, not debug role
+  const actualRole = originalUser?.role || actualRole;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -129,7 +132,7 @@ export default function DashboardPage() {
     });
 
     // Pending Approvals - for approvers and admins
-    if (['approver', 'admin'].includes(user.role)) {
+    if (['approver', 'admin'].includes(actualRole)) {
       cards.push({
         title: 'Pending Approvals',
         description: `${mockStats.pendingApprovals} requests need review`,
@@ -143,7 +146,7 @@ export default function DashboardPage() {
     }
 
     // Cardholder Queue - for cardholders and admins
-    if (['cardholder', 'admin'].includes(user.role)) {
+    if (['cardholder', 'admin'].includes(actualRole)) {
       cards.push({
         title: 'Cardholder Queue',
         description: `${mockStats.cardholderQueue} approved requests`,
@@ -157,7 +160,7 @@ export default function DashboardPage() {
     }
 
     // Purchase Orders - for cardholders and admins
-    if (['cardholder', 'admin'].includes(user.role)) {
+    if (['cardholder', 'admin'].includes(actualRole)) {
       cards.push({
         title: 'Purchase Orders',
         description: 'Manage purchase orders',
@@ -173,7 +176,7 @@ export default function DashboardPage() {
     }
 
     // Reconciliation Status - for cardholders and admins
-    if (['cardholder', 'admin'].includes(user.role)) {
+    if (['cardholder', 'admin'].includes(actualRole)) {
       cards.push({
         title: 'Reconciliation',
         description: `${mockStats.reconciliationStatus.open} open cycles`,
@@ -231,7 +234,7 @@ export default function DashboardPage() {
               <FileText className="h-4 w-4" />
               <span>View All Requests</span>
             </Button>
-            {['approver', 'admin'].includes(user.role) && (
+            {['approver', 'admin'].includes(actualRole) && (
               <Button
                 variant="outline"
                 onClick={() => router.push('/approvals')}

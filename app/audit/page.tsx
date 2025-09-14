@@ -130,7 +130,10 @@ const mockAuditData = [
 
 export default function AuditPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, originalUser } = useAuth();
+  
+  // Use original user role for access control, not debug role
+  const actualRole = originalUser?.role || user.role;
   const [auditData, setAuditData] = useState(mockAuditData);
   const [selectedAudit, setSelectedAudit] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -164,7 +167,7 @@ export default function AuditPage() {
   }
 
   // Check if user has audit permissions
-  if (!['auditor', 'admin'].includes(user.role)) {
+  if (!['auditor', 'admin'].includes(actualRole)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

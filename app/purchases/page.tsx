@@ -95,7 +95,10 @@ const mockPurchases = [
 
 export default function PurchasesPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, originalUser } = useAuth();
+  
+  // Use original user role for access control, not debug role
+  const actualRole = originalUser?.role || user.role;
   const [purchases, setPurchases] = useState(mockPurchases);
   const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -128,7 +131,7 @@ export default function PurchasesPage() {
   }
 
   // Check if user has cardholder permissions
-  if (!['cardholder', 'admin'].includes(user.role)) {
+  if (!['cardholder', 'admin'].includes(actualRole)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

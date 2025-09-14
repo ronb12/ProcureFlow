@@ -78,7 +78,10 @@ const mockPendingRequests = [
 
 export default function ApprovalsPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, originalUser } = useAuth();
+  
+  // Use original user role for access control, not debug role
+  const actualRole = originalUser?.role || user.role;
   const [requests, setRequests] = useState(mockPendingRequests);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -110,7 +113,7 @@ export default function ApprovalsPage() {
   }
 
   // Check if user has approval permissions
-  if (!['approver', 'admin'].includes(user.role)) {
+  if (!['approver', 'admin'].includes(actualRole)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

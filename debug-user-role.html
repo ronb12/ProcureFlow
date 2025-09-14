@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug User Role - ProcureFlow</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            text-align: center;
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .user-info {
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .info {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug User Role</h1>
+        <p>This tool will help you debug what's happening with user roles.</p>
+        
+        <button onclick="loginAsApprover()">Login as Approver</button>
+        <button onclick="loginAsRequester()">Login as Requester</button>
+        <button onclick="checkCurrentUser()">Check Current User</button>
+        <button onclick="logout()">Logout</button>
+        
+        <div id="userInfo" class="user-info">Click a button to see user information...</div>
+        <div id="status"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2LeC0_Zewi_DWdGqD7HjlqrsYypo7TnE",
+            authDomain: "procureflow-demo.firebaseapp.com",
+            projectId: "procureflow-demo",
+            storageBucket: "procureflow-demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef123456"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        function loginAsApprover() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<div class="info">Logging in as approver...</div>';
+            
+            firebase.auth().signInWithEmailAndPassword('approver@procureflow.demo', 'demo123')
+                .then(() => {
+                    statusDiv.innerHTML = '<div class="success">✅ Logged in as approver</div>';
+                    checkCurrentUser();
+                })
+                .catch((error) => {
+                    statusDiv.innerHTML = '<div class="error">❌ Login failed: ' + error.message + '</div>';
+                });
+        }
+
+        function loginAsRequester() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<div class="info">Logging in as requester...</div>';
+            
+            firebase.auth().signInWithEmailAndPassword('requester@procureflow.demo', 'demo123')
+                .then(() => {
+                    statusDiv.innerHTML = '<div class="success">✅ Logged in as requester</div>';
+                    checkCurrentUser();
+                })
+                .catch((error) => {
+                    statusDiv.innerHTML = '<div class="error">❌ Login failed: ' + error.message + '</div>';
+                });
+        }
+
+        function checkCurrentUser() {
+            const userInfoDiv = document.getElementById('userInfo');
+            const statusDiv = document.getElementById('status');
+            
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    // Get user document from Firestore
+                    firebase.firestore().collection('users').doc(user.uid).get()
+                        .then((doc) => {
+                            if (doc.exists) {
+                                const userData = doc.data();
+                                userInfoDiv.innerHTML = `Firebase Auth User:
+UID: ${user.uid}
+Email: ${user.email}
+Display Name: ${user.displayName}
+
+Firestore User Document:
+Name: ${userData.name}
+Email: ${userData.email}
+Role: ${userData.role}
+Department: ${userData.department}
+Title: ${userData.title}
+Approval Limit: ${userData.approvalLimit}
+Org ID: ${userData.orgId}
+
+Expected Navigation:
+- Requester: Requests, Dashboard, Profile, Notifications
+- Approver: Requests, Approvals, Dashboard, Profile, Notifications
+- Cardholder: Requests, Purchases, Dashboard, Profile, Notifications
+- Auditor: Requests, Audit Packages, Dashboard, Profile, Notifications
+- Admin: All of the above + Admin`;
+                            } else {
+                                userInfoDiv.innerHTML = `Firebase Auth User:
+UID: ${user.uid}
+Email: ${user.email}
+Display Name: ${user.displayName}
+
+❌ ERROR: User document not found in Firestore!
+This is why you're seeing the same pages - the app can't determine your role.`;
+                            }
+                        })
+                        .catch((error) => {
+                            userInfoDiv.innerHTML = `Firebase Auth User:
+UID: ${user.uid}
+Email: ${user.email}
+Display Name: ${user.displayName}
+
+❌ ERROR getting user data: ${error.message}`;
+                        });
+                } else {
+                    userInfoDiv.innerHTML = 'No user logged in';
+                }
+            });
+        }
+
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                document.getElementById('userInfo').innerHTML = 'Logged out';
+                document.getElementById('status').innerHTML = '<div class="info">Logged out successfully</div>';
+            });
+        }
+
+        // Check current user on page load
+        checkCurrentUser();
+    </script>
+</body>
+</html>

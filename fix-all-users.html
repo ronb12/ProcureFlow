@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix All Demo Users</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .user-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fix All Demo Users</h1>
+        <p>This tool will create/fix all demo users with proper Firebase Auth UIDs and Firestore documents.</p>
+        
+        <div id="status"></div>
+        
+        <div class="step">
+            <h3>Step 1: Create All Demo Users</h3>
+            <p>This will create all demo users in Firebase Auth and Firestore with correct UIDs.</p>
+            <button onclick="createAllUsers()">Create All Users</button>
+            <div id="create-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 2: Verify All Users</h3>
+            <p>Check that all users exist and have correct roles.</p>
+            <button onclick="verifyAllUsers()">Verify All Users</button>
+            <div id="verify-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 3: Test Role Routing</h3>
+            <p>Test that each user routes to the correct page.</p>
+            <button onclick="testRoleRouting()">Test Role Routing</button>
+            <div id="routing-result"></div>
+        </div>
+        
+        <div id="output"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2LeC0_Zewi_DWdGqD7HjlqrsYypo7TnE",
+            authDomain: "procureflow-demo.firebaseapp.com",
+            projectId: "procureflow-demo",
+            storageBucket: "procureflow-demo.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const demoUsers = [
+            {
+                email: 'admin@procureflow.demo',
+                password: 'demo123',
+                name: 'Admin User',
+                role: 'admin',
+                orgId: 'org_cdc',
+                approvalLimit: 50000,
+                phone: '555-0001',
+                department: 'IT Department',
+                title: 'System Administrator'
+            },
+            {
+                email: 'requester@procureflow.demo',
+                password: 'demo123',
+                name: 'John Smith',
+                role: 'requester',
+                orgId: 'org_cdc',
+                approvalLimit: 5000,
+                phone: '555-0002',
+                department: 'Operations',
+                title: 'Operations Manager'
+            },
+            {
+                email: 'approver@procureflow.demo',
+                password: 'demo123',
+                name: 'Jane Williams',
+                role: 'approver',
+                orgId: 'org_cdc',
+                approvalLimit: 10000,
+                phone: '555-0004',
+                department: 'Finance',
+                title: 'Finance Director'
+            },
+            {
+                email: 'cardholder@procureflow.demo',
+                password: 'demo123',
+                name: 'Robert Davis',
+                role: 'cardholder',
+                orgId: 'org_cdc',
+                approvalLimit: 0,
+                phone: '555-0005',
+                department: 'Procurement',
+                title: 'Procurement Specialist'
+            },
+            {
+                email: 'auditor@procureflow.demo',
+                password: 'demo123',
+                name: 'Sarah Johnson',
+                role: 'auditor',
+                orgId: 'org_cdc',
+                approvalLimit: 0,
+                phone: '555-0006',
+                department: 'Audit',
+                title: 'Internal Auditor'
+            }
+        ];
+
+        window.createAllUsers = async function() {
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('create-result');
+            
+            try {
+                statusDiv.innerHTML = '<div class="info">Creating all demo users...</div>';
+                
+                let results = [];
+                
+                for (const userData of demoUsers) {
+                    try {
+                        // Create auth user
+                        const userCredential = await createUserWithEmailAndPassword(
+                            auth, 
+                            userData.email, 
+                            userData.password
+                        );
+                        
+                        const user = userCredential.user;
+                        
+                        // Create firestore document with correct UID
+                        const firestoreData = {
+                            ...userData,
+                            uid: user.uid,
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString()
+                        };
+                        
+                        const userDocRef = doc(db, 'users', user.uid);
+                        await setDoc(userDocRef, firestoreData);
+                        
+                        results.push({
+                            email: userData.email,
+                            role: userData.role,
+                            status: 'success',
+                            uid: user.uid
+                        });
+                        
+                    } catch (error) {
+                        if (error.code === 'auth/email-already-in-use') {
+                            // User exists, try to update firestore document
+                            try {
+                                await signInWithEmailAndPassword(auth, userData.email, userData.password);
+                                const user = auth.currentUser;
+                                
+                                const firestoreData = {
+                                    ...userData,
+                                    uid: user.uid,
+                                    updatedAt: new Date().toISOString()
+                                };
+                                
+                                const userDocRef = doc(db, 'users', user.uid);
+                                await setDoc(userDocRef, firestoreData);
+                                
+                                results.push({
+                                    email: userData.email,
+                                    role: userData.role,
+                                    status: 'updated',
+                                    uid: user.uid
+                                });
+                                
+                                await signOut(auth);
+                            } catch (updateError) {
+                                results.push({
+                                    email: userData.email,
+                                    role: userData.role,
+                                    status: 'error',
+                                    error: updateError.message
+                                });
+                            }
+                        } else {
+                            results.push({
+                                email: userData.email,
+                                role: userData.role,
+                                status: 'error',
+                                error: error.message
+                            });
+                        }
+                    }
+                }
+                
+                // Display results
+                let html = '<div class="user-grid">';
+                results.forEach(result => {
+                    const statusClass = result.status === 'success' ? 'success' : 
+                                      result.status === 'updated' ? 'warning' : 'error';
+                    html += `
+                        <div class="user-card">
+                            <h4>${result.email}</h4>
+                            <p><strong>Role:</strong> ${result.role}</p>
+                            <p><strong>Status:</strong> <span class="${statusClass}">${result.status}</span></p>
+                            ${result.uid ? `<p><strong>UID:</strong> ${result.uid}</p>` : ''}
+                            ${result.error ? `<p class="error"><strong>Error:</strong> ${result.error}</p>` : ''}
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                resultDiv.innerHTML = html;
+                statusDiv.innerHTML = '<div class="success">✅ All users processed!</div>';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        };
+
+        window.verifyAllUsers = async function() {
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('verify-result');
+            
+            try {
+                statusDiv.innerHTML = '<div class="info">Verifying all users...</div>';
+                
+                // Get all users from Firestore
+                const usersRef = collection(db, 'users');
+                const usersSnapshot = await getDocs(usersRef);
+                
+                let html = '<div class="user-grid">';
+                let validUsers = 0;
+                
+                usersSnapshot.forEach((doc) => {
+                    const userData = doc.data();
+                    const isValid = userData.role && userData.email && userData.uid;
+                    if (isValid) validUsers++;
+                    
+                    html += `
+                        <div class="user-card">
+                            <h4>${userData.email || 'No Email'}</h4>
+                            <p><strong>Role:</strong> ${userData.role || 'NOT SET'}</p>
+                            <p><strong>Name:</strong> ${userData.name || 'Not Set'}</p>
+                            <p><strong>UID:</strong> ${userData.uid || 'NOT SET'}</p>
+                            <p><strong>Valid:</strong> <span class="${isValid ? 'success' : 'error'}">${isValid ? 'Yes' : 'No'}</span></p>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                html += `<p><strong>Total Users:</strong> ${usersSnapshot.size}</p>`;
+                html += `<p><strong>Valid Users:</strong> <span class="${validUsers === demoUsers.length ? 'success' : 'error'}">${validUsers}</span></p>`;
+                
+                resultDiv.innerHTML = html;
+                statusDiv.innerHTML = `<div class="${validUsers === demoUsers.length ? 'success' : 'warning'}">✅ Verification complete! ${validUsers}/${demoUsers.length} users valid.</div>`;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        };
+
+        window.testRoleRouting = function() {
+            const statusDiv = document.getElementById('status');
+            const resultDiv = document.getElementById('routing-result');
+            
+            const routingRules = {
+                'admin': '/admin',
+                'requester': '/requests',
+                'approver': '/approvals',
+                'cardholder': '/purchases',
+                'auditor': '/audit-packages'
+            };
+            
+            let html = '<h3>Role Routing Rules:</h3><ul>';
+            
+            Object.entries(routingRules).forEach(([role, route]) => {
+                html += `<li><strong>${role}:</strong> → ${route}</li>`;
+            });
+            
+            html += '</ul>';
+            html += '<h3>Test Instructions:</h3>';
+            html += '<ol>';
+            html += '<li>Go to <a href="https://procureflow-demo.web.app" target="_blank">https://procureflow-demo.web.app</a></li>';
+            html += '<li>Sign in with each demo user</li>';
+            html += '<li>Verify you are redirected to the correct page</li>';
+            html += '</ol>';
+            
+            resultDiv.innerHTML = html;
+            statusDiv.innerHTML = '<div class="info">ℹ️ Role routing test instructions displayed</div>';
+        };
+
+        // Auto-load message
+        window.addEventListener('load', () => {
+            document.getElementById('status').innerHTML = '<div class="info">Page loaded. Follow the steps to create/fix all demo users.</div>';
+        });
+    </script>
+</body>
+</html>

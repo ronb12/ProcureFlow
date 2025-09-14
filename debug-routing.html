@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Role Routing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        .warning { color: orange; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #ccc;
+        }
+        .test-result.success { border-left-color: green; background: #f0fff0; }
+        .test-result.error { border-left-color: red; background: #fff0f0; }
+        .test-result.info { border-left-color: blue; background: #f0f8ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Debug Role Routing</h1>
+        <p>This tool will help debug why role-based routing isn't working.</p>
+        
+        <div id="status"></div>
+        
+        <button onclick="testCurrentUser()">Test Current User</button>
+        <button onclick="testRoleRouting()">Test Role Routing Logic</button>
+        <button onclick="checkAllUsers()">Check All Demo Users</button>
+        
+        <div id="output"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2LeC0_Zewi_DWdGqD7HjlqrsYypo7TnE",
+            authDomain: "procureflow-demo.firebaseapp.com",
+            projectId: "procureflow-demo",
+            storageBucket: "procureflow-demo.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.testCurrentUser = async function() {
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+            
+            try {
+                statusDiv.innerHTML = '<div class="info">Testing current user...</div>';
+                
+                const user = auth.currentUser;
+                if (!user) {
+                    statusDiv.innerHTML = '<div class="warning">Not signed in. Please sign in first.</div>';
+                    return;
+                }
+                
+                // Check user document in Firestore
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+                
+                let result = `
+                    <div class="test-result info">
+                        <h3>Current User Info:</h3>
+                        <p><strong>UID:</strong> ${user.uid}</p>
+                        <p><strong>Email:</strong> ${user.email}</p>
+                        <p><strong>Display Name:</strong> ${user.displayName || 'Not set'}</p>
+                    </div>
+                `;
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    result += `
+                        <div class="test-result ${userData.role === 'approver' ? 'success' : 'error'}">
+                            <h3>Firestore User Document:</h3>
+                            <pre>${JSON.stringify(userData, null, 2)}</pre>
+                            <p><strong>Role:</strong> ${userData.role || 'NOT SET'}</p>
+                        </div>
+                    `;
+                    
+                    // Test routing logic
+                    const expectedRoute = getUserRoute(userData.role);
+                    result += `
+                        <div class="test-result info">
+                            <h3>Expected Routing:</h3>
+                            <p><strong>Role:</strong> ${userData.role || 'undefined'}</p>
+                            <p><strong>Should Route To:</strong> ${expectedRoute}</p>
+                        </div>
+                    `;
+                    
+                    if (userData.role === 'approver') {
+                        statusDiv.innerHTML = '<div class="success">✅ User has correct approver role!</div>';
+                    } else {
+                        statusDiv.innerHTML = '<div class="error">❌ User role is not "approver". Current: ' + (userData.role || 'undefined') + '</div>';
+                    }
+                } else {
+                    result += '<div class="test-result error"><h3>❌ No Firestore Document Found!</h3></div>';
+                    statusDiv.innerHTML = '<div class="error">❌ User document does not exist in Firestore!</div>';
+                }
+                
+                outputDiv.innerHTML = result;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        };
+
+        window.testRoleRouting = function() {
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+            
+            const testRoles = ['requester', 'approver', 'cardholder', 'auditor', 'admin', 'unknown', null, undefined];
+            
+            let result = '<div class="test-result info"><h3>Role Routing Test:</h3>';
+            
+            testRoles.forEach(role => {
+                const route = getUserRoute(role);
+                result += `<p><strong>Role:</strong> ${role || 'null/undefined'} → <strong>Route:</strong> ${route}</p>`;
+            });
+            
+            result += '</div>';
+            
+            statusDiv.innerHTML = '<div class="success">✅ Role routing logic tested</div>';
+            outputDiv.innerHTML = result;
+        };
+
+        window.checkAllUsers = async function() {
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+            
+            try {
+                statusDiv.innerHTML = '<div class="info">Checking all demo users...</div>';
+                
+                // Get all users from Firestore
+                const usersRef = collection(db, 'users');
+                const usersSnapshot = await getDocs(usersRef);
+                
+                let result = '<div class="test-result info"><h3>All Demo Users:</h3>';
+                
+                usersSnapshot.forEach((doc) => {
+                    const userData = doc.data();
+                    result += `
+                        <div style="margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+                            <p><strong>Email:</strong> ${userData.email}</p>
+                            <p><strong>Role:</strong> ${userData.role || 'NOT SET'}</p>
+                            <p><strong>Name:</strong> ${userData.name || 'Not set'}</p>
+                            <p><strong>UID:</strong> ${userData.uid}</p>
+                        </div>
+                    `;
+                });
+                
+                result += '</div>';
+                
+                statusDiv.innerHTML = '<div class="success">✅ All users checked</div>';
+                outputDiv.innerHTML = result;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        };
+
+        function getUserRoute(role) {
+            switch (role) {
+                case 'requester':
+                    return '/requests';
+                case 'approver':
+                    return '/approvals';
+                case 'cardholder':
+                    return '/purchases';
+                case 'auditor':
+                    return '/audit-packages';
+                case 'admin':
+                    return '/admin';
+                default:
+                    return '/dashboard';
+            }
+        }
+
+        // Auto-check on page load
+        window.addEventListener('load', () => {
+            document.getElementById('status').innerHTML = '<div class="info">Page loaded. Click "Test Current User" to begin debugging.</div>';
+        });
+    </script>
+</body>
+</html>

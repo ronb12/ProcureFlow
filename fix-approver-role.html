@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Approver Role</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Fix Approver Role</h1>
+        <p>This tool will check and fix the approver user's role in Firestore.</p>
+        
+        <div id="status"></div>
+        
+        <button onclick="checkApproverRole()">Check Approver Role</button>
+        <button onclick="fixApproverRole()">Fix Approver Role</button>
+        <button onclick="createApproverUser()">Create Approver User</button>
+        
+        <div id="output"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB2LeC0_Zewi_DWdGqD7HjlqrsYypo7TnE",
+            authDomain: "procureflow-demo.firebaseapp.com",
+            projectId: "procureflow-demo",
+            storageBucket: "procureflow-demo.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef123456"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        window.checkApproverRole = async function() {
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+            
+            try {
+                statusDiv.innerHTML = '<div class="info">Checking approver role...</div>';
+                
+                // Get current user
+                const user = auth.currentUser;
+                if (!user) {
+                    statusDiv.innerHTML = '<div class="error">Not signed in. Please sign in first.</div>';
+                    return;
+                }
+                
+                // Check user document in Firestore
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    outputDiv.innerHTML = `
+                        <h3>Current User Data:</h3>
+                        <pre>${JSON.stringify(userData, null, 2)}</pre>
+                        <p><strong>Role:</strong> ${userData.role || 'NOT SET'}</p>
+                        <p><strong>Email:</strong> ${userData.email}</p>
+                    `;
+                    
+                    if (userData.role === 'approver') {
+                        statusDiv.innerHTML = '<div class="success">✅ Approver role is correct!</div>';
+                    } else {
+                        statusDiv.innerHTML = '<div class="error">❌ Role is not set to "approver". Current role: ' + (userData.role || 'undefined') + '</div>';
+                    }
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ User document does not exist in Firestore!</div>';
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        };
+
+        window.fixApproverRole = async function() {
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+            
+            try {
+                statusDiv.innerHTML = '<div class="info">Fixing approver role...</div>';
+                
+                const user = auth.currentUser;
+                if (!user) {
+                    statusDiv.innerHTML = '<div class="error">Not signed in. Please sign in first.</div>';
+                    return;
+                }
+                
+                // Update user role to approver
+                const userDocRef = doc(db, 'users', user.uid);
+                await updateDoc(userDocRef, {
+                    role: 'approver',
+                    updatedAt: new Date().toISOString()
+                });
+                
+                statusDiv.innerHTML = '<div class="success">✅ Approver role fixed!</div>';
+                outputDiv.innerHTML = '<p>User role updated to "approver"</p>';
+                
+                // Refresh the page to see the change
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        };
+
+        window.createApproverUser = async function() {
+            const statusDiv = document.getElementById('status');
+            const outputDiv = document.getElementById('output');
+            
+            try {
+                statusDiv.innerHTML = '<div class="info">Creating approver user...</div>';
+                
+                // Create approver user document
+                const approverData = {
+                    uid: 'approver_user',
+                    email: 'approver@procureflow.demo',
+                    name: 'Jane Williams',
+                    role: 'approver',
+                    orgId: 'org_cdc',
+                    approvalLimit: 10000,
+                    phone: '555-0004',
+                    department: 'Operations',
+                    title: 'Operations Manager',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                const userDocRef = doc(db, 'users', 'approver_user');
+                await setDoc(userDocRef, approverData);
+                
+                statusDiv.innerHTML = '<div class="success">✅ Approver user created!</div>';
+                outputDiv.innerHTML = `
+                    <h3>Approver User Created:</h3>
+                    <pre>${JSON.stringify(approverData, null, 2)}</pre>
+                `;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = '<div class="error">Error: ' + error.message + '</div>';
+            }
+        };
+
+        // Auto-check on page load
+        window.addEventListener('load', () => {
+            document.getElementById('status').innerHTML = '<div class="info">Page loaded. Sign in and click "Check Approver Role" to begin.</div>';
+        });
+    </script>
+</body>
+</html>

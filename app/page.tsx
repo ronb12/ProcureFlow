@@ -11,7 +11,35 @@ export default function HomePage() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.push('/dashboard');
+        // Debug logging
+        console.log('HomePage routing - User:', user.email, 'Role:', user.role);
+        
+        // Route users to role-specific pages instead of generic dashboard
+        switch (user.role) {
+          case 'requester':
+            console.log('Routing requester to /requests');
+            router.push('/requests');
+            break;
+          case 'approver':
+            console.log('Routing approver to /approvals');
+            router.push('/approvals');
+            break;
+          case 'cardholder':
+            console.log('Routing cardholder to /purchases');
+            router.push('/purchases');
+            break;
+          case 'auditor':
+            console.log('Routing auditor to /audit-packages');
+            router.push('/audit-packages');
+            break;
+          case 'admin':
+            console.log('Routing admin to /admin');
+            router.push('/admin');
+            break;
+          default:
+            console.log('Routing default to /dashboard, role was:', user.role);
+            router.push('/dashboard');
+        }
       } else {
         router.push('/login');
       }

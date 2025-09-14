@@ -81,7 +81,26 @@ export default function LoginPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (user && !loading) {
-      router.push('/dashboard');
+      // Route users to role-specific pages instead of generic dashboard
+      switch (user.role) {
+        case 'requester':
+          router.push('/requests');
+          break;
+        case 'approver':
+          router.push('/approvals');
+          break;
+        case 'cardholder':
+          router.push('/purchases');
+          break;
+        case 'auditor':
+          router.push('/audit-packages');
+          break;
+        case 'admin':
+          router.push('/admin');
+          break;
+        default:
+          router.push('/dashboard');
+      }
     }
   }, [user, loading, router]);
 
@@ -122,16 +141,12 @@ export default function LoginPage() {
       if (isSignUp) {
         await signUpWithEmail(email, password, name);
         // Note: Role will be assigned by admin after account creation
-        toast.success(
-          `Account created successfully as ${roles.find(r => r.value === selectedRole)?.label}`
-        );
+        toast.success('Account created successfully');
       } else {
         await signInWithEmail(email, password);
-        toast.success(
-          `Signed in as ${roles.find(r => r.value === selectedRole)?.label}`
-        );
+        toast.success('Signed in successfully');
       }
-      router.push('/dashboard');
+      // Redirect will be handled by the useEffect above based on user role
     } catch (error: any) {
       console.error('Auth error:', error);
       const errorMessage =
@@ -153,7 +168,7 @@ export default function LoginPage() {
         await signInWithGoogle();
         toast.success('Signed in with Google');
       }
-      router.push('/dashboard');
+      // Redirect will be handled by the useEffect above based on user role
     } catch (error: any) {
       console.error('Google auth error:', error);
       const errorMessage =
@@ -177,7 +192,7 @@ export default function LoginPage() {
         await signInWithMicrosoft();
         toast.success('Signed in with Microsoft');
       }
-      router.push('/dashboard');
+      // Redirect will be handled by the useEffect above based on user role
     } catch (error: any) {
       console.error('Microsoft auth error:', error);
       const errorMessage =

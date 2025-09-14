@@ -243,6 +243,55 @@ export async function createUserDocument(
   const userRef = doc(db, 'users', firebaseUser.uid);
   const userSnap = await getDoc(userRef);
 
+  // Determine role based on email for demo users (always update)
+  let role = 'requester'; // Default role
+  let orgId = 'org_cdc'; // Default org
+  let approvalLimit = 0;
+
+  if (firebaseUser.email) {
+    if (firebaseUser.email === 'admin@procureflow.demo') {
+      role = 'admin';
+      approvalLimit = 100000;
+    } else if (firebaseUser.email === 'approver@procureflow.demo') {
+      role = 'approver';
+      approvalLimit = 10000;
+    } else if (firebaseUser.email === 'cardholder@procureflow.demo') {
+      role = 'cardholder';
+      approvalLimit = 0;
+    } else if (firebaseUser.email === 'auditor@procureflow.demo') {
+      role = 'auditor';
+      approvalLimit = 0;
+    } else if (firebaseUser.email === 'requester@procureflow.demo') {
+      role = 'requester';
+      approvalLimit = 0;
+    } else if (firebaseUser.email === 'test@procureflow.demo') {
+      role = 'requester';
+      approvalLimit = 5000;
+    }
+  }
+
+  // Always update the user document with the correct role for demo users
+  if (firebaseUser.email && firebaseUser.email.includes('@procureflow.demo')) {
+    console.log(`Updating user role for ${firebaseUser.email} to ${role}`);
+    try {
+      await setDoc(userRef, {
+        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+        email: firebaseUser.email || '',
+        role: role,
+        orgId: orgId,
+        approvalLimit: approvalLimit,
+        createdAt: userSnap.exists() ? userSnap.data()?.createdAt || new Date() : new Date(),
+        updatedAt: new Date(),
+        ...additionalData,
+      });
+      console.log(`Successfully updated user role to ${role}`);
+      return;
+    } catch (error) {
+      console.error('Error updating user document:', error);
+      throw error;
+    }
+  }
+
   if (!userSnap.exists()) {
     const { displayName, email } = firebaseUser;
     const createdAt = new Date();

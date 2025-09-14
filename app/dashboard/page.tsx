@@ -78,7 +78,7 @@ export default function DashboardPage() {
   const router = useRouter();
   
   // Use original user role for role-based functionality, not debug role
-  const actualRole = originalUser?.role || user.role;
+  const actualRole = originalUser?.role || user?.role || 'requester';
 
   useEffect(() => {
     if (!loading && !user) {

@@ -70,6 +70,25 @@ export default function LoginPage() {
     },
   ];
 
+  // Auto-select role based on email
+  useEffect(() => {
+    if (email) {
+      if (email === 'admin@procureflow.demo') {
+        setSelectedRole('admin');
+      } else if (email === 'approver@procureflow.demo') {
+        setSelectedRole('approver');
+      } else if (email === 'cardholder@procureflow.demo') {
+        setSelectedRole('cardholder');
+      } else if (email === 'auditor@procureflow.demo') {
+        setSelectedRole('auditor');
+      } else if (email === 'requester@procureflow.demo') {
+        setSelectedRole('requester');
+      } else if (email === 'test@procureflow.demo') {
+        setSelectedRole('requester');
+      }
+    }
+  }, [email]);
+
   // Clear form when switching modes
   const handleModeToggle = (signUp: boolean) => {
     setIsSignUp(signUp);

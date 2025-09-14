@@ -145,6 +145,61 @@ export async function getCurrentUser(): Promise<User | null> {
     }
 
     const userData = userDoc.data();
+    
+    // For demo users, always ensure the correct role is set
+    if (firebaseUser.email && firebaseUser.email.includes('@procureflow.demo')) {
+      let correctRole = 'requester';
+      let correctOrgId = 'org_cdc';
+      let correctApprovalLimit = 0;
+      
+      if (firebaseUser.email === 'admin@procureflow.demo') {
+        correctRole = 'admin';
+        correctApprovalLimit = 100000;
+      } else if (firebaseUser.email === 'approver@procureflow.demo') {
+        correctRole = 'approver';
+        correctApprovalLimit = 10000;
+      } else if (firebaseUser.email === 'cardholder@procureflow.demo') {
+        correctRole = 'cardholder';
+        correctApprovalLimit = 0;
+      } else if (firebaseUser.email === 'auditor@procureflow.demo') {
+        correctRole = 'auditor';
+        correctApprovalLimit = 0;
+      } else if (firebaseUser.email === 'requester@procureflow.demo') {
+        correctRole = 'requester';
+        correctApprovalLimit = 0;
+      } else if (firebaseUser.email === 'test@procureflow.demo') {
+        correctRole = 'requester';
+        correctApprovalLimit = 5000;
+      }
+      
+      // If the role is incorrect, update it
+      if (userData.role !== correctRole) {
+        console.log(`Updating user role from ${userData.role} to ${correctRole} for ${firebaseUser.email}`);
+        try {
+          await setDoc(doc(db, 'users', firebaseUser.uid), {
+            ...userData,
+            role: correctRole,
+            orgId: correctOrgId,
+            approvalLimit: correctApprovalLimit,
+            updatedAt: new Date(),
+          });
+          console.log(`Successfully updated user role to ${correctRole}`);
+        } catch (updateError) {
+          console.error('Error updating user role:', updateError);
+        }
+      }
+      
+      return {
+        id: firebaseUser.uid,
+        ...userData,
+        role: correctRole,
+        orgId: correctOrgId,
+        approvalLimit: correctApprovalLimit,
+        createdAt: userData.createdAt?.toDate() || new Date(),
+        updatedAt: new Date(),
+      } as User;
+    }
+    
     return {
       id: firebaseUser.uid,
       ...userData,

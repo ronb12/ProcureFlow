@@ -214,7 +214,16 @@ export default function DashboardPage() {
             Welcome back, {user.name || user.email?.split('@')[0] || 'User'}!
           </h1>
           <p className="mt-2 text-gray-600">
-            Here's what's happening with your procurement requests.
+            {actualRole && ['requester', 'admin'].includes(actualRole) 
+              ? "Here's what's happening with your procurement requests."
+              : actualRole && ['approver', 'admin'].includes(actualRole)
+              ? "Here's your approval queue and recent activity."
+              : actualRole && ['cardholder', 'admin'].includes(actualRole)
+              ? "Here's your purchase queue and recent activity."
+              : actualRole && ['auditor', 'admin'].includes(actualRole)
+              ? "Here's your audit dashboard and recent activity."
+              : "Here's your dashboard overview."
+            }
           </p>
         </div>
 

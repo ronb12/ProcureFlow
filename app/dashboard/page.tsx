@@ -101,35 +101,37 @@ export default function DashboardPage() {
   const getRoleBasedCards = () => {
     const cards = [];
 
-    // My Requests - for all users
-    cards.push({
-      title: 'My Requests',
-      description: `${mockStats.myRequests.total} total requests`,
-      icon: FileText,
-      href: '/requests',
-      stats: [
-        {
-          label: 'Draft',
-          value: mockStats.myRequests.draft,
-          color: 'text-gray-600',
-        },
-        {
-          label: 'Submitted',
-          value: mockStats.myRequests.submitted,
-          color: 'text-blue-600',
-        },
-        {
-          label: 'In Review',
-          value: mockStats.myRequests.inReview,
-          color: 'text-yellow-600',
-        },
-        {
-          label: 'Approved',
-          value: mockStats.myRequests.approved,
-          color: 'text-green-600',
-        },
-      ],
-    });
+    // My Requests - only for requesters and admins
+    if (actualRole && ['requester', 'admin'].includes(actualRole)) {
+      cards.push({
+        title: 'My Requests',
+        description: `${mockStats.myRequests.total} total requests`,
+        icon: FileText,
+        href: '/requests',
+        stats: [
+          {
+            label: 'Draft',
+            value: mockStats.myRequests.draft,
+            color: 'text-gray-600',
+          },
+          {
+            label: 'Submitted',
+            value: mockStats.myRequests.submitted,
+            color: 'text-blue-600',
+          },
+          {
+            label: 'In Review',
+            value: mockStats.myRequests.inReview,
+            color: 'text-yellow-600',
+          },
+          {
+            label: 'Approved',
+            value: mockStats.myRequests.approved,
+            color: 'text-green-600',
+          },
+        ],
+      });
+    }
 
     // Pending Approvals - for approvers and admins
     if (actualRole && ['approver', 'admin'].includes(actualRole)) {
@@ -316,16 +318,28 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Recent Requests */}
+        {/* Recent Activity - Role-specific */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
                 <Clock className="h-5 w-5" />
-                <span>Recent Requests</span>
+                <span>
+                  {actualRole && ['requester', 'admin'].includes(actualRole) 
+                    ? 'Recent Requests' 
+                    : actualRole && ['approver', 'admin'].includes(actualRole)
+                    ? 'Recent Approvals'
+                    : 'Recent Activity'
+                  }
+                </span>
               </CardTitle>
               <CardDescription>
-                Your latest procurement requests
+                {actualRole && ['requester', 'admin'].includes(actualRole) 
+                  ? 'Your latest procurement requests'
+                  : actualRole && ['approver', 'admin'].includes(actualRole)
+                  ? 'Your latest approval decisions'
+                  : 'Your recent activity'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -334,7 +348,13 @@ export default function DashboardPage() {
                   <div
                     key={request.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                    onClick={() => router.push('/requests')}
+                    onClick={() => router.push(
+                      actualRole && ['requester', 'admin'].includes(actualRole) 
+                        ? '/requests' 
+                        : actualRole && ['approver', 'admin'].includes(actualRole)
+                        ? '/approvals'
+                        : '/dashboard'
+                    )}
                   >
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">

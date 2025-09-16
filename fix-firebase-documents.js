@@ -22,74 +22,74 @@ async function fixFirebaseDocuments() {
   try {
     // Define the correct user data for demo users
     const demoUsers = [
-      {
-        email: 'admin@procureflow.demo',
-        role: 'admin',
-        orgId: 'org_cdc',
-        approvalLimit: 100000,
+            {
+              email: 'admin@procureflow.demo',
+              role: 'admin',
+              orgId: 'org_cdc',
+              approvalLimit: 100000,
         name: 'Sarah Johnson',
         phone: '555-0002',
         department: 'Administration',
         title: 'System Administrator'
-      },
-      {
-        email: 'approver@procureflow.demo',
-        role: 'approver',
-        orgId: 'org_cdc',
-        approvalLimit: 10000,
+            },
+            {
+              email: 'approver@procureflow.demo',
+              role: 'approver',
+              orgId: 'org_cdc',
+              approvalLimit: 10000,
         name: 'Jane Williams',
         phone: '555-0004',
         department: 'Finance',
         title: 'Finance Director'
-      },
-      {
-        email: 'cardholder@procureflow.demo',
-        role: 'cardholder',
-        orgId: 'org_cdc',
-        approvalLimit: 0,
+            },
+            {
+              email: 'cardholder@procureflow.demo',
+              role: 'cardholder',
+              orgId: 'org_cdc',
+              approvalLimit: 0,
         name: 'Robert Davis',
         phone: '555-0005',
         department: 'Procurement',
         title: 'Procurement Specialist'
-      },
-      {
-        email: 'auditor@procureflow.demo',
-        role: 'auditor',
-        orgId: 'org_cdc',
-        approvalLimit: 0,
+            },
+            {
+              email: 'auditor@procureflow.demo',
+              role: 'auditor',
+              orgId: 'org_cdc',
+              approvalLimit: 0,
         name: 'Alice Brown',
         phone: '555-0006',
         department: 'Compliance',
         title: 'Compliance Auditor'
-      },
-      {
-        email: 'requester@procureflow.demo',
-        role: 'requester',
-        orgId: 'org_cdc',
-        approvalLimit: 0,
+            },
+            {
+              email: 'requester@procureflow.demo',
+              role: 'requester',
+              orgId: 'org_cdc',
+              approvalLimit: 0,
         name: 'John Smith',
         phone: '555-0003',
         department: 'Operations',
         title: 'Operations Manager'
-      },
-      {
-        email: 'test@procureflow.demo',
-        role: 'requester',
-        orgId: 'org_cdc',
-        approvalLimit: 5000,
+            },
+            {
+              email: 'test@procureflow.demo',
+              role: 'requester',
+              orgId: 'org_cdc',
+              approvalLimit: 5000,
         name: 'Test User (All Roles)',
         phone: '555-0001',
         department: 'IT Department',
         title: 'Test User'
-      }
-    ];
-
+            }
+          ];
+          
     console.log('📋 Updating demo user documents...');
-    
+          
     for (const userData of demoUsers) {
-      try {
+            try {
         // Find the user document by email
-        const usersRef = db.collection('users');
+              const usersRef = db.collection('users');
         const snapshot = await usersRef.where('email', '==', userData.email).get();
         
         if (snapshot.empty) {
@@ -105,10 +105,10 @@ async function fixFirebaseDocuments() {
           console.log(`   New role: ${userData.role}`);
           
           await doc.ref.update({
-            role: userData.role,
-            orgId: userData.orgId,
-            approvalLimit: userData.approvalLimit,
-            name: userData.name,
+                  role: userData.role,
+                  orgId: userData.orgId,
+                  approvalLimit: userData.approvalLimit,
+                  name: userData.name,
             phone: userData.phone,
             department: userData.department,
             title: userData.title,

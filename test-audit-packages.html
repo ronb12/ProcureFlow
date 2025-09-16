@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Audit Packages Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            margin: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.auditor {
+            background: #28a745;
+        }
+        .button.auditor:hover {
+            background: #1e7e34;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .status {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Audit Packages Page Test</h1>
+        <p>Test the audit packages page functionality after fixes.</p>
+        
+        <div class="info">
+            <strong>Fixed Issues:</strong>
+            <ul>
+                <li>✅ Fixed React hooks dependency issues</li>
+                <li>✅ Added proper error handling</li>
+                <li>✅ Prevented infinite loops in useEffect</li>
+                <li>✅ Added loading states and error boundaries</li>
+            </ul>
+        </div>
+        
+        <div class="status">
+            <h3>Test Steps:</h3>
+            <ol>
+                <li>Click "Login as Auditor" to authenticate</li>
+                <li>Click "Test Audit Packages" to verify the page loads</li>
+                <li>Check that the page shows content without React errors</li>
+            </ol>
+        </div>
+        
+        <a href="javascript:loginAsAuditor()" class="button auditor">
+            🔑 Login as Auditor
+        </a>
+        
+        <a href="/audit-packages/" class="button">
+            📋 Test Audit Packages Page
+        </a>
+        
+        <a href="/login" class="button">
+            🔐 Go to Login Page
+        </a>
+        
+        <div id="result" style="margin-top: 20px; padding: 15px; border-radius: 5px; display: none;"></div>
+    </div>
+
+    <script>
+        async function loginAsAuditor() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div style="color: #0c5460;">🔄 Logging in as auditor...</div>';
+            
+            try {
+                // Check if Firebase is available
+                if (typeof firebase === 'undefined') {
+                    resultDiv.innerHTML = '<div style="color: #721c24; background: #f8d7da; padding: 15px; border-radius: 5px;">❌ Firebase not loaded. Please go to the main app first: <a href="/">ProcureFlow Home</a></div>';
+                    return;
+                }
+
+                const email = 'auditor@procureflow.demo';
+                const password = 'demo123';
+
+                // Try to sign in
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                resultDiv.innerHTML = '<div style="color: #155724; background: #d4edda; padding: 15px; border-radius: 5px;">✅ Successfully logged in as auditor!<br>UID: ' + user.uid + '<br><br>🔄 Now you can test the audit packages page.</div>';
+
+            } catch (error) {
+                resultDiv.innerHTML = '<div style="color: #721c24; background: #f8d7da; padding: 15px; border-radius: 5px;">❌ Login failed: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -39,9 +39,11 @@ export const db: Firestore = getFirestore(app);
 export const storage: FirebaseStorage = getStorage(app);
 export const functions: Functions = getFunctions(app);
 
-// Connect to emulators in development
-if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-  // Only connect to emulators on client side
+// Connect to emulators in development (only when explicitly enabled)
+if (process.env.NODE_ENV === 'development' && 
+    typeof window !== 'undefined' && 
+    process.env.NEXT_PUBLIC_USE_EMULATORS === 'true') {
+  // Only connect to emulators on client side when explicitly enabled
   if (!auth.emulatorConfig) {
     connectAuthEmulator(auth, 'http://localhost:9099');
   }

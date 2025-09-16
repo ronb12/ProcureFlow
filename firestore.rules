@@ -153,6 +153,30 @@ service cloud.firestore {
       allow update, delete: if false; // Immutable
     }
     
+    // Audit Packages collection
+    match /auditPackages/{packageId} {
+      allow read: if isAuditor() || isAdmin();
+      allow create: if isAuditor() || isAdmin();
+      allow update: if isAuditor() || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Audit Package Exports collection
+    match /auditExports/{exportId} {
+      allow read: if isAuditor() || isAdmin();
+      allow create: if isAuditor() || isAdmin();
+      allow update: if isAuditor() || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Compliance Checks collection
+    match /complianceChecks/{checkId} {
+      allow read: if isAuditor() || isAdmin();
+      allow create: if isAuditor() || isAdmin();
+      allow update: if isAuditor() || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
     // Notifications collection
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;

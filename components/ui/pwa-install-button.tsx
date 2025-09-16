@@ -15,6 +15,9 @@ export function PWAInstallButton() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
+    let checkInterval: NodeJS.Timeout;
+    let fallbackTimer: NodeJS.Timeout;
+
     // Check if app is already installed
     const checkIfInstalled = () => {
       if (window.matchMedia('(display-mode: standalone)').matches) {
@@ -31,12 +34,16 @@ export function PWAInstallButton() {
     // Check if deferred prompt is already available from PWAProvider
     const checkDeferredPrompt = () => {
       const globalPrompt = (window as any).deferredPrompt;
-      if (globalPrompt) {
+      if (globalPrompt && !deferredPrompt) {
         setDeferredPrompt(globalPrompt as BeforeInstallPromptEvent);
         setShowInstallButton(true);
         console.log(
           'PWA install button should now be visible (from global prompt)'
         );
+        // Clear the interval once we have the prompt
+        if (checkInterval) {
+          clearInterval(checkInterval);
+        }
       }
     };
 
@@ -48,33 +55,42 @@ export function PWAInstallButton() {
       setIsInstalled(true);
       setShowInstallButton(false);
       setDeferredPrompt(null);
+      if (checkInterval) {
+        clearInterval(checkInterval);
+      }
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
 
     // Check periodically if app is installed or if deferred prompt becomes available
-    const checkInterval = setInterval(() => {
-      if (checkIfInstalled()) {
-        clearInterval(checkInterval);
-        return;
-      }
-      checkDeferredPrompt();
-    }, 1000);
+    // Only run if we don't already have a prompt
+    if (!deferredPrompt) {
+      checkInterval = setInterval(() => {
+        if (checkIfInstalled()) {
+          clearInterval(checkInterval);
+          return;
+        }
+        checkDeferredPrompt();
+      }, 2000); // Increased interval to reduce spam
+    }
 
     // Fallback: Show install button after a delay if beforeinstallprompt doesn't fire
-    const fallbackTimer = setTimeout(() => {
-      if (!showInstallButton && !deferredPrompt && !isInstalled) {
-        console.log('PWA install button fallback - showing button');
-        setShowInstallButton(true);
-      }
-    }, 5000);
+    fallbackTimer = setTimeout(() => {
+      setShowInstallButton(prev => {
+        if (!prev && !deferredPrompt && !isInstalled) {
+          console.log('PWA install button fallback - showing button');
+          return true;
+        }
+        return prev;
+      });
+    }, 10000); // Increased delay
 
     return () => {
       window.removeEventListener('appinstalled', handleAppInstalled);
-      clearTimeout(fallbackTimer);
-      clearInterval(checkInterval);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+      if (checkInterval) clearInterval(checkInterval);
     };
-  }, [showInstallButton, deferredPrompt, isInstalled]);
+  }, []); // Empty dependency array to prevent infinite loops
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {

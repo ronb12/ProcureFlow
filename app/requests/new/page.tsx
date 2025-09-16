@@ -16,8 +16,273 @@ import { MoneyInput } from '@/components/ui/money-input';
 import { FileDropzone } from '@/components/ui/file-dropzone';
 import { CreateRequestData, RequestItem } from '@/lib/types';
 import { notificationService } from '@/lib/notification-service';
-import { ArrowLeft, Save, Send } from 'lucide-react';
+import { ArrowLeft, Save, Send, Building2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+interface Facility {
+  id: string;
+  name: string;
+  code: string;
+  installation: string;
+  installationCode: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+  director: string;
+  capacity: number;
+  ageGroups: string[];
+  status: 'active' | 'inactive';
+}
+
+// Mock facilities data for DOD MWR child care centers grouped by installation
+const mockFacilities: Facility[] = [
+  // Fort Jackson, SC - Multiple Child Care Centers
+  {
+    id: '1',
+    name: 'Fort Jackson CDC #1 - Main',
+    code: 'FJ-CDC-001',
+    installation: 'Fort Jackson',
+    installationCode: 'FJ',
+    address: '1234 Child Care Drive',
+    city: 'Columbia',
+    state: 'SC',
+    zip: '29207',
+    phone: '(803) 555-0101',
+    director: 'Sarah Johnson',
+    capacity: 120,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  {
+    id: '2',
+    name: 'Fort Jackson CDC #2 - East',
+    code: 'FJ-CDC-002',
+    installation: 'Fort Jackson',
+    installationCode: 'FJ',
+    address: '5678 East Child Care Blvd',
+    city: 'Columbia',
+    state: 'SC',
+    zip: '29207',
+    phone: '(803) 555-0102',
+    director: 'Michael Rodriguez',
+    capacity: 95,
+    ageGroups: ['Infant', 'Toddler', 'Preschool'],
+    status: 'active',
+  },
+  {
+    id: '3',
+    name: 'Fort Jackson CDC #3 - West',
+    code: 'FJ-CDC-003',
+    installation: 'Fort Jackson',
+    installationCode: 'FJ',
+    address: '9012 West Child Care Ave',
+    city: 'Columbia',
+    state: 'SC',
+    zip: '29207',
+    phone: '(803) 555-0103',
+    director: 'Jennifer Williams',
+    capacity: 150,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  {
+    id: '4',
+    name: 'Fort Jackson CDC #4 - North',
+    code: 'FJ-CDC-004',
+    installation: 'Fort Jackson',
+    installationCode: 'FJ',
+    address: '3456 North Child Care St',
+    city: 'Columbia',
+    state: 'SC',
+    zip: '29207',
+    phone: '(803) 555-0104',
+    director: 'David Chen',
+    capacity: 180,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  {
+    id: '5',
+    name: 'Fort Jackson CDC #5 - South',
+    code: 'FJ-CDC-005',
+    installation: 'Fort Jackson',
+    installationCode: 'FJ',
+    address: '7890 South Child Care Rd',
+    city: 'Columbia',
+    state: 'SC',
+    zip: '29207',
+    phone: '(803) 555-0105',
+    director: 'Lisa Thompson',
+    capacity: 200,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  {
+    id: '6',
+    name: 'Fort Jackson CDC #6 - Central',
+    code: 'FJ-CDC-006',
+    installation: 'Fort Jackson',
+    installationCode: 'FJ',
+    address: '2468 Central Child Care Way',
+    city: 'Columbia',
+    state: 'SC',
+    zip: '29207',
+    phone: '(803) 555-0106',
+    director: 'Robert Davis',
+    capacity: 110,
+    ageGroups: ['Infant', 'Toddler', 'Preschool'],
+    status: 'active',
+  },
+  {
+    id: '7',
+    name: 'Fort Jackson CDC #7 - Training',
+    code: 'FJ-CDC-007',
+    installation: 'Fort Jackson',
+    installationCode: 'FJ',
+    address: '1357 Training Child Care Ln',
+    city: 'Columbia',
+    state: 'SC',
+    zip: '29207',
+    phone: '(803) 555-0107',
+    director: 'Maria Garcia',
+    capacity: 85,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  {
+    id: '8',
+    name: 'Fort Jackson CDC #8 - Support',
+    code: 'FJ-CDC-008',
+    installation: 'Fort Jackson',
+    installationCode: 'FJ',
+    address: '9753 Support Child Care Dr',
+    city: 'Columbia',
+    state: 'SC',
+    zip: '29207',
+    phone: '(803) 555-0108',
+    director: 'James Wilson',
+    capacity: 140,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  // Fort Bragg, NC - Multiple Centers
+  {
+    id: '9',
+    name: 'Fort Bragg CDC #1 - Main',
+    code: 'FB-CDC-001',
+    installation: 'Fort Bragg',
+    installationCode: 'FB',
+    address: '1234 Child Care Drive',
+    city: 'Fayetteville',
+    state: 'NC',
+    zip: '28310',
+    phone: '(910) 555-0201',
+    director: 'Sarah Johnson',
+    capacity: 120,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  {
+    id: '10',
+    name: 'Fort Bragg CDC #2 - East',
+    code: 'FB-CDC-002',
+    installation: 'Fort Bragg',
+    installationCode: 'FB',
+    address: '5678 East Child Care Blvd',
+    city: 'Fayetteville',
+    state: 'NC',
+    zip: '28310',
+    phone: '(910) 555-0202',
+    director: 'Michael Rodriguez',
+    capacity: 95,
+    ageGroups: ['Infant', 'Toddler', 'Preschool'],
+    status: 'active',
+  },
+  {
+    id: '11',
+    name: 'Fort Bragg CDC #3 - West',
+    code: 'FB-CDC-003',
+    installation: 'Fort Bragg',
+    installationCode: 'FB',
+    address: '9012 West Child Care Ave',
+    city: 'Fayetteville',
+    state: 'NC',
+    zip: '28310',
+    phone: '(910) 555-0203',
+    director: 'Jennifer Williams',
+    capacity: 150,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  // Camp Lejeune, NC
+  {
+    id: '12',
+    name: 'Camp Lejeune CDC #1 - Main',
+    code: 'CL-CDC-001',
+    installation: 'Camp Lejeune',
+    installationCode: 'CL',
+    address: '1234 Marine Way',
+    city: 'Jacksonville',
+    state: 'NC',
+    zip: '28542',
+    phone: '(910) 555-0301',
+    director: 'David Chen',
+    capacity: 180,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  {
+    id: '13',
+    name: 'Camp Lejeune CDC #2 - East',
+    code: 'CL-CDC-002',
+    installation: 'Camp Lejeune',
+    installationCode: 'CL',
+    address: '5678 East Marine Blvd',
+    city: 'Jacksonville',
+    state: 'NC',
+    zip: '28542',
+    phone: '(910) 555-0302',
+    director: 'Lisa Thompson',
+    capacity: 200,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  // Norfolk Naval Station, VA
+  {
+    id: '14',
+    name: 'Norfolk Naval CDC #1 - Main',
+    code: 'NN-CDC-001',
+    installation: 'Norfolk Naval Station',
+    installationCode: 'NN',
+    address: '1234 Navy Boulevard',
+    city: 'Norfolk',
+    state: 'VA',
+    zip: '23511',
+    phone: '(757) 555-0401',
+    director: 'Robert Davis',
+    capacity: 150,
+    ageGroups: ['Infant', 'Toddler', 'Preschool', 'School Age'],
+    status: 'active',
+  },
+  {
+    id: '15',
+    name: 'Norfolk Naval CDC #2 - East',
+    code: 'NN-CDC-002',
+    installation: 'Norfolk Naval Station',
+    installationCode: 'NN',
+    address: '5678 East Navy Ave',
+    city: 'Norfolk',
+    state: 'VA',
+    zip: '23511',
+    phone: '(757) 555-0402',
+    director: 'Maria Garcia',
+    capacity: 110,
+    ageGroups: ['Infant', 'Toddler', 'Preschool'],
+    status: 'active',
+  },
+];
 
 export default function NewRequestPage() {
   const router = useRouter();
@@ -27,7 +292,7 @@ export default function NewRequestPage() {
 
   // Form state
   const [formData, setFormData] = useState<
-    Partial<CreateRequestData> & { totalEstimate?: number }
+    Partial<CreateRequestData> & { totalEstimate?: number; facilityId?: string; installationId?: string }
   >({
     vendor: '',
     justification: '',
@@ -35,9 +300,25 @@ export default function NewRequestPage() {
     accountingCode: '',
     items: [] as RequestItem[],
     totalEstimate: 0,
+    facilityId: '',
+    installationId: '',
   });
 
   const [attachments, setAttachments] = useState<File[]>([]);
+
+  // Get unique installations
+  const installations = Array.from(
+    new Set(mockFacilities.map(f => f.installation))
+  ).map(installation => ({
+    id: installation,
+    name: installation,
+    code: mockFacilities.find(f => f.installation === installation)?.installationCode || '',
+  }));
+
+  // Get facilities by installation
+  const getFacilitiesByInstallation = (installationId: string) => {
+    return mockFacilities.filter(f => f.installation === installationId);
+  };
 
   // Handle authentication redirect
   useEffect(() => {
@@ -87,7 +368,7 @@ export default function NewRequestPage() {
     );
   }
 
-  const handleInputChange = (field: keyof CreateRequestData, value: any) => {
+  const handleInputChange = (field: keyof CreateRequestData | 'facilityId' | 'installationId', value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -103,6 +384,14 @@ export default function NewRequestPage() {
   const handleSubmit = async (isDraft: boolean = false) => {
     if (!isDraft) {
       // Validate required fields
+      if (!formData.installationId?.trim()) {
+        toast.error('Installation selection is required');
+        return;
+      }
+      if (!formData.facilityId?.trim()) {
+        toast.error('Child care center selection is required');
+        return;
+      }
       if (!formData.vendor?.trim()) {
         toast.error('Vendor is required');
         return;
@@ -195,6 +484,46 @@ export default function NewRequestPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Installation *
+                  </label>
+                  <select
+                    value={formData.installationId || ''}
+                    onChange={e => {
+                      handleInputChange('installationId', e.target.value);
+                      handleInputChange('facilityId', ''); // Reset facility when installation changes
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select an installation</option>
+                    {installations.map(installation => (
+                      <option key={installation.id} value={installation.id}>
+                        {installation.name} ({installation.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Child Care Center *
+                  </label>
+                  <select
+                    value={formData.facilityId || ''}
+                    onChange={e => handleInputChange('facilityId', e.target.value)}
+                    disabled={!formData.installationId}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">
+                      {formData.installationId ? 'Select a child care center' : 'Select installation first'}
+                    </option>
+                    {formData.installationId && getFacilitiesByInstallation(formData.installationId).map(facility => (
+                      <option key={facility.id} value={facility.id}>
+                        {facility.name} ({facility.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Vendor *

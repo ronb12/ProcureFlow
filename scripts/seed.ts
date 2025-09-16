@@ -251,6 +251,135 @@ async function seedData() {
     console.log('✅ Created sample cycle');
 
     console.log('🎉 Data seeding completed successfully!');
+    // Create sample audit packages
+    console.log('Creating sample audit packages...');
+    const auditPackages = [
+      {
+        id: 'audit-pkg-001',
+        requestId: 'REQ-2024-001',
+        poId: 'PO-2024-001',
+        purchaseId: 'PUR-2024-001',
+        cardholderId: 'cardholder1',
+        approverId: 'approver1',
+        orgId: 'org_cdc',
+        status: 'audit_ready',
+        auditScore: 95,
+        totalIssues: 0,
+        criticalIssues: 0,
+        warnings: 0,
+        createdAt: new Date('2024-01-15'),
+        updatedAt: new Date('2024-01-22'),
+        lastAuditedAt: new Date('2024-01-22'),
+        exportUrl: '/exports/audit-package-001.zip',
+        exportGeneratedAt: new Date('2024-01-22'),
+        exportExpiresAt: new Date('2024-02-21')
+      },
+      {
+        id: 'audit-pkg-002',
+        requestId: 'REQ-2024-002',
+        poId: 'PO-2024-002',
+        purchaseId: 'PUR-2024-002',
+        cardholderId: 'cardholder2',
+        approverId: 'approver1',
+        orgId: 'org_cdc',
+        status: 'incomplete',
+        auditScore: 45,
+        totalIssues: 8,
+        criticalIssues: 4,
+        warnings: 4,
+        createdAt: new Date('2024-01-18'),
+        updatedAt: new Date('2024-01-20')
+      },
+      {
+        id: 'audit-pkg-003',
+        requestId: 'REQ-2024-003',
+        poId: 'PO-2024-003',
+        purchaseId: 'PUR-2024-003',
+        cardholderId: 'cardholder3',
+        approverId: 'approver2',
+        orgId: 'org_sac',
+        status: 'compliant',
+        auditScore: 88,
+        totalIssues: 0,
+        criticalIssues: 0,
+        warnings: 0,
+        createdAt: new Date('2024-01-19'),
+        updatedAt: new Date('2024-01-26')
+      },
+      {
+        id: 'audit-pkg-004',
+        requestId: 'REQ-2024-004',
+        poId: 'PO-2024-004',
+        purchaseId: 'PUR-2024-004',
+        cardholderId: 'cardholder4',
+        approverId: 'approver2',
+        orgId: 'org_sac',
+        status: 'pending_review',
+        auditScore: 75,
+        totalIssues: 2,
+        criticalIssues: 0,
+        warnings: 2,
+        createdAt: new Date('2024-01-20'),
+        updatedAt: new Date('2024-01-27')
+      },
+      {
+        id: 'audit-pkg-005',
+        requestId: 'REQ-2024-005',
+        poId: 'PO-2024-005',
+        purchaseId: 'PUR-2024-005',
+        cardholderId: 'cardholder5',
+        approverId: 'approver3',
+        orgId: 'org_cdc',
+        status: 'non_compliant',
+        auditScore: 25,
+        totalIssues: 15,
+        criticalIssues: 10,
+        warnings: 5,
+        createdAt: new Date('2024-01-21'),
+        updatedAt: new Date('2024-01-24')
+      }
+    ];
+
+    for (const pkg of auditPackages) {
+      await db.collection('auditPackages').doc(pkg.id).set(pkg);
+      console.log(`✅ Created audit package: ${pkg.requestId}`);
+    }
+
+    // Create sample compliance checks
+    console.log('Creating sample compliance checks...');
+    const complianceChecks = [
+      {
+        id: 'check-001',
+        packageId: 'audit-pkg-001',
+        checkType: 'micro_purchase_limit',
+        passed: true,
+        details: 'Purchase within $10,000 limit',
+        createdAt: new Date('2024-01-22')
+      },
+      {
+        id: 'check-002',
+        packageId: 'audit-pkg-001',
+        checkType: 'split_purchase_detection',
+        passed: true,
+        details: 'No split purchases detected',
+        createdAt: new Date('2024-01-22')
+      },
+      {
+        id: 'check-003',
+        packageId: 'audit-pkg-005',
+        checkType: 'micro_purchase_limit',
+        passed: false,
+        details: 'Purchase exceeds micro-purchase limit',
+        issues: ['Purchase exceeds $10,000 limit'],
+        createdAt: new Date('2024-01-24')
+      }
+    ];
+
+    for (const check of complianceChecks) {
+      await db.collection('complianceChecks').doc(check.id).set(check);
+      console.log(`✅ Created compliance check: ${check.checkType}`);
+    }
+
     console.log('\n📋 Demo Accounts:');
     console.log('Admin: admin@procureflow.demo / demo123');
     console.log('Requester: requester@procureflow.demo / demo123');

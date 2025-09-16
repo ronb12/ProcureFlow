@@ -23,6 +23,8 @@ import {
   Plus,
   Clock,
   AlertCircle,
+  AlertTriangle,
+  Shield,
   TrendingUp,
 } from 'lucide-react';
 
@@ -43,6 +45,27 @@ const mockStats = {
     open: 3,
     closed: 1,
     missingReceipts: 2,
+  },
+  // Audit-specific statistics
+  auditPackages: {
+    total: 24,
+    auditReady: 8,
+    pendingReview: 6,
+    nonCompliant: 3,
+    compliant: 7,
+    incomplete: 2,
+  },
+  complianceMonitoring: {
+    criticalIssues: 5,
+    warnings: 12,
+    resolved: 18,
+    totalIssues: 35,
+  },
+  dodMwrCompliance: {
+    compliantPackages: 15,
+    needsReview: 6,
+    missingDocuments: 3,
+    totalPackages: 24,
   },
 };
 
@@ -70,6 +93,34 @@ const mockRecentRequests = [
     status: 'Draft' as const,
     createdAt: new Date('2024-01-13'),
     needBy: new Date('2024-01-25'),
+  },
+];
+
+// Mock audit activity data
+const mockAuditActivity = [
+  {
+    id: '1',
+    packageId: 'REQ-2024-001',
+    action: 'Package Reviewed',
+    status: 'compliant' as const,
+    createdAt: new Date('2024-01-15'),
+    issues: 0,
+  },
+  {
+    id: '2',
+    packageId: 'REQ-2024-002',
+    action: 'Compliance Check',
+    status: 'non_compliant' as const,
+    createdAt: new Date('2024-01-14'),
+    issues: 3,
+  },
+  {
+    id: '3',
+    packageId: 'REQ-2024-003',
+    action: 'DOD MWR Review',
+    status: 'audit_ready' as const,
+    createdAt: new Date('2024-01-13'),
+    issues: 1,
   },
 ];
 
@@ -199,6 +250,119 @@ export default function DashboardPage() {
       });
     }
 
+    // Audit Findings - for cardholders and admins
+    if (actualRole && ['cardholder', 'admin'].includes(actualRole)) {
+      cards.push({
+        title: 'Audit Findings',
+        description: 'Review and respond to audit findings',
+        icon: AlertCircle,
+        href: '/audit-findings',
+        stats: [
+          {
+            label: 'Open Findings',
+            value: 2,
+            color: 'text-red-600',
+          },
+          {
+            label: 'In Progress',
+            value: 1,
+            color: 'text-yellow-600',
+          },
+          {
+            label: 'Resolved',
+            value: 3,
+            color: 'text-green-600',
+          },
+        ],
+      });
+    }
+
+    // Audit Packages - for auditors and admins
+    if (actualRole && ['auditor', 'admin'].includes(actualRole)) {
+      cards.push({
+        title: 'Audit Packages',
+        description: `${mockStats.auditPackages.total} packages ready for review`,
+        icon: Shield,
+        href: '/audit-packages',
+        stats: [
+          {
+            label: 'Audit Ready',
+            value: mockStats.auditPackages.auditReady,
+            color: 'text-green-600',
+          },
+          {
+            label: 'Pending Review',
+            value: mockStats.auditPackages.pendingReview,
+            color: 'text-yellow-600',
+          },
+          {
+            label: 'Non-Compliant',
+            value: mockStats.auditPackages.nonCompliant,
+            color: 'text-red-600',
+          },
+          {
+            label: 'Compliant',
+            value: mockStats.auditPackages.compliant,
+            color: 'text-blue-600',
+          },
+        ],
+      });
+    }
+
+    // Compliance Monitoring - for auditors and admins
+    if (actualRole && ['auditor', 'admin'].includes(actualRole)) {
+      cards.push({
+        title: 'Compliance Monitoring',
+        description: `${mockStats.complianceMonitoring.criticalIssues} critical issues found`,
+        icon: AlertTriangle,
+        href: '/audit-packages?filter=non_compliant',
+        stats: [
+          {
+            label: 'Critical Issues',
+            value: mockStats.complianceMonitoring.criticalIssues,
+            color: 'text-red-600',
+          },
+          {
+            label: 'Warnings',
+            value: mockStats.complianceMonitoring.warnings,
+            color: 'text-orange-600',
+          },
+          {
+            label: 'Resolved',
+            value: mockStats.complianceMonitoring.resolved,
+            color: 'text-green-600',
+          },
+        ],
+      });
+    }
+
+    // DOD MWR Compliance - for auditors and admins
+    if (actualRole && ['auditor', 'admin'].includes(actualRole)) {
+      cards.push({
+        title: 'DOD MWR Compliance',
+        description: `${mockStats.dodMwrCompliance.compliantPackages} packages compliant`,
+        icon: CheckCircle,
+        href: '/audit-packages?filter=compliant',
+        stats: [
+          {
+            label: 'Compliant',
+            value: mockStats.dodMwrCompliance.compliantPackages,
+            color: 'text-green-600',
+          },
+          {
+            label: 'Needs Review',
+            value: mockStats.dodMwrCompliance.needsReview,
+            color: 'text-yellow-600',
+          },
+          {
+            label: 'Missing Docs',
+            value: mockStats.dodMwrCompliance.missingDocuments,
+            color: 'text-red-600',
+          },
+        ],
+      });
+    }
+
     return cards;
   };
 
@@ -271,14 +435,54 @@ export default function DashboardPage() {
                 <span>View Purchase Queue</span>
               </Button>
             )}
+            {actualRole && ['cardholder', 'admin'].includes(actualRole) && (
+              <Button
+                variant="outline"
+                onClick={() => router.push('/audit-findings')}
+                className="flex items-center space-x-2"
+              >
+                <AlertCircle className="h-4 w-4" />
+                <span>Review Audit Findings</span>
+              </Button>
+            )}
             {actualRole && ['auditor', 'admin'].includes(actualRole) && (
               <Button
                 variant="outline"
                 onClick={() => router.push('/audit-packages')}
                 className="flex items-center space-x-2"
               >
-                <BarChart3 className="h-4 w-4" />
+                <Shield className="h-4 w-4" />
                 <span>View Audit Packages</span>
+              </Button>
+            )}
+            {actualRole && ['auditor', 'admin'].includes(actualRole) && (
+              <Button
+                variant="outline"
+                onClick={() => router.push('/audit-packages?filter=non_compliant')}
+                className="flex items-center space-x-2"
+              >
+                <AlertTriangle className="h-4 w-4" />
+                <span>Review Critical Issues</span>
+              </Button>
+            )}
+            {actualRole && ['auditor', 'admin'].includes(actualRole) && (
+              <Button
+                variant="outline"
+                onClick={() => router.push('/audit-packages?filter=audit_ready')}
+                className="flex items-center space-x-2"
+              >
+                <CheckCircle className="h-4 w-4" />
+                <span>Audit Ready Packages</span>
+              </Button>
+            )}
+            {actualRole && ['auditor', 'admin'].includes(actualRole) && (
+              <Button
+                variant="outline"
+                onClick={() => router.push('/audit-packages?filter=compliant')}
+                className="flex items-center space-x-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span>DOD MWR Compliance</span>
               </Button>
             )}
           </div>
@@ -338,6 +542,10 @@ export default function DashboardPage() {
                     ? 'Recent Requests' 
                     : actualRole && ['approver', 'admin'].includes(actualRole)
                     ? 'Recent Approvals'
+                    : actualRole && ['cardholder', 'admin'].includes(actualRole)
+                    ? 'Recent Purchases'
+                    : actualRole && ['auditor', 'admin'].includes(actualRole)
+                    ? 'Recent Audit Activity'
                     : 'Recent Activity'
                   }
                 </span>
@@ -347,13 +555,43 @@ export default function DashboardPage() {
                   ? 'Your latest procurement requests'
                   : actualRole && ['approver', 'admin'].includes(actualRole)
                   ? 'Your latest approval decisions'
+                  : actualRole && ['cardholder', 'admin'].includes(actualRole)
+                  ? 'Your latest purchase activities'
+                  : actualRole && ['auditor', 'admin'].includes(actualRole)
+                  ? 'Your latest audit package reviews and compliance checks'
                   : 'Your recent activity'
                 }
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {mockRecentRequests.map(request => (
+                {actualRole && ['auditor', 'admin'].includes(actualRole) ? (
+                  // Show audit activity for auditors
+                  mockAuditActivity.map(activity => (
+                    <div
+                      key={activity.id}
+                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                      onClick={() => router.push('/audit-packages')}
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-medium">{activity.packageId}</span>
+                          <StatusBadge status={activity.status} size="sm" />
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {activity.action} • {activity.issues} issues found
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-muted-foreground">
+                          {formatDate(activity.createdAt)}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  // Show regular requests for other roles
+                  mockRecentRequests.map(request => (
                   <div
                     key={request.id}
                     className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
@@ -381,14 +619,34 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  ))
+                )}
               </div>
               <Button
                 variant="outline"
                 className="w-full mt-4"
-                onClick={() => router.push('/requests')}
+                onClick={() => router.push(
+                  actualRole && ['auditor', 'admin'].includes(actualRole)
+                    ? '/audit-packages'
+                    : actualRole && ['requester', 'admin'].includes(actualRole)
+                    ? '/requests'
+                    : actualRole && ['approver', 'admin'].includes(actualRole)
+                    ? '/approvals'
+                    : actualRole && ['cardholder', 'admin'].includes(actualRole)
+                    ? '/purchases'
+                    : '/dashboard'
+                )}
               >
-                View All Requests
+                {actualRole && ['auditor', 'admin'].includes(actualRole)
+                  ? 'View All Audit Packages'
+                  : actualRole && ['requester', 'admin'].includes(actualRole)
+                  ? 'View All Requests'
+                  : actualRole && ['approver', 'admin'].includes(actualRole)
+                  ? 'View All Approvals'
+                  : actualRole && ['cardholder', 'admin'].includes(actualRole)
+                  ? 'View All Purchases'
+                  : 'View All Activity'
+                }
               </Button>
             </CardContent>
           </Card>

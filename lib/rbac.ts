@@ -70,6 +70,13 @@ export class RBAC {
         read: ['admin', 'cardholder'],
         download: ['admin', 'cardholder'],
       },
+      vendors: {
+        create: ['admin', 'cardholder'],
+        read: ['admin', 'cardholder', 'approver', 'requester'],
+        update: ['admin', 'cardholder'],
+        delete: ['admin'],
+        verify: ['admin', 'cardholder'],
+      },
     };
 
     const resourcePermissions = permissions[resource];

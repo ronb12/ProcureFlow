@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
+import { AppHeader } from '@/components/ui/app-header';
 import {
   Card,
   CardContent,
@@ -25,6 +26,9 @@ import {
   Truck,
   Package,
   CheckCircle,
+  ArrowLeft,
+  ShoppingCart,
+  Trash2,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -144,6 +148,113 @@ const mockPurchaseOrders: PurchaseOrder[] = [
     deliveredAt: new Date('2024-01-25'),
     trackingNumber: '1Z999AA1234567890',
   },
+  // Draft Purchase Orders
+  {
+    id: 'po-draft-001',
+    reqId: 'req-003',
+    poNumber: 'PO-2024-003',
+    vendor: {
+      name: 'Lowe\'s',
+      address: '321 Hardware Lane',
+      city: 'Tool City',
+      state: 'CA',
+      zip: '67890',
+      phone: '(555) 123-4567',
+      email: 'orders@lowes.com',
+      taxId: '11-2233445',
+    },
+    cardholder: {
+      id: 'cardholder-1',
+      name: 'Bob Johnson',
+      email: 'bob.johnson@mwr.com',
+      cardNumber: '****1234',
+      cardType: 'Government Purchase Card',
+    },
+    delivery: {
+      address: '456 Military Base Road',
+      city: 'Base City',
+      state: 'CA',
+      zip: '98765',
+      contactName: 'Mike Wilson',
+      contactPhone: '(555) 987-6543',
+    },
+    terms: {
+      paymentTerms: 'Net 30',
+      shippingTerms: 'FOB Destination',
+      deliveryDate: new Date('2024-03-01'),
+    },
+    items: [
+      {
+        sku: 'LOW-001',
+        desc: 'Paint Supplies',
+        qty: 5,
+        estUnitPrice: 25.0,
+      },
+      {
+        sku: 'LOW-002',
+        desc: 'Tools Set',
+        qty: 2,
+        estUnitPrice: 150.0,
+      },
+    ],
+    subtotal: 425.0,
+    tax: 0.0, // DOD MWR tax exempt
+    shipping: 15.0,
+    total: 440.0,
+    status: 'draft',
+    createdAt: new Date('2024-01-20'),
+    updatedAt: new Date('2024-01-20'),
+  },
+  {
+    id: 'po-draft-002',
+    reqId: 'req-004',
+    poNumber: 'PO-2024-004',
+    vendor: {
+      name: 'Amazon Business',
+      address: '456 E-commerce Way',
+      city: 'Digital City',
+      state: 'CA',
+      zip: '13579',
+      phone: '(555) 987-6543',
+      email: 'business@amazon.com',
+      taxId: '91-1234567',
+    },
+    cardholder: {
+      id: 'cardholder-1',
+      name: 'Bob Johnson',
+      email: 'bob.johnson@mwr.com',
+      cardNumber: '****1234',
+      cardType: 'Government Purchase Card',
+    },
+    delivery: {
+      address: '456 Military Base Road',
+      city: 'Base City',
+      state: 'CA',
+      zip: '98765',
+      contactName: 'Sarah Davis',
+      contactPhone: '(555) 987-6543',
+    },
+    terms: {
+      paymentTerms: 'Net 30',
+      shippingTerms: 'FOB Destination',
+      deliveryDate: new Date('2024-03-05'),
+    },
+    items: [
+      {
+        sku: 'AMZ-001',
+        desc: 'Office Supplies',
+        qty: 10,
+        estUnitPrice: 12.50,
+      },
+    ],
+    subtotal: 125.0,
+    tax: 0.0, // DOD MWR tax exempt
+    shipping: 0.0,
+    total: 125.0,
+    status: 'draft',
+    createdAt: new Date('2024-01-22'),
+    updatedAt: new Date('2024-01-22'),
+  },
 ];
 
 export default function PurchaseOrdersPage() {
@@ -255,15 +366,54 @@ export default function PurchaseOrdersPage() {
     toast.success(`Purchase Order ${newStatus} successfully`);
   };
 
+  const handleEditDraft = (poId: string) => {
+    // Navigate to edit page with the draft PO
+    router.push(`/purchases/create-po?edit=${poId}`);
+  };
+
+  const handleDeleteDraft = (poId: string) => {
+    if (window.confirm('Are you sure you want to delete this draft purchase order?')) {
+      setPurchaseOrders(prev => prev.filter(po => po.id !== poId));
+      toast.success('Draft purchase order deleted');
+    }
+  };
+
+  const handleSendDraft = (poId: string) => {
+    handleStatusUpdate(poId, 'sent');
+    toast.success('Draft purchase order sent to vendor');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <AppHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Purchase Orders</h1>
-          <p className="mt-2 text-gray-600">
-            Manage purchase orders for approved requests.
-          </p>
+          <div className="flex items-center space-x-4 mb-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/purchases')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Purchases
+            </Button>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Purchase Orders</h1>
+              <p className="mt-2 text-gray-600">
+                Manage purchase orders for approved requests.
+              </p>
+            </div>
+            <Button
+              onClick={() => router.push('/purchases/create-po')}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Create Purchase Order
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -374,10 +524,43 @@ export default function PurchaseOrdersPage() {
                         <Eye className="h-4 w-4 mr-1" />
                         View Details
                       </Button>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4 mr-1" />
-                        Export
-                      </Button>
+                      
+                      {po.status === 'draft' ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditDraft(po.id)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <FileText className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleSendDraft(po.id)}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            <Mail className="h-4 w-4 mr-1" />
+                            Send
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteDraft(po.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        </>
+                      ) : (
+                        <Button variant="outline" size="sm">
+                          <Download className="h-4 w-4 mr-1" />
+                          Export
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>

@@ -35,6 +35,11 @@ const mockRequests = [
     createdAt: new Date('2024-01-15'),
     needBy: new Date('2024-01-20'),
     justification: 'Office supplies for MWR facility',
+    facility: {
+      id: '1',
+      name: 'Fort Bragg Child Development Center',
+      code: 'FB-CDC-001',
+    },
     items: [
       {
         id: 'item-1',
@@ -70,6 +75,11 @@ const mockRequests = [
     createdAt: new Date('2024-01-14'),
     needBy: new Date('2024-01-18'),
     justification: 'Computer equipment for new workstations',
+    facility: {
+      id: '2',
+      name: 'Camp Lejeune Early Learning Center',
+      code: 'CL-ELC-002',
+    },
     items: [
       {
         id: 'item-4',
@@ -97,6 +107,11 @@ const mockRequests = [
     createdAt: new Date('2024-01-13'),
     needBy: new Date('2024-01-25'),
     justification: 'Maintenance supplies for facility repairs',
+    facility: {
+      id: '3',
+      name: 'Norfolk Naval Station CDC',
+      code: 'NN-CDC-003',
+    },
     items: [
       {
         id: 'item-6',
@@ -298,6 +313,7 @@ export default function RequestsPage() {
   const [requests, setRequests] = useState(mockRequests);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [facilityFilter, setFacilityFilter] = useState('all');
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   if (loading) {
@@ -316,10 +332,13 @@ export default function RequestsPage() {
   const filteredRequests = requests.filter(request => {
     const matchesSearch =
       request.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.justification.toLowerCase().includes(searchTerm.toLowerCase());
+      request.justification.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (request.facility?.name && request.facility.name.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus =
       statusFilter === 'all' || request.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesFacility =
+      facilityFilter === 'all' || request.facility?.id === facilityFilter;
+    return matchesSearch && matchesStatus && matchesFacility;
   });
 
   const statusCounts = requests.reduce(
@@ -401,6 +420,18 @@ export default function RequestsPage() {
                   Reconciled ({statusCounts.Reconciled || 0})
                 </option>
               </select>
+              <select
+                value={facilityFilter}
+                onChange={e => setFacilityFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Facilities</option>
+                <option value="1">Fort Bragg CDC</option>
+                <option value="2">Camp Lejeune ELC</option>
+                <option value="3">Norfolk Naval CDC</option>
+                <option value="4">San Diego Naval CDC</option>
+                <option value="5">JBLM CDC</option>
+              </select>
             </div>
           </div>
         </div>
@@ -443,6 +474,11 @@ export default function RequestsPage() {
                           Total: {formatCurrency(request.total)}
                         </span>
                       </div>
+                      {request.facility && (
+                        <div className="mt-2 text-sm text-blue-600">
+                          <span className="font-medium">Facility:</span> {request.facility.name} ({request.facility.code})
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button

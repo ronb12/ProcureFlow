@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Auditor & Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            margin: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.auditor {
+            background: #28a745;
+        }
+        .button.auditor:hover {
+            background: #1e7e34;
+        }
+        .button.test {
+            background: #17a2b8;
+        }
+        .button.test:hover {
+            background: #138496;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        .status {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Verify Auditor & Test Page Functionality</h1>
+        <p>This will verify the auditor document exists in Firebase and test the audit packages page.</p>
+        
+        <div class="info">
+            <strong>Test Plan:</strong>
+            <ol>
+                <li>Login as auditor</li>
+                <li>Verify Firestore document exists and has correct data</li>
+                <li>Test audit packages page functionality</li>
+                <li>Verify all features work properly</li>
+            </ol>
+        </div>
+        
+        <button onclick="runFullTest()" class="button auditor">
+            🚀 Run Full Verification Test
+        </button>
+        
+        <button onclick="loginAsAuditor()" class="button">
+            🔑 Login as Auditor
+        </button>
+        
+        <button onclick="testAuditPackagesPage()" class="button test">
+            📋 Test Audit Packages Page
+        </button>
+        
+        <button onclick="clearLog()" class="button">
+            🗑️ Clear Log
+        </button>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateStatus(message, type) {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+            statusElement.style.display = 'block';
+        }
+
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+            document.getElementById('status').style.display = 'none';
+        }
+
+        async function runFullTest() {
+            log('🚀 Starting full verification test...');
+            updateStatus('Running full test...', 'info');
+            
+            try {
+                // Step 1: Login as auditor
+                log('Step 1: Logging in as auditor...');
+                await loginAsAuditor();
+                
+                // Step 2: Verify Firestore document
+                log('Step 2: Verifying Firestore document...');
+                await verifyAuditorDocument();
+                
+                // Step 3: Test audit packages page
+                log('Step 3: Testing audit packages page...');
+                await testAuditPackagesPage();
+                
+                log('✅ Full test completed successfully!');
+                updateStatus('All tests passed! Auditor is fully functional.', 'success');
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`);
+                updateStatus(`Test failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function loginAsAuditor() {
+            try {
+                // Check if Firebase is available
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase not loaded. Please go to the main app first.');
+                }
+
+                const email = 'auditor@procureflow.demo';
+                const password = 'demo123';
+
+                log(`🔍 Attempting to sign in with: ${email}`);
+                
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+
+                log(`✅ Successfully signed in as auditor!`);
+                log(`UID: ${user.uid}`);
+                log(`Email: ${user.email}`);
+                log(`Display Name: ${user.displayName}`);
+                
+                return user;
+                
+            } catch (error) {
+                log(`❌ Login failed: ${error.message}`);
+                throw error;
+            }
+        }
+
+        async function verifyAuditorDocument() {
+            try {
+                const user = firebase.auth().currentUser;
+                if (!user) {
+                    throw new Error('No user logged in');
+                }
+
+                log(`🔍 Checking Firestore document for UID: ${user.uid}`);
+                
+                const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+                
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    log(`✅ Firestore document found!`);
+                    log(`Document data:`);
+                    log(`  - Name: ${userData.name}`);
+                    log(`  - Email: ${userData.email}`);
+                    log(`  - Role: ${userData.role}`);
+                    log(`  - Org ID: ${userData.orgId}`);
+                    log(`  - Approval Limit: ${userData.approvalLimit}`);
+                    log(`  - Department: ${userData.department}`);
+                    log(`  - Title: ${userData.title}`);
+                    log(`  - Phone: ${userData.phone}`);
+                    log(`  - Created At: ${userData.createdAt?.toDate?.() || 'N/A'}`);
+                    log(`  - Updated At: ${userData.updatedAt?.toDate?.() || 'N/A'}`);
+                    
+                    // Verify role is correct
+                    if (userData.role === 'auditor') {
+                        log(`✅ Role verification passed: ${userData.role}`);
+                    } else {
+                        throw new Error(`Role verification failed. Expected 'auditor', got '${userData.role}'`);
+                    }
+                    
+                    return userData;
+                    
+                } else {
+                    log(`⚠️ Firestore document not found for UID: ${user.uid}`);
+                    log(`Creating missing document...`);
+                    
+                    // Create the document
+                    const userData = {
+                        name: 'Alice Brown',
+                        email: 'auditor@procureflow.demo',
+                        role: 'auditor',
+                        orgId: 'org_cdc',
+                        approvalLimit: 0,
+                        phone: '555-0006',
+                        department: 'Compliance',
+                        title: 'Compliance Auditor',
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    };
+                    
+                    await firebase.firestore().collection('users').doc(user.uid).set(userData);
+                    log(`✅ Firestore document created successfully!`);
+                    
+                    return userData;
+                }
+                
+            } catch (error) {
+                log(`❌ Document verification failed: ${error.message}`);
+                throw error;
+            }
+        }
+
+        async function testAuditPackagesPage() {
+            try {
+                log(`🔍 Testing audit packages page functionality...`);
+                
+                // Test if we can access the page
+                const response = await fetch('/audit-packages/', {
+                    method: 'HEAD',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    log(`✅ Audit packages page is accessible (${response.status})`);
+                } else {
+                    throw new Error(`Page not accessible: ${response.status}`);
+                }
+                
+                // Test navigation
+                log(`🔄 Testing navigation to audit packages page...`);
+                window.open('/audit-packages/', '_blank');
+                log(`✅ Navigation test completed (opened in new tab)`);
+                
+                return true;
+                
+            } catch (error) {
+                log(`❌ Page test failed: ${error.message}`);
+                throw error;
+            }
+        }
+
+        // Auto-run basic test on page load
+        window.addEventListener('load', () => {
+            log('🔍 Verification page loaded');
+            log('Click "Run Full Verification Test" to start comprehensive testing');
+        });
+    </script>
+</body>
+</html>

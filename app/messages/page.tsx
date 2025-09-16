@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { AppHeader } from '@/components/ui/app-header';
 import { 
   MessageSquare, 
   Send, 
@@ -231,6 +232,7 @@ export default function MessagesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AppHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

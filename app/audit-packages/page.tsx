@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { AppHeader } from '@/components/ui/app-header';
 
 // Mock data
 const mockAuditPackages = [
@@ -927,6 +928,7 @@ export default function StaticAuditPackagesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AppHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

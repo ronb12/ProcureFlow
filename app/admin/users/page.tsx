@@ -132,6 +132,7 @@ export default function UserManagementPage() {
     }
   }, [user, loading, router]);
 
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -163,6 +164,31 @@ export default function UserManagementPage() {
       </div>
     );
   }
+
+  const handleEditUser = (userId: string) => {
+    const userToEdit = users.find(u => u.id === userId);
+    if (userToEdit) {
+      setSelectedUser(userToEdit);
+      setShowAddUser(true);
+    }
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    if (confirm('Are you sure you want to delete this user?')) {
+      setUsers(users.filter(u => u.id !== userId));
+      toast.success('User deleted successfully');
+    }
+  };
+
+  const handleToggleUserStatus = (userId: string) => {
+    setUsers(users.map(u => 
+      u.id === userId 
+        ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' }
+        : u
+    ));
+    toast.success('User status updated');
+  };
+
 
   const filteredUsers = users.filter(user => {
     const matchesSearch =
@@ -263,7 +289,10 @@ export default function UserManagementPage() {
                 Create and manage user roles and permissions.
               </p>
             </div>
-            <Button onClick={() => setShowAddUser(true)}>
+            <Button onClick={() => {
+              setSelectedUser(null);
+              setShowAddUser(true);
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -434,9 +463,7 @@ export default function UserManagementPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() =>
-                              setSelectedUser({ ...user, editing: true })
-                            }
+                            onClick={() => handleEditUser(user.id)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -502,19 +529,30 @@ export default function UserManagementPage() {
 
         {/* Add User Modal */}
         {showAddUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-2xl">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" 
+            style={{zIndex: 9999}}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowAddUser(false);
+              }
+            }}
+          >
+            <Card className="w-full max-w-2xl bg-white">
               <CardHeader>
-                <CardTitle>Add New User</CardTitle>
+                <CardTitle>{selectedUser ? 'Edit User' : 'Add New User'}</CardTitle>
                 <CardDescription>
-                  Create a new user account with role assignment
+                  {selectedUser ? 'Update user account and role assignment' : 'Create a new user account with role assignment'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <UserEditForm
-                  user={null}
-                  onSave={(data: any) => handleUserAction('', 'add', data)}
-                  onCancel={() => setShowAddUser(false)}
+                  user={selectedUser}
+                  onSave={(data: any) => handleUserAction(selectedUser?.id || '', selectedUser ? 'update_role' : 'add', data)}
+                  onCancel={() => {
+                    setShowAddUser(false);
+                    setSelectedUser(null);
+                  }}
                   isProcessing={isProcessing}
                 />
               </CardContent>
@@ -535,6 +573,17 @@ function UserEditForm({ user, onSave, onCancel, isProcessing }: any) {
     orgId: user?.orgId || 'org_cdc',
     approvalLimit: user?.approvalLimit || 0,
   });
+
+  // Update form data when user prop changes
+  useEffect(() => {
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+      role: user?.role || 'requester',
+      orgId: user?.orgId || 'org_cdc',
+      approvalLimit: user?.approvalLimit || 0,
+    });
+  }, [user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

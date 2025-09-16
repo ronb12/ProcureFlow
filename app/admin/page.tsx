@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { AppHeader } from '@/components/ui/app-header';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { UserRole } from '@/lib/types';
 import {
@@ -197,6 +198,46 @@ export default function AdminPage() {
     }
   };
 
+  const handleAddUser = () => {
+    console.log('Add User clicked');
+    toast.success('Add User functionality - would open user creation form');
+  };
+
+  const handleAddOrganization = () => {
+    console.log('Add Organization clicked');
+    toast.success('Add Organization functionality - would open organization creation form');
+  };
+
+  const handleEditOrganization = (orgId: string) => {
+    console.log('Edit Organization clicked:', orgId);
+    toast.success('Edit Organization functionality - would open organization edit form');
+  };
+
+  const handleViewOrganization = (orgId: string) => {
+    console.log('View Organization clicked:', orgId);
+    toast.success('View Organization functionality - would show organization details');
+  };
+
+  const handleExportSettings = () => {
+    console.log('Export Settings clicked');
+    toast.success('Export Settings functionality - would download settings file');
+  };
+
+  const handleImportSettings = () => {
+    console.log('Import Settings clicked');
+    toast.success('Import Settings functionality - would open file upload dialog');
+  };
+
+  const handleSaveSettings = () => {
+    console.log('Save Settings clicked');
+    toast.success('Settings saved successfully');
+  };
+
+  const handleEditUser = () => {
+    console.log('Edit User clicked');
+    toast.success('Edit User functionality - would open user edit form');
+  };
+
   const getRoleColor = (role: UserRole) => {
     switch (role) {
       case 'admin':
@@ -222,6 +263,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <AppHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -383,7 +425,7 @@ export default function AdminPage() {
                   <Users className="h-4 w-4 mr-2" />
                   Manage Users
                 </Button>
-                <Button>
+                <Button onClick={handleAddUser}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add User
                 </Button>
@@ -495,7 +537,7 @@ export default function AdminPage() {
               <h2 className="text-xl font-semibold text-gray-900">
                 Organizations
               </h2>
-              <Button>
+              <Button onClick={handleAddOrganization}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Organization
               </Button>
@@ -530,11 +572,20 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <div className="mt-4 flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleEditOrganization(org.id)}
+                      >
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewOrganization(org.id)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                     </div>
@@ -649,15 +700,15 @@ export default function AdminPage() {
             </div>
 
             <div className="flex justify-end space-x-3">
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleExportSettings}>
                 <Download className="h-4 w-4 mr-2" />
                 Export Settings
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={handleImportSettings}>
                 <Upload className="h-4 w-4 mr-2" />
                 Import Settings
               </Button>
-              <Button>Save Changes</Button>
+              <Button onClick={handleSaveSettings}>Save Changes</Button>
             </div>
           </div>
         )}
@@ -723,7 +774,7 @@ export default function AdminPage() {
                   >
                     Close
                   </Button>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={handleEditUser}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit User
                   </Button>

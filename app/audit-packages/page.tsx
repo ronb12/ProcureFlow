@@ -271,6 +271,428 @@ export default function StaticAuditPackagesPage() {
     console.log('Reset filter - showing all packages');
   };
 
+  const handleGenerateAuditReport = async () => {
+    console.log('Generate audit report clicked');
+    
+    try {
+      // Dynamic import to avoid SSR issues
+      const { jsPDF } = await import('jspdf');
+      
+      const doc = new jsPDF();
+      
+      // Add DOD MWR header with enhanced styling
+      doc.setFillColor(0, 51, 102); // Navy blue
+      doc.rect(0, 0, 210, 40, 'F');
+      
+      // Add white border around header
+      doc.setDrawColor(255, 255, 255);
+      doc.setLineWidth(2);
+      doc.rect(2, 2, 206, 36, 'S');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DEPARTMENT OF DEFENSE', 20, 18);
+      doc.text('MORALE, WELFARE & RECREATION', 20, 26);
+      doc.text('AUDIT SUMMARY REPORT', 20, 34);
+
+      // Add decorative line under header
+      doc.setDrawColor(255, 255, 255);
+      doc.setLineWidth(1);
+      doc.line(20, 38, 190, 38);
+
+      // Reset text color
+      doc.setTextColor(0, 0, 0);
+
+      // Add report metadata with styling
+      doc.setFillColor(240, 248, 255); // Light blue background
+      doc.rect(15, 45, 180, 20, 'F');
+      doc.setDrawColor(0, 51, 102);
+      doc.setLineWidth(0.5);
+      doc.rect(15, 45, 180, 20, 'S');
+      
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 51, 102);
+      doc.text('REPORT INFORMATION', 20, 52);
+      
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Generated: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, 20, 58);
+      doc.text(`Period: ${new Date().toLocaleDateString()}`, 20, 63);
+      doc.text(`System: ProcureFlow Audit Management`, 20, 68);
+
+      // Calculate audit statistics
+      const totalPackages = mockAuditPackages.length;
+      const compliantPackages = mockAuditPackages.filter(pkg => pkg.status === 'compliant' && pkg.auditScore >= 80).length;
+      const nonCompliantPackages = mockAuditPackages.filter(pkg => pkg.status === 'non_compliant' || pkg.auditScore < 60).length;
+      const pendingPackages = mockAuditPackages.filter(pkg => pkg.status === 'pending_review' || pkg.status === 'audit_ready').length;
+      const totalCriticalIssues = mockAuditPackages.reduce((sum, pkg) => sum + pkg.criticalIssues, 0);
+      const totalIssues = mockAuditPackages.reduce((sum, pkg) => sum + pkg.totalIssues, 0);
+      const averageScore = Math.round(mockAuditPackages.reduce((sum, pkg) => sum + pkg.auditScore, 0) / totalPackages);
+      const complianceRate = Math.round((compliantPackages / totalPackages) * 100);
+
+      // Add executive summary with enhanced styling
+      let yPos = 75;
+      
+      // Section header with background
+      doc.setFillColor(0, 51, 102);
+      doc.rect(15, yPos, 180, 8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('EXECUTIVE SUMMARY', 20, yPos + 6);
+      
+      yPos += 15;
+      
+      // Summary cards
+      const summaryCards = [
+        { label: 'Total Packages', value: totalPackages, color: [0, 51, 102] },
+        { label: 'Compliant', value: `${compliantPackages} (${complianceRate}%)`, color: [0, 128, 0] },
+        { label: 'Non-Compliant', value: nonCompliantPackages, color: [255, 0, 0] },
+        { label: 'Pending Review', value: pendingPackages, color: [255, 165, 0] }
+      ];
+      
+      // First row of cards
+      summaryCards.forEach((card, index) => {
+        const x = 20 + (index * 45);
+        const y = yPos;
+        
+        // Card background
+        doc.setFillColor(248, 250, 252);
+        doc.rect(x, y, 40, 20, 'F');
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.rect(x, y, 40, 20, 'S');
+        
+        // Card content
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text(card.label, x + 2, y + 6);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(card.color[0], card.color[1], card.color[2]);
+        doc.text(card.value.toString(), x + 2, y + 15);
+      });
+      
+      yPos += 30;
+      
+      // Additional metrics
+      const metrics = [
+        { label: 'Total Issues Found', value: totalIssues, color: [255, 0, 0] },
+        { label: 'Critical Issues', value: totalCriticalIssues, color: [139, 0, 0] },
+        { label: 'Average Score', value: `${averageScore}/100`, color: [0, 51, 102] },
+        { label: 'Compliance Rate', value: `${complianceRate}%`, color: [0, 128, 0] }
+      ];
+      
+      // Second row of metrics
+      metrics.forEach((metric, index) => {
+        const x = 20 + (index * 45);
+        const y = yPos;
+        
+        // Metric background
+        doc.setFillColor(248, 250, 252);
+        doc.rect(x, y, 40, 20, 'F');
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.rect(x, y, 40, 20, 'S');
+        
+        // Metric content
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text(metric.label, x + 2, y + 6);
+        
+        doc.setFontSize(12);
+        doc.setTextColor(metric.color[0], metric.color[1], metric.color[2]);
+        doc.text(metric.value.toString(), x + 2, y + 15);
+      });
+      
+      yPos += 30;
+
+      // Add compliance status with enhanced styling
+      yPos += 10;
+      
+      // Section header
+      doc.setFillColor(0, 51, 102);
+      doc.rect(15, yPos, 180, 8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('COMPLIANCE STATUS', 20, yPos + 6);
+      
+      yPos += 15;
+      
+      // Status indicator box
+      const statusColor = complianceRate >= 80 ? 'COMPLIANT' : complianceRate >= 60 ? 'NEEDS ATTENTION' : 'NON-COMPLIANT';
+      const statusColorCode = complianceRate >= 80 ? [0, 128, 0] : complianceRate >= 60 ? [255, 165, 0] : [255, 0, 0];
+      
+      // Status box
+      doc.setFillColor(statusColorCode[0], statusColorCode[1], statusColorCode[2]);
+      doc.rect(20, yPos, 60, 15, 'F');
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
+      doc.rect(20, yPos, 60, 15, 'S');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(statusColor, 25, yPos + 10);
+      
+      // Compliance rate circle
+      const centerX = 100;
+      const centerY = yPos + 7.5;
+      const radius = 12;
+      
+      // Background circle
+      doc.setFillColor(240, 240, 240);
+      doc.circle(centerX, centerY, radius, 'F');
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(1);
+      doc.circle(centerX, centerY, radius, 'S');
+      
+      // Percentage text
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${complianceRate}%`, centerX - 8, centerY + 3);
+      
+      // Critical issues indicator
+      doc.setFillColor(255, 0, 0);
+      doc.rect(130, yPos, 50, 15, 'F');
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
+      doc.rect(130, yPos, 50, 15, 'S');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Critical: ${totalCriticalIssues}`, 135, yPos + 10);
+      
+      yPos += 25;
+
+      // Add package breakdown by facility
+      yPos += 15;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('PACKAGE BREAKDOWN BY FACILITY', 20, yPos);
+
+      yPos += 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+
+      // Group packages by facility
+      const facilityGroups = mockAuditPackages.reduce((groups, pkg) => {
+        const facility = pkg.facility?.name || 'Unknown Facility';
+        if (!groups[facility]) {
+          groups[facility] = [];
+        }
+        groups[facility].push(pkg);
+        return groups;
+      }, {} as Record<string, any[]>);
+
+      Object.entries(facilityGroups).forEach(([facility, packages]) => {
+        const facilityCompliant = packages.filter(pkg => pkg.auditScore >= 80).length;
+        const facilityIssues = packages.reduce((sum, pkg) => sum + pkg.totalIssues, 0);
+        const facilityCritical = packages.reduce((sum, pkg) => sum + pkg.criticalIssues, 0);
+        
+        doc.text(`${facility}:`, 20, yPos);
+        yPos += 6;
+        doc.text(`  Packages: ${packages.length} | Compliant: ${facilityCompliant} | Issues: ${facilityIssues} | Critical: ${facilityCritical}`, 25, yPos);
+        yPos += 6;
+      });
+
+      // Add recommendations
+      yPos += 15;
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('AUDIT RECOMMENDATIONS', 20, yPos);
+
+      yPos += 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+
+      const recommendations = [];
+      if (complianceRate < 80) {
+        recommendations.push('• Implement additional compliance training for cardholders');
+        recommendations.push('• Review and update procurement procedures');
+        recommendations.push('• Increase audit frequency for high-risk facilities');
+      }
+      if (totalCriticalIssues > 0) {
+        recommendations.push('• Address critical issues immediately');
+        recommendations.push('• Implement additional controls for high-risk transactions');
+        recommendations.push('• Consider temporary restrictions for repeat offenders');
+      }
+      if (averageScore < 70) {
+        recommendations.push('• Conduct comprehensive system-wide audit review');
+        recommendations.push('• Implement mandatory training for all users');
+        recommendations.push('• Consider process automation to reduce human error');
+      }
+      if (recommendations.length === 0) {
+        recommendations.push('• System is performing well - maintain current procedures');
+        recommendations.push('• Continue regular monitoring and compliance checks');
+      }
+
+      recommendations.forEach(rec => {
+        doc.text(rec, 20, yPos);
+        yPos += 6;
+      });
+
+      // Add detailed package list with professional table
+      yPos += 15;
+      
+      // Section header
+      doc.setFillColor(0, 51, 102);
+      doc.rect(15, yPos, 180, 8, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DETAILED PACKAGE LIST', 20, yPos + 6);
+      
+      yPos += 15;
+      
+      // Table header
+      doc.setFillColor(240, 248, 255);
+      doc.rect(15, yPos, 180, 12, 'F');
+      doc.setDrawColor(0, 51, 102);
+      doc.setLineWidth(1);
+      doc.rect(15, yPos, 180, 12, 'S');
+      
+      // Header text
+      doc.setTextColor(0, 51, 102);
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Request ID', 20, yPos + 8);
+      doc.text('Facility', 50, yPos + 8);
+      doc.text('Status', 90, yPos + 8);
+      doc.text('Score', 120, yPos + 8);
+      doc.text('Issues', 140, yPos + 8);
+      doc.text('Critical', 160, yPos + 8);
+      
+      yPos += 15;
+      
+      // Table data with alternating row colors
+      mockAuditPackages.forEach((pkg, index) => {
+        if (yPos > 280) { // Start new page if needed
+          doc.addPage();
+          yPos = 20;
+          
+          // Re-add table header on new page
+          doc.setFillColor(240, 248, 255);
+          doc.rect(15, yPos, 180, 12, 'F');
+          doc.setDrawColor(0, 51, 102);
+          doc.setLineWidth(1);
+          doc.rect(15, yPos, 180, 12, 'S');
+          
+          doc.setTextColor(0, 51, 102);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Request ID', 20, yPos + 8);
+          doc.text('Facility', 50, yPos + 8);
+          doc.text('Status', 90, yPos + 8);
+          doc.text('Score', 120, yPos + 8);
+          doc.text('Issues', 140, yPos + 8);
+          doc.text('Critical', 160, yPos + 8);
+          
+          yPos += 15;
+        }
+        
+        // Alternating row colors
+        if (index % 2 === 0) {
+          doc.setFillColor(248, 250, 252);
+          doc.rect(15, yPos, 180, 10, 'F');
+        }
+        
+        // Row border
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.3);
+        doc.rect(15, yPos, 180, 10, 'S');
+        
+        // Row data
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        
+        // Request ID
+        doc.text(pkg.requestId, 20, yPos + 7);
+        
+        // Facility (truncated if too long)
+        const facilityName = pkg.facility?.name || 'Unknown';
+        const truncatedFacility = facilityName.length > 15 ? facilityName.substring(0, 15) + '...' : facilityName;
+        doc.text(truncatedFacility, 50, yPos + 7);
+        
+        // Status with color coding
+        const status = pkg.status.replace('_', ' ').toUpperCase();
+        const statusColor = pkg.auditScore >= 80 ? [0, 128, 0] : pkg.auditScore >= 60 ? [255, 165, 0] : [255, 0, 0];
+        doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+        doc.setFont('helvetica', 'bold');
+        doc.text(status, 90, yPos + 7);
+        
+        // Score with color coding
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${pkg.auditScore}/100`, 120, yPos + 7);
+        
+        // Issues
+        doc.text(pkg.totalIssues.toString(), 140, yPos + 7);
+        
+        // Critical issues with red color if > 0
+        if (pkg.criticalIssues > 0) {
+          doc.setTextColor(255, 0, 0);
+          doc.setFont('helvetica', 'bold');
+        } else {
+          doc.setTextColor(0, 0, 0);
+          doc.setFont('helvetica', 'normal');
+        }
+        doc.text(pkg.criticalIssues.toString(), 160, yPos + 7);
+        
+        yPos += 10;
+      });
+
+      // Add enhanced footer
+      yPos = doc.internal.pageSize.height - 35;
+      
+      // Footer background
+      doc.setFillColor(240, 248, 255);
+      doc.rect(0, yPos - 5, 210, 35, 'F');
+      doc.setDrawColor(0, 51, 102);
+      doc.setLineWidth(1);
+      doc.line(0, yPos - 5, 210, yPos - 5);
+      
+      // Footer content
+      doc.setFontSize(8);
+      doc.setTextColor(0, 51, 102);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Generated by ProcureFlow - DOD MWR Purchase Card Management System', 20, yPos);
+      
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text('This report contains sensitive audit information and should be handled accordingly', 20, yPos + 5);
+      doc.text(`Report ID: AUDIT-SUMMARY-${Date.now()}`, 20, yPos + 10);
+      doc.text(`Page 1 of 1`, 20, yPos + 15);
+      
+      // Add DOD MWR logo placeholder
+      doc.setFillColor(0, 51, 102);
+      doc.rect(170, yPos - 2, 25, 20, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(6);
+      doc.setFont('helvetica', 'bold');
+      doc.text('DOD', 175, yPos + 3);
+      doc.text('MWR', 175, yPos + 7);
+      doc.text('AUDIT', 175, yPos + 11);
+
+      // Save the PDF
+      doc.save(`DOD-MWR-Audit-Summary-Report-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+    } catch (error) {
+      console.error('Error generating audit report:', error);
+      alert('Error generating PDF report. Please try again.');
+    }
+  };
+
   const closeModal = () => {
     setShowModal(false);
     setSelectedPackage(null);
@@ -565,13 +987,7 @@ export default function StaticAuditPackagesPage() {
               <div className="flex items-center space-x-2 flex-wrap">
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    // Generate audit report
-                    const compliantCount = mockAuditPackages.filter(pkg => pkg.auditScore >= 80).length;
-                    const totalCount = mockAuditPackages.length;
-                    const complianceRate = Math.round((compliantCount / totalCount) * 100);
-                    alert(`Audit Summary Report:\n\nTotal Packages: ${totalCount}\nCompliant: ${compliantCount}\nCompliance Rate: ${complianceRate}%\n\nReport generated: ${new Date().toLocaleString()}`);
-                  }}
+                  onClick={handleGenerateAuditReport}
                   className="flex items-center space-x-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
                 >
                   <span>📊 Generate Report</span>
@@ -651,14 +1067,14 @@ export default function StaticAuditPackagesPage() {
                    <CardContent className="pt-6">
                      <div className="flex items-center">
                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                         <span className="text-green-600 text-sm font-bold">✓</span>
+                         <span className="text-green-600 text-sm font-bold">✅</span>
                        </div>
                        <div className="ml-3">
-                         <p className="text-sm font-medium text-gray-500">Audits Completed</p>
+                         <p className="text-sm font-medium text-gray-500">Compliant Packages</p>
                          <p className="text-2xl font-bold text-green-600">
-                           {mockAuditPackages.filter(pkg => pkg.status === 'compliant' || pkg.auditScore >= 80).length}
+                           {mockAuditPackages.filter(pkg => pkg.status === 'compliant' && pkg.auditScore >= 80).length}
                          </p>
-                         <p className="text-xs text-gray-500">Ready for closure</p>
+                         <p className="text-xs text-gray-500">DOD MWR compliant</p>
                        </div>
                      </div>
                    </CardContent>
@@ -667,15 +1083,15 @@ export default function StaticAuditPackagesPage() {
                  <Card>
                    <CardContent className="pt-6">
                      <div className="flex items-center">
-                       <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                         <span className="text-yellow-600 text-sm font-bold">⏱</span>
+                       <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                         <span className="text-orange-600 text-sm font-bold">⚠️</span>
                        </div>
                        <div className="ml-3">
-                         <p className="text-sm font-medium text-gray-500">Pending Review</p>
-                         <p className="text-2xl font-bold text-yellow-600">
-                           {mockAuditPackages.filter(pkg => pkg.status === 'pending_review' || pkg.status === 'audit_ready').length}
+                         <p className="text-sm font-medium text-gray-500">Non-Compliant</p>
+                         <p className="text-2xl font-bold text-orange-600">
+                           {mockAuditPackages.filter(pkg => pkg.status === 'non_compliant' || pkg.auditScore < 60).length}
                          </p>
-                         <p className="text-xs text-gray-500">Awaiting audit</p>
+                         <p className="text-xs text-gray-500">Require remediation</p>
                        </div>
                      </div>
                    </CardContent>
@@ -688,11 +1104,11 @@ export default function StaticAuditPackagesPage() {
                          <span className="text-red-600 text-sm font-bold">🚨</span>
                        </div>
                        <div className="ml-3">
-                         <p className="text-sm font-medium text-gray-500">Critical Issues</p>
+                         <p className="text-sm font-medium text-gray-500">Critical Findings</p>
                          <p className="text-2xl font-bold text-red-600">
                            {mockAuditPackages.reduce((sum, pkg) => sum + pkg.criticalIssues, 0)}
                          </p>
-                         <p className="text-xs text-gray-500">Require immediate attention</p>
+                         <p className="text-xs text-gray-500">Immediate action required</p>
                        </div>
                      </div>
                    </CardContent>
@@ -702,14 +1118,14 @@ export default function StaticAuditPackagesPage() {
                    <CardContent className="pt-6">
                      <div className="flex items-center">
                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                         <span className="text-blue-600 text-sm font-bold">📊</span>
+                         <span className="text-blue-600 text-sm font-bold">📈</span>
                        </div>
                        <div className="ml-3">
-                         <p className="text-sm font-medium text-gray-500">Audit Score</p>
+                         <p className="text-sm font-medium text-gray-500">Compliance Rate</p>
                          <p className="text-2xl font-bold text-blue-600">
-                           {Math.round(mockAuditPackages.reduce((sum, pkg) => sum + pkg.auditScore, 0) / mockAuditPackages.length)}
+                           {Math.round((mockAuditPackages.filter(pkg => pkg.auditScore >= 80).length / mockAuditPackages.length) * 100)}%
                          </p>
-                         <p className="text-xs text-gray-500">Average score</p>
+                         <p className="text-xs text-gray-500">DOD MWR standard</p>
                        </div>
                      </div>
                    </CardContent>

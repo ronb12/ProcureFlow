@@ -10,10 +10,13 @@ const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
 if (serviceAccount) {
   initializeApp({
     credential: cert(serviceAccount),
+    projectId: 'procureflow-demo',
   });
 } else {
   // Use default credentials (for emulator)
-  initializeApp();
+  initializeApp({
+    projectId: 'procureflow-demo',
+  });
 }
 
 const db = getFirestore();
@@ -378,6 +381,166 @@ async function seedData() {
     for (const check of complianceChecks) {
       await db.collection('complianceChecks').doc(check.id).set(check);
       console.log(`✅ Created compliance check: ${check.checkType}`);
+    }
+
+    // Create sample message threads
+    console.log('Creating sample message threads...');
+    const messageThreads = [
+      {
+        id: 'thread-001',
+        participants: ['requester_user', 'approver_user'],
+        requestId: 'REQ-2024-001',
+        subject: 'Office Supplies Request - REQ-2024-001',
+        lastMessage: 'The approval has been processed and sent to cardholder.',
+        lastMessageTime: new Date('2024-01-15T10:30:00Z'),
+        unreadCount: 2,
+        priority: 'normal',
+        type: 'request',
+        status: 'active',
+        createdAt: new Date('2024-01-15T09:00:00Z'),
+        updatedAt: new Date('2024-01-15T10:30:00Z')
+      },
+      {
+        id: 'thread-002',
+        participants: ['auditor_user', 'cardholder_user'],
+        requestId: 'AUDIT-2024-001',
+        subject: 'Audit Findings - REQ-2024-002',
+        lastMessage: 'Please review the compliance issues found in your purchase.',
+        lastMessageTime: new Date('2024-01-15T09:15:00Z'),
+        unreadCount: 1,
+        priority: 'high',
+        type: 'audit',
+        status: 'active',
+        createdAt: new Date('2024-01-15T08:00:00Z'),
+        updatedAt: new Date('2024-01-15T09:15:00Z')
+      },
+      {
+        id: 'thread-003',
+        participants: ['requester_user', 'auditor_user', 'admin_user'],
+        requestId: null,
+        subject: 'General Discussion - Q1 Compliance Review',
+        lastMessage: 'The quarterly compliance review is scheduled for next week.',
+        lastMessageTime: new Date('2024-01-14T16:45:00Z'),
+        unreadCount: 0,
+        priority: 'normal',
+        type: 'general',
+        status: 'active',
+        createdAt: new Date('2024-01-14T15:00:00Z'),
+        updatedAt: new Date('2024-01-14T16:45:00Z')
+      },
+      {
+        id: 'thread-004',
+        participants: ['approver_user', 'cardholder_user'],
+        requestId: 'REQ-2024-003',
+        subject: 'Equipment Purchase - REQ-2024-003',
+        lastMessage: 'The purchase order has been created successfully.',
+        lastMessageTime: new Date('2024-01-14T14:20:00Z'),
+        unreadCount: 0,
+        priority: 'normal',
+        type: 'request',
+        status: 'resolved',
+        createdAt: new Date('2024-01-14T13:00:00Z'),
+        updatedAt: new Date('2024-01-14T14:20:00Z')
+      }
+    ];
+
+    for (const thread of messageThreads) {
+      await db.collection('messageThreads').doc(thread.id).set(thread);
+      console.log(`✅ Created message thread: ${thread.subject}`);
+    }
+
+    // Create sample messages
+    console.log('Creating sample messages...');
+    const messages = [
+      {
+        id: 'msg-001',
+        threadId: 'thread-001',
+        senderId: 'requester_user',
+        recipientId: 'approver_user',
+        content: 'Hi Jane, I need approval for the office supplies request. The total amount is $1,250 and all items are within policy.',
+        timestamp: new Date('2024-01-15T10:00:00Z'),
+        read: false,
+        type: 'text',
+        attachments: [],
+        createdAt: new Date('2024-01-15T10:00:00Z')
+      },
+      {
+        id: 'msg-002',
+        threadId: 'thread-001',
+        senderId: 'approver_user',
+        recipientId: 'requester_user',
+        content: 'I\'ve reviewed your request. Everything looks good. I\'ll process the approval now.',
+        timestamp: new Date('2024-01-15T10:15:00Z'),
+        read: true,
+        type: 'text',
+        attachments: [],
+        createdAt: new Date('2024-01-15T10:15:00Z')
+      },
+      {
+        id: 'msg-003',
+        threadId: 'thread-001',
+        senderId: 'approver_user',
+        recipientId: 'requester_user',
+        content: 'The approval has been processed and sent to cardholder.',
+        timestamp: new Date('2024-01-15T10:30:00Z'),
+        read: false,
+        type: 'text',
+        attachments: [],
+        createdAt: new Date('2024-01-15T10:30:00Z')
+      },
+      {
+        id: 'msg-004',
+        threadId: 'thread-002',
+        senderId: 'auditor_user',
+        recipientId: 'cardholder_user',
+        content: 'Please review the compliance issues found in your purchase. There are 3 critical issues that need immediate attention.',
+        timestamp: new Date('2024-01-15T09:15:00Z'),
+        read: false,
+        type: 'text',
+        attachments: ['audit-findings.pdf'],
+        createdAt: new Date('2024-01-15T09:15:00Z')
+      },
+      {
+        id: 'msg-005',
+        threadId: 'thread-003',
+        senderId: 'admin_user',
+        recipientId: 'requester_user',
+        content: 'The quarterly compliance review is scheduled for next week. Please ensure all documentation is up to date.',
+        timestamp: new Date('2024-01-14T16:45:00Z'),
+        read: true,
+        type: 'text',
+        attachments: [],
+        createdAt: new Date('2024-01-14T16:45:00Z')
+      }
+    ];
+
+    for (const message of messages) {
+      await db.collection('messages').doc(message.id).set(message);
+      console.log(`✅ Created message: ${message.id}`);
+    }
+
+    // Create message read status
+    console.log('Creating message read status...');
+    const readStatuses = [
+      {
+        id: 'read-001',
+        userId: 'requester_user',
+        messageId: 'msg-002',
+        readAt: new Date('2024-01-15T10:20:00Z'),
+        createdAt: new Date('2024-01-15T10:20:00Z')
+      },
+      {
+        id: 'read-002',
+        userId: 'admin_user',
+        messageId: 'msg-005',
+        readAt: new Date('2024-01-14T17:00:00Z'),
+        createdAt: new Date('2024-01-14T17:00:00Z')
+      }
+    ];
+
+    for (const status of readStatuses) {
+      await db.collection('messageReadStatus').doc(status.id).set(status);
+      console.log(`✅ Created read status: ${status.id}`);
     }
 
     console.log('\n📋 Demo Accounts:');

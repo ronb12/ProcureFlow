@@ -189,5 +189,110 @@ service cloud.firestore {
     match /notificationPreferences/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
     }
+    
+    // Messages collection
+    match /messages/{messageId} {
+      allow read: if isSignedIn() && (
+        // User can read messages they sent or received
+        resource.data.senderId == request.auth.uid || 
+        resource.data.recipientId == request.auth.uid ||
+        // Or if they're a participant in a thread
+        request.auth.uid in resource.data.participants
+      );
+      allow create: if isSignedIn() && (
+        // User can only send messages as themselves
+        resource.data.senderId == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        // User can update their own messages (for read status, etc.)
+        resource.data.senderId == request.auth.uid ||
+        // Or if they're a participant in the thread
+        request.auth.uid in resource.data.participants
+      );
+      allow delete: if isSignedIn() && (
+        // User can delete their own messages
+        resource.data.senderId == request.auth.uid ||
+        // Admin can delete any message
+        isAdmin()
+      );
+    }
+    
+    // Message Threads collection
+    match /messageThreads/{threadId} {
+      allow read: if isSignedIn() && (
+        // User can read threads they participate in
+        request.auth.uid in resource.data.participants ||
+        // Admin can read all threads
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        // User can create threads they participate in
+        request.auth.uid in resource.data.participants
+      );
+      allow update: if isSignedIn() && (
+        // User can update threads they participate in
+        request.auth.uid in resource.data.participants ||
+        // Admin can update any thread
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (
+        // User can delete threads they participate in
+        request.auth.uid in resource.data.participants ||
+        // Admin can delete any thread
+        isAdmin()
+      );
+    }
+    
+    // Message Attachments collection
+    match /messageAttachments/{attachmentId} {
+      allow read: if isSignedIn() && (
+        // User can read attachments from messages they have access to
+        request.auth.uid in resource.data.participants ||
+        // Admin can read all attachments
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        // User can create attachments for messages they're sending
+        resource.data.senderId == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        // User can update their own attachments
+        resource.data.senderId == request.auth.uid ||
+        // Admin can update any attachment
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (
+        // User can delete their own attachments
+        resource.data.senderId == request.auth.uid ||
+        // Admin can delete any attachment
+        isAdmin()
+      );
+    }
+    
+    // Message Read Status collection
+    match /messageReadStatus/{statusId} {
+      allow read: if isSignedIn() && (
+        // User can read their own read status
+        resource.data.userId == request.auth.uid ||
+        // Admin can read all read status
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        // User can create their own read status
+        resource.data.userId == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        // User can update their own read status
+        resource.data.userId == request.auth.uid ||
+        // Admin can update any read status
+        isAdmin()
+      );
+      allow delete: if isSignedIn() && (
+        // User can delete their own read status
+        resource.data.userId == request.auth.uid ||
+        // Admin can delete any read status
+        isAdmin()
+      );
+    }
   }
 }

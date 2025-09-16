@@ -489,39 +489,41 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
           {roleCards.map((card, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
+            <Card key={index} className="hover:shadow-lg transition-all duration-200 border-l-4 border-l-blue-500 bg-gradient-to-br from-white to-gray-50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-gray-800">
                   {card.title}
                 </CardTitle>
-                <card.icon className="h-4 w-4 text-muted-foreground" />
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <card.icon className="h-4 w-4 text-blue-600" />
+                </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent className="pt-0">
+                <div className="text-2xl font-bold text-gray-900 mb-2">
                   {card.stats[0]?.value || 0}
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-600 mb-4 leading-relaxed">
                   {card.description}
                 </p>
-                <div className="mt-4 space-y-1">
+                <div className="space-y-2 mb-4">
                   {card.stats.map((stat, statIndex) => (
                     <div
                       key={statIndex}
-                      className="flex justify-between text-xs"
+                      className="flex justify-between items-center text-xs bg-gray-50 px-2 py-1 rounded"
                     >
-                      <span className="text-muted-foreground">
+                      <span className="text-gray-600 font-medium">
                         {stat.label}
                       </span>
-                      <span className={stat.color}>{stat.value}</span>
+                      <span className={`font-semibold ${stat.color}`}>{stat.value}</span>
                     </div>
                   ))}
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="w-full mt-4"
+                  className="w-full bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:border-blue-300 transition-colors"
                   onClick={() => router.push(card.href)}
                 >
                   View Details
@@ -659,35 +661,63 @@ export default function DashboardPage() {
                 <span>Quick Stats</span>
               </CardTitle>
               <CardDescription>
-                Your procurement activity this month
+                {actualRole && ['auditor', 'admin'].includes(actualRole)
+                  ? 'Your audit activity this month'
+                  : 'Your procurement activity this month'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Total Spent</span>
-                  <span className="text-lg font-bold text-green-600">
-                    {formatCurrency(15420.5)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">
-                    Requests Submitted
-                  </span>
-                  <span className="text-lg font-bold">
-                    {mockStats.myRequests.total}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Approval Rate</span>
-                  <span className="text-lg font-bold text-green-600">92%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">
-                    Avg. Processing Time
-                  </span>
-                  <span className="text-lg font-bold">3.2 days</span>
-                </div>
+                {actualRole && ['auditor', 'admin'].includes(actualRole) ? (
+                  // Audit-specific stats
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Packages Audited</span>
+                      <span className="text-lg font-bold text-green-600">24</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Compliance Rate</span>
+                      <span className="text-lg font-bold text-blue-600">87%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Critical Findings</span>
+                      <span className="text-lg font-bold text-red-600">3</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Avg. Audit Time</span>
+                      <span className="text-lg font-bold">2.1 days</span>
+                    </div>
+                  </>
+                ) : (
+                  // Regular procurement stats
+                  <>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Total Spent</span>
+                      <span className="text-lg font-bold text-green-600">
+                        {formatCurrency(15420.5)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        Requests Submitted
+                      </span>
+                      <span className="text-lg font-bold">
+                        {mockStats.myRequests.total}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Approval Rate</span>
+                      <span className="text-lg font-bold text-green-600">92%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">
+                        Avg. Processing Time
+                      </span>
+                      <span className="text-lg font-bold">3.2 days</span>
+                    </div>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

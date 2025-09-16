@@ -5,7 +5,7 @@ import { signOutUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { Button } from './button';
 import { NotificationDropdown } from './notification-dropdown';
-import { LogOut, User, Settings, Menu, X } from 'lucide-react';
+import { LogOut, User, Settings, Menu, X, MessageSquare } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 
@@ -107,6 +107,17 @@ export function AppHeader() {
               className="text-gray-700 hover:text-blue-600 font-medium"
             >
               Dashboard
+            </button>
+            {/* Messages - Available to all roles */}
+            <button
+              onClick={() => router.push('/messages')}
+              className="text-gray-700 hover:text-blue-600 font-medium relative"
+            >
+              Messages
+              {/* Message notification badge - in real app, this would come from message data */}
+              <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs text-white flex items-center justify-center min-w-[12px]">
+                3
+              </span>
             </button>
             {/* Only show Requests tab for requesters and admins */}
             {actualRole && ['requester', 'admin'].includes(actualRole) && (
@@ -251,6 +262,16 @@ export function AppHeader() {
               className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
             >
               Dashboard
+            </button>
+            {/* Messages - Available to all roles */}
+            <button
+              onClick={() => {
+                router.push('/messages');
+                setShowMobileMenu(false);
+              }}
+              className="block w-full text-left px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-white rounded-md"
+            >
+              Messages
             </button>
             {/* Only show Requests tab for requesters and admins */}
             {actualRole && ['requester', 'admin'].includes(actualRole) && (

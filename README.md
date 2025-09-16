@@ -132,6 +132,10 @@ Visit `http://localhost:3000` to see the application.
 - **Purchases**: Cardholder purchase records
 - **Cycles**: Monthly reconciliation periods
 - **Audit**: Immutable event log
+- **Messages**: Internal communication system with threading
+- **MessageThreads**: Conversation management and organization
+- **MessageAttachments**: File sharing and document exchange
+- **MessageReadStatus**: Read receipt and delivery tracking
 
 ### Security
 
@@ -190,12 +194,25 @@ Draft → Submitted → AO Review → Approved → Cardholder Purchasing → Pur
 - **Facility-Specific Reports** - Generate reports tailored to specific MWR facilities and installations
 - **Audit Workflow Management** - Complete audit lifecycle from package creation to closure
 
+### 💬 **For All Users - Messaging System**
+- **Internal Communication** - Secure messaging between all user roles
+- **Request Discussions** - Messages tied to specific purchase requests
+- **Audit Communications** - Direct auditor-cardholder discussions
+- **Team Coordination** - Department-wide messaging and collaboration
+- **Real-time Messaging** - Live chat with read receipts and status indicators
+- **Message Threading** - Organized conversations by topic and priority
+- **File Attachments** - Secure document sharing within messages
+- **Search & Filtering** - Find conversations by content, type, or priority
+- **Mobile Responsive** - Full messaging capabilities on all devices
+- **DOD MWR Compliance** - All communications logged for audit purposes
+
 ### ⚙️ **For MWR Administrators**
 - **System-wide Compliance Management** - Monitor all audit packages
 - **Policy Configuration** - Set compliance rules and thresholds
 - **User Management** - Role-based access and permissions
 - **Audit Report Generation** - External audit support
 - **Compliance Analytics** - Trend analysis and recommendations
+- **Message Administration** - Monitor and manage system communications
 
 ## 📱 PWA Features
 
@@ -204,6 +221,8 @@ Draft → Submitted → AO Review → Approved → Cardholder Purchasing → Pur
 - **Camera Integration**: Direct receipt capture
 - **Push Notifications**: Status change alerts
 - **Install Prompt**: Add to home screen
+- **Offline Messaging**: Draft messages saved locally when offline
+- **Real-time Sync**: Messages sync when connection restored
 
 ## 🧪 Testing
 
@@ -376,6 +395,17 @@ For questions or issues:
   - Auditor-specific findings page with response workflow
   - Enhanced audit statistics and compliance monitoring
   - Color-coded status indicators and professional naming
+- **v2.2.0**: Comprehensive messaging system for internal communication
+  - Real-time messaging between all user roles
+  - Message threading and conversation management
+  - File attachments and document sharing
+  - Search and filtering capabilities
+  - Mobile-responsive messaging interface
+  - DOD MWR compliant communication logging
+  - Role-based message access control
+  - Read receipts and delivery status
+  - Offline message support with sync
+  - Integration with request and audit workflows
 
 ---
 

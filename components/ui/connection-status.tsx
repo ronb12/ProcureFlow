@@ -6,28 +6,26 @@ import { ensureFirestoreConnection } from '@/lib/firebase';
 
 export function ConnectionStatus() {
   const pathname = usePathname();
-  
-  // Don't show connection status on admin pages
-  if (pathname?.startsWith('/admin')) {
-    return null;
-  }
   const [isOnline, setIsOnline] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-
+  
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
       setIsConnecting(true);
-      ensureFirestoreConnection()
-        .then(() => {
-          setIsConnected(true);
-          setIsConnecting(false);
-        })
-        .catch(() => {
-          setIsConnected(false);
-          setIsConnecting(false);
-        });
+      // Add a small delay to prevent blocking the UI
+      setTimeout(() => {
+        ensureFirestoreConnection()
+          .then(() => {
+            setIsConnected(true);
+            setIsConnecting(false);
+          })
+          .catch(() => {
+            setIsConnected(false);
+            setIsConnecting(false);
+          });
+      }, 100);
     };
 
     const handleOffline = () => {
@@ -35,9 +33,9 @@ export function ConnectionStatus() {
       setIsConnected(false);
     };
 
-    // Check initial connection
+    // Check initial connection with delay to prevent blocking initial render
     if (navigator.onLine) {
-      handleOnline();
+      setTimeout(handleOnline, 200);
     }
 
     window.addEventListener('online', handleOnline);
@@ -49,9 +47,14 @@ export function ConnectionStatus() {
     };
   }, []);
 
+  // Don't show connection status on admin pages
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
+
   if (!isOnline) {
     return (
-      <div className="fixed top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-md text-sm z-50">
+      <div className="fixed top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-md text-sm z-30">
         Offline
       </div>
     );
@@ -59,7 +62,7 @@ export function ConnectionStatus() {
 
   if (isConnecting) {
     return (
-      <div className="fixed top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-md text-sm z-50">
+      <div className="fixed top-4 right-4 bg-yellow-500 text-white px-3 py-1 rounded-md text-sm z-30">
         Connecting...
       </div>
     );
@@ -67,14 +70,14 @@ export function ConnectionStatus() {
 
   if (!isConnected) {
     return (
-      <div className="fixed top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-md text-sm z-50">
+      <div className="fixed top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-md text-sm z-30">
         Connection Error
       </div>
     );
   }
 
   return (
-    <div className="fixed top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-md text-sm z-50">
+    <div className="fixed top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-md text-sm z-30">
       Connected
     </div>
   );

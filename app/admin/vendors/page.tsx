@@ -8,6 +8,8 @@ import {
   Card,
   CardContent,
 } from '@/components/ui/card';
+import { AdminNav } from '@/components/ui/admin-nav';
+import { VendorModal } from '@/components/ui/vendor-modal';
 import {
   Building2,
   Plus,
@@ -20,6 +22,7 @@ import {
   Star,
   AlertCircle,
   CheckCircle,
+  User,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -28,6 +31,7 @@ interface Vendor {
   name: string;
   type: 'supplier' | 'contractor' | 'service_provider';
   status: 'active' | 'inactive' | 'suspended';
+  marketType: 'contract' | 'open_market';
   contact: {
     primary: string;
     phone: string;
@@ -78,6 +82,7 @@ const mockVendors: Vendor[] = [
     name: 'Office Depot Business Solutions',
     type: 'supplier',
     status: 'active',
+    marketType: 'contract',
     contact: {
       primary: 'John Smith',
       phone: '(555) 123-4567',
@@ -135,6 +140,7 @@ const mockVendors: Vendor[] = [
     name: 'Home Depot Pro',
     type: 'supplier',
     status: 'active',
+    marketType: 'open_market',
     contact: {
       primary: 'Jane Doe',
       phone: '(555) 987-6543',
@@ -190,6 +196,7 @@ export default function VendorsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [marketTypeFilter, setMarketTypeFilter] = useState<string>('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
 
@@ -248,8 +255,9 @@ export default function VendorsPage() {
     
     const matchesStatus = statusFilter === 'all' || vendor.status === statusFilter;
     const matchesType = typeFilter === 'all' || vendor.type === typeFilter;
+    const matchesMarketType = marketTypeFilter === 'all' || vendor.marketType === marketTypeFilter;
     
-    return matchesSearch && matchesStatus && matchesType;
+    return matchesSearch && matchesStatus && matchesType && matchesMarketType;
   });
 
   const handleDeleteVendor = (vendorId: string) => {
@@ -268,21 +276,81 @@ export default function VendorsPage() {
     toast.success('Vendor preference updated');
   };
 
+  const handleAddVendor = () => {
+    setSelectedVendor(null);
+    setShowAddForm(true);
+  };
+
+  const handleEditVendor = (vendorId: string) => {
+    const vendorToEdit = vendors.find(v => v.id === vendorId);
+    if (vendorToEdit) {
+      setSelectedVendor(vendorToEdit);
+      setShowAddForm(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowAddForm(false);
+    setSelectedVendor(null);
+  };
+
+  const handleSaveVendor = async (vendorData: Vendor) => {
+    try {
+      if (vendorData.id && vendors.find(v => v.id === vendorData.id)) {
+        // Update existing vendor
+        setVendors(prev =>
+          prev.map(v =>
+            v.id === vendorData.id
+              ? { ...vendorData, updatedAt: new Date() }
+              : v
+          )
+        );
+        toast.success('Vendor updated successfully');
+      } else {
+        // Add new vendor
+        const newVendor: Vendor = {
+          ...vendorData,
+          id: Date.now().toString(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        setVendors(prev => [...prev, newVendor]);
+        toast.success('Vendor created successfully');
+      }
+
+      setShowAddForm(false);
+      setSelectedVendor(null);
+    } catch (error) {
+      console.error('Error saving vendor:', error);
+      toast.error('Failed to save vendor');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <AdminNav />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Vendor Management</h1>
-              <p className="mt-2 text-gray-600">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center space-x-4 mb-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push('/admin')}
+                  className="flex items-center space-x-2 text-sm"
+                >
+                  ← Back to Admin Dashboard
+                </Button>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Vendor Management</h1>
+              <p className="mt-2 text-gray-600 text-sm sm:text-base">
                 Manage vendor database, add new vendors, and track performance.
               </p>
             </div>
             <Button
-              onClick={() => setShowAddForm(true)}
-              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleAddVendor}
+              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add New Vendor
@@ -336,13 +404,26 @@ export default function VendorsPage() {
                     <option value="service_provider">Service Provider</option>
                   </select>
                 </div>
+
+                {/* Market Type Filter */}
+                <div className="lg:w-48">
+                  <select
+                    value={marketTypeFilter}
+                    onChange={(e) => setMarketTypeFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="all">All Markets</option>
+                    <option value="contract">Federal Contract</option>
+                    <option value="open_market">Open Market</option>
+                  </select>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -415,26 +496,28 @@ export default function VendorsPage() {
           ) : (
             filteredVendors.map(vendor => (
               <Card key={vendor.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center space-x-4 mb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">
                           {vendor.name}
                         </h3>
-                        {vendor.preferences.preferred && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                            <Star className="h-3 w-3 mr-1" />
-                            Preferred
+                        <div className="flex flex-wrap gap-2">
+                          {vendor.preferences.preferred && (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              <Star className="h-3 w-3 mr-1" />
+                              Preferred
+                            </span>
+                          )}
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            vendor.status === 'active' ? 'bg-green-100 text-green-800' :
+                            vendor.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
                           </span>
-                        )}
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          vendor.status === 'active' ? 'bg-green-100 text-green-800' :
-                          vendor.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {vendor.status.charAt(0).toUpperCase() + vendor.status.slice(1)}
-                        </span>
+                        </div>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
@@ -454,19 +537,70 @@ export default function VendorsPage() {
                           <span className="font-medium">Type:</span> {vendor.type.replace('_', ' ')}
                         </div>
                         <div>
+                          <span className="font-medium">Market:</span> 
+                          <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                            vendor.marketType === 'contract' 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-green-100 text-green-800'
+                          }`}>
+                            {vendor.marketType === 'contract' ? 'Federal Contract' : 'Open Market'}
+                          </span>
+                        </div>
+                        <div>
                           <span className="font-medium">Rating:</span> {vendor.performance.rating}/5.0
                         </div>
                         <div>
                           <span className="font-medium">On-Time Delivery:</span> {vendor.performance.onTimeDelivery}%
                         </div>
                       </div>
+                      
+                      {/* Contract Information */}
+                      {vendor.contracts && vendor.contracts.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <h4 className="text-sm font-medium text-gray-900 mb-2">Federal Contracts</h4>
+                          <div className="space-y-2">
+                            {vendor.contracts.slice(0, 2).map((contract, index) => (
+                              <div key={index} className="bg-blue-50 p-2 rounded text-xs">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-medium text-blue-900">
+                                    {contract.contractNumber || 'Contract #' + (index + 1)}
+                                  </span>
+                                  <span className={`px-2 py-1 rounded text-xs ${
+                                    contract.status === 'active' 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : contract.status === 'expired'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    {contract.status || 'Unknown'}
+                                  </span>
+                                </div>
+                                <div className="text-blue-700 mt-1">
+                                  {contract.contractType} • {contract.description || 'No description'}
+                                </div>
+                                {contract.beginDate && contract.endDate && (
+                                  <div className="text-blue-600 text-xs mt-1">
+                                    {contract.beginDate.toLocaleDateString()} - {contract.endDate.toLocaleDateString()}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            {vendor.contracts.length > 2 && (
+                              <div className="text-xs text-gray-500 text-center">
+                                +{vendor.contracts.length - 2} more contracts
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
-                    <div className="flex space-x-2 ml-4">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 sm:ml-4">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setSelectedVendor(vendor)}
+                        onClick={() => handleEditVendor(vendor.id)}
+                        className="w-full sm:w-auto"
                       >
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
@@ -475,17 +609,20 @@ export default function VendorsPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleTogglePreferred(vendor.id)}
+                        className="w-full sm:w-auto"
                       >
                         <Star className="h-4 w-4 mr-1" />
-                        {vendor.preferences.preferred ? 'Remove' : 'Set'} Preferred
+                        <span className="hidden sm:inline">{vendor.preferences.preferred ? 'Remove' : 'Set'} Preferred</span>
+                        <span className="sm:hidden">{vendor.preferences.preferred ? 'Remove' : 'Set'}</span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteVendor(vendor.id)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 w-full sm:w-auto"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4 mr-1 sm:mr-0" />
+                        <span className="sm:hidden">Delete</span>
                       </Button>
                     </div>
                   </div>
@@ -494,6 +631,15 @@ export default function VendorsPage() {
             ))
           )}
         </div>
+
+        {/* Vendor Modal */}
+        <VendorModal
+          isOpen={showAddForm}
+          onClose={handleCloseModal}
+          onSave={handleSaveVendor}
+          vendor={selectedVendor}
+          isProcessing={false}
+        />
       </div>
     </div>
   );

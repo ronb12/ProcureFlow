@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import { AppHeader } from '@/components/ui/app-header';
+import { AdminNav } from '@/components/ui/admin-nav';
 import toast from 'react-hot-toast';
 import {
   Card,
@@ -271,6 +272,7 @@ export default function AdminFacilitiesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <AppHeader />
+      <AdminNav />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

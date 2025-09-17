@@ -17,8 +17,9 @@ export function AppHeader() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close mobile menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -27,16 +28,22 @@ export function AppHeader() {
       ) {
         setShowMobileMenu(false);
       }
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowUserMenu(false);
+      }
     };
 
-    if (showMobileMenu) {
+    if (showMobileMenu || showUserMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showMobileMenu]);
+  }, [showMobileMenu, showUserMenu]);
 
   const handleLogout = async () => {
     try {
@@ -81,7 +88,7 @@ export function AppHeader() {
   if (!user) return null;
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand */}
@@ -167,9 +174,12 @@ export function AppHeader() {
             <NotificationDropdown />
 
             {/* User Profile Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={userMenuRef}>
               <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
+                onClick={() => {
+                  console.log('Avatar clicked, current state:', showUserMenu);
+                  setShowUserMenu(!showUserMenu);
+                }}
                 className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
               >
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
@@ -192,7 +202,7 @@ export function AppHeader() {
 
               {/* Dropdown Menu */}
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[60]">
                   <div className="px-4 py-2 border-b border-gray-100">
                     <div className="text-sm font-medium text-gray-900">
                       {user.name || user.email?.split('@')[0] || 'User'}

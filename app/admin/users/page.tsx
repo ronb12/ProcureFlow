@@ -525,13 +525,13 @@ export default function UserManagementPage() {
 
         {/* User Modal */}
         {showUserModal && (
-          <UserModal
-            isOpen={showUserModal}
-            onClose={handleCloseModal}
-            onSave={handleSaveUser}
-            user={selectedUser}
-            isProcessing={isProcessing}
-          />
+        <UserModal
+          isOpen={showUserModal}
+          onClose={handleCloseModal}
+          onSave={handleSaveUser}
+          user={selectedUser}
+          isProcessing={isProcessing}
+        />
         )}
       </div>
     </div>

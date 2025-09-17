@@ -17,7 +17,6 @@ import { FileDropzone } from '@/components/ui/file-dropzone';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { RequestStatus } from '@/lib/types';
 import {
-  CreditCard,
   Upload,
   CheckCircle,
   Clock,
@@ -25,14 +24,12 @@ import {
   Receipt,
   ShoppingCart,
   Search,
-  Filter,
   Download,
   Plus,
   Building2,
   FileText,
   TrendingUp,
   DollarSign,
-  Calendar,
   BarChart3,
   PieChart,
   Target,
@@ -42,13 +39,8 @@ import {
   RefreshCw,
   Settings,
   Bell,
-  Users,
   Archive,
   Eye,
-  Edit,
-  Trash2,
-  Copy,
-  Share,
   ExternalLink,
   X,
   Shield,
@@ -294,10 +286,10 @@ export default function PurchasesPage() {
   const [vendorFilter, setVendorFilter] = useState<string>('all');
   
   // Enhanced state management for A+ features
-  const [selectedPurchases, setSelectedPurchases] = useState<string[]>([]);
+  const [selectedPurchases] = useState<string[]>([]);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [showReports, setShowReports] = useState(false);
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  // const [showBulkActions] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -335,6 +327,12 @@ export default function PurchasesPage() {
   const [showHelp, setShowHelp] = useState(false);
   const [selectedReportType, setSelectedReportType] = useState<string | null>(null);
   const [reportData, setReportData] = useState<any>(null);
+  
+  // Missing state variables that are referenced in the code
+  const [vendorVerificationComplete, setVendorVerificationComplete] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<any>(null);
+  const [showBulkActions, setShowBulkActions] = useState(false);
   const [notifications, setNotifications] = useState([
     {
       id: '1',
@@ -407,7 +405,7 @@ export default function PurchasesPage() {
             Access Denied
           </h1>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access the purchases page.
+            You don&apos;t have permission to access the purchases page.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Return to Dashboard
@@ -534,12 +532,12 @@ export default function PurchasesPage() {
     }));
   };
 
-  const handleDiscrepancyApproval = (approved: boolean) => {
-    setReconciliationData(prev => ({
-      ...prev,
-      overageApproved: approved,
-    }));
-  };
+  // const handleDiscrepancyApproval = (approved: boolean) => {
+  //   setReconciliationData(prev => ({
+  //     ...prev,
+  //     overageApproved: approved,
+  //   }));
+  // };
 
   // Document viewing functions
   const handleViewDocument = (documentType: string) => {
@@ -633,7 +631,7 @@ export default function PurchasesPage() {
       
       setVendorVerification(verificationResult);
       toast.success('Vendor verification completed successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to verify vendor status');
     } finally {
       setIsProcessing(false);

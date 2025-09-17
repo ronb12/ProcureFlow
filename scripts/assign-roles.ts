@@ -1,5 +1,6 @@
 import { initializeApp, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
@@ -27,39 +28,79 @@ interface RoleAssignment {
 async function assignRoles() {
   console.log('🔐 Starting role assignment...');
 
-  const roleAssignments: RoleAssignment[] = [
-    // Replace these with actual Firebase Auth UIDs
-    {
-      uid: 'YOUR_FIREBASE_UID_HERE', // Get this from Firebase Console
-      role: 'admin',
-      orgId: 'org_cdc',
-      approvalLimit: 100000,
-    },
-    {
-      uid: 'YOUR_FIREBASE_UID_HERE',
-      role: 'requester',
-      orgId: 'org_cdc',
-      approvalLimit: 0,
-    },
-    {
-      uid: 'YOUR_FIREBASE_UID_HERE',
-      role: 'approver',
-      orgId: 'org_cdc',
-      approvalLimit: 10000,
-    },
-    {
-      uid: 'YOUR_FIREBASE_UID_HERE',
-      role: 'cardholder',
-      orgId: 'org_cdc',
-      approvalLimit: 0,
-    },
-    {
-      uid: 'YOUR_FIREBASE_UID_HERE',
-      role: 'auditor',
-      orgId: 'org_cdc',
-      approvalLimit: 0,
-    },
-  ];
+  // Get users from Firestore to assign roles based on email
+  const db = getFirestore();
+  const usersSnapshot = await db.collection('users').get();
+  
+  const roleAssignments: RoleAssignment[] = [];
+
+  // Map emails to roles and create assignments
+  const emailRoleMap = {
+    'admin@procureflow.demo': { role: 'admin', orgId: 'org_cdc', approvalLimit: 100000 },
+    'requester@procureflow.demo': { role: 'requester', orgId: 'org_cdc', approvalLimit: 0 },
+    'approver@procureflow.demo': { role: 'approver', orgId: 'org_cdc', approvalLimit: 10000 },
+    'cardholder@procureflow.demo': { role: 'cardholder', orgId: 'org_cdc', approvalLimit: 0 },
+    'auditor@procureflow.demo': { role: 'auditor', orgId: 'org_cdc', approvalLimit: 0 },
+    'test@procureflow.demo': { role: 'requester', orgId: 'org_cdc', approvalLimit: 5000 },
+  };
+
+  for (const userDoc of usersSnapshot.docs) {
+    const userData = userDoc.data();
+    const email = userData.email;
+    
+    if (email && emailRoleMap[email as keyof typeof emailRoleMap]) {
+      const roleConfig = emailRoleMap[email as keyof typeof emailRoleMap];
+      roleAssignments.push({
+        uid: userDoc.id,
+        role: roleConfig.role,
+        orgId: roleConfig.orgId,
+        approvalLimit: roleConfig.approvalLimit,
+      });
+    }
+  }
+
+  // If no users found in Firestore, use the seeded user IDs
+  if (roleAssignments.length === 0) {
+    console.log('No users found in Firestore, using seeded user IDs...');
+    roleAssignments.push(
+      {
+        uid: 'admin_user',
+        role: 'admin',
+        orgId: 'org_cdc',
+        approvalLimit: 100000,
+      },
+      {
+        uid: 'requester_user',
+        role: 'requester',
+        orgId: 'org_cdc',
+        approvalLimit: 0,
+      },
+      {
+        uid: 'approver_user',
+        role: 'approver',
+        orgId: 'org_cdc',
+        approvalLimit: 10000,
+      },
+      {
+        uid: 'cardholder_user',
+        role: 'cardholder',
+        orgId: 'org_cdc',
+        approvalLimit: 0,
+      },
+      {
+        uid: 'auditor_user',
+        role: 'auditor',
+        orgId: 'org_cdc',
+        approvalLimit: 0,
+      },
+      {
+        uid: 'test_user',
+        role: 'requester',
+        orgId: 'org_cdc',
+        approvalLimit: 5000,
+      }
+    );
+  }
 
   try {
     for (const assignment of roleAssignments) {

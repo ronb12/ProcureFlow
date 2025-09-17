@@ -2,25 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
-import { UserRole } from '@/lib/types';
+import { UserRole, User } from '@/lib/types';
 import { AdminNav } from '@/components/ui/admin-nav';
 import { AppHeader } from '@/components/ui/app-header';
+import { UserModal } from '@/components/ui/user-modal';
 import {
   Users,
   Plus,
-  Edit,
-  Trash2,
   Eye,
+  Edit,
   Shield,
   CheckCircle,
   XCircle,
@@ -28,8 +24,14 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+// Extended user type for display purposes
+interface DisplayUser extends User {
+  status: 'active' | 'inactive';
+  lastLogin: Date | null;
+}
+
 // Mock data - in real app this would come from API
-const mockUsers = [
+const mockUsers: DisplayUser[] = [
   {
     id: '1',
     name: 'John Smith',
@@ -38,6 +40,7 @@ const mockUsers = [
     status: 'active',
     lastLogin: new Date('2024-01-20'),
     createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
     orgId: 'org_cdc',
     approvalLimit: 100000,
   },
@@ -49,6 +52,7 @@ const mockUsers = [
     status: 'active',
     lastLogin: new Date('2024-01-19'),
     createdAt: new Date('2024-01-02'),
+    updatedAt: new Date('2024-01-02'),
     orgId: 'org_cdc',
     approvalLimit: 0,
   },
@@ -60,6 +64,7 @@ const mockUsers = [
     status: 'active',
     lastLogin: new Date('2024-01-18'),
     createdAt: new Date('2024-01-03'),
+    updatedAt: new Date('2024-01-03'),
     orgId: 'org_cdc',
     approvalLimit: 0,
   },
@@ -71,6 +76,7 @@ const mockUsers = [
     status: 'active',
     lastLogin: new Date('2024-01-17'),
     createdAt: new Date('2024-01-04'),
+    updatedAt: new Date('2024-01-04'),
     orgId: 'org_cdc',
     approvalLimit: 10000,
   },
@@ -82,6 +88,7 @@ const mockUsers = [
     status: 'inactive',
     lastLogin: new Date('2024-01-10'),
     createdAt: new Date('2024-01-05'),
+    updatedAt: new Date('2024-01-05'),
     orgId: 'org_cdc',
     approvalLimit: 0,
   },
@@ -117,21 +124,154 @@ const roleOptions: { value: UserRole; label: string; description: string }[] = [
 
 export default function UserManagementPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
-  const [users, setUsers] = useState(mockUsers);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [users, setUsers] = useState<DisplayUser[]>(mockUsers);
+  const [selectedUser, setSelectedUser] = useState<DisplayUser | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showAddUser, setShowAddUser] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [user] = useState({ role: 'admin' }); // Mock user for testing
+  const [loading] = useState(false);
 
-  // Handle authentication redirect
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
+  // Handle Add User
+  const handleAddUser = () => {
+    console.log('Add User clicked');
+    setSelectedUser(null);
+    setShowUserModal(true);
+  };
+
+  // Handle Edit User
+  const handleEditUser = (userId: string) => {
+    console.log('Edit User clicked for ID:', userId);
+    const userToEdit = users.find(u => u.id === userId);
+    if (userToEdit) {
+      setSelectedUser(userToEdit);
+      setShowUserModal(true);
     }
-  }, [user, loading, router]);
+  };
 
+  // Handle View User
+  const handleViewUser = (user: DisplayUser) => {
+    console.log('View User clicked for:', user.name);
+    setSelectedUser(user);
+    setShowUserModal(true);
+  };
+
+  // Handle Close Modal
+  const handleCloseModal = () => {
+    console.log('Closing modal');
+    setShowUserModal(false);
+    setSelectedUser(null);
+  };
+
+  // Handle Save User
+  const handleSaveUser = async (userData: User) => {
+    console.log('Saving user:', userData);
+    setIsProcessing(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      if (userData.id) {
+        // Update existing user
+        setUsers(prev =>
+          prev.map(u =>
+            u.id === userData.id
+              ? { ...u, ...userData, updatedAt: new Date() }
+              : u
+          )
+        );
+        toast.success('User updated successfully');
+      } else {
+        // Add new user
+        const newUser: DisplayUser = {
+          ...userData,
+          id: Date.now().toString(),
+          status: 'active',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          lastLogin: null,
+        };
+        setUsers(prev => [...prev, newUser]);
+        toast.success('User created successfully');
+      }
+
+      setShowUserModal(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error saving user:', error);
+      toast.error('Failed to save user');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle User Actions
+  const handleUserAction = async (
+    userId: string,
+    action: string,
+    _data?: Record<string, unknown>
+  ) => {
+    console.log('User action:', action, 'for user:', userId);
+    setIsProcessing(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      if (action === 'toggle_status') {
+        setUsers(prev =>
+          prev.map(u =>
+            u.id === userId
+              ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' }
+              : u
+          )
+        );
+        toast.success('User status updated');
+      } else if (action === 'delete') {
+        setUsers(prev => prev.filter(u => u.id !== userId));
+        toast.success('User deleted');
+      }
+    } catch (error) {
+      console.error('Error processing user action:', error);
+      toast.error('Failed to process user action');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Filter users
+  const filteredUsers = users.filter(user => {
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === 'all' || user?.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
+  // Get role color
+  const getRoleColor = (role: UserRole) => {
+    switch (role) {
+      case 'admin':
+        return 'text-red-600 bg-red-50';
+      case 'approver':
+        return 'text-blue-600 bg-blue-50';
+      case 'cardholder':
+        return 'text-green-600 bg-green-50';
+      case 'auditor':
+        return 'text-purple-600 bg-purple-50';
+      case 'requester':
+        return 'text-gray-600 bg-gray-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  // Get status color
+  const getStatusColor = (status: string) => {
+    return status === 'active'
+      ? 'text-green-600 bg-green-50'
+      : 'text-red-600 bg-red-50';
+  };
 
   if (loading) {
     return (
@@ -155,7 +295,7 @@ export default function UserManagementPage() {
             Access Denied
           </h1>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access user management.
+            You don&apos;t have permission to access user management.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Return to Dashboard
@@ -164,114 +304,6 @@ export default function UserManagementPage() {
       </div>
     );
   }
-
-  const handleEditUser = (userId: string) => {
-    const userToEdit = users.find(u => u.id === userId);
-    if (userToEdit) {
-      setSelectedUser(userToEdit);
-      setShowAddUser(true);
-    }
-  };
-
-  const handleDeleteUser = (userId: string) => {
-    if (confirm('Are you sure you want to delete this user?')) {
-      setUsers(users.filter(u => u.id !== userId));
-      toast.success('User deleted successfully');
-    }
-  };
-
-  const handleToggleUserStatus = (userId: string) => {
-    setUsers(users.map(u => 
-      u.id === userId 
-        ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' }
-        : u
-    ));
-    toast.success('User status updated');
-  };
-
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user?.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
-
-  const handleUserAction = async (
-    userId: string,
-    action: string,
-    data?: any
-  ) => {
-    setIsProcessing(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (action === 'toggle_status') {
-        setUsers(prev =>
-          prev.map(u =>
-            u.id === userId
-              ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' }
-              : u
-          )
-        );
-        toast.success('User status updated');
-      } else if (action === 'update_role') {
-        setUsers(prev =>
-          prev.map(u =>
-            u.id === userId
-              ? { ...u, role: data.role, approvalLimit: data.approvalLimit }
-              : u
-          )
-        );
-        toast.success('User role updated');
-      } else if (action === 'delete') {
-        setUsers(prev => prev.filter(u => u.id !== userId));
-        toast.success('User deleted');
-      } else if (action === 'add') {
-        const newUser = {
-          id: Date.now().toString(),
-          ...data,
-          status: 'active',
-          createdAt: new Date(),
-          lastLogin: null,
-        };
-        setUsers(prev => [...prev, newUser]);
-        toast.success('User added successfully');
-        setShowAddUser(false);
-      }
-
-      setSelectedUser(null);
-    } catch (error) {
-      toast.error('Failed to process user action');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const getRoleColor = (role: UserRole) => {
-    switch (role) {
-      case 'admin':
-        return 'text-red-600 bg-red-50';
-      case 'approver':
-        return 'text-blue-600 bg-blue-50';
-      case 'cardholder':
-        return 'text-green-600 bg-green-50';
-      case 'auditor':
-        return 'text-purple-600 bg-purple-50';
-      case 'requester':
-        return 'text-gray-600 bg-gray-50';
-      default:
-        return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    return status === 'active'
-      ? 'text-green-600 bg-green-50'
-      : 'text-red-600 bg-red-50';
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -289,10 +321,7 @@ export default function UserManagementPage() {
                 Create and manage user roles and permissions.
               </p>
             </div>
-            <Button onClick={() => {
-              setSelectedUser(null);
-              setShowAddUser(true);
-            }}>
+            <Button onClick={handleAddUser} className="bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -433,9 +462,9 @@ export default function UserManagementPage() {
                         >
                           {user.role}
                         </span>
-                        {user.approvalLimit > 0 && (
+                        {(user.approvalLimit ?? 0) > 0 && (
                           <div className="text-xs text-gray-500 mt-1">
-                            Limit: ${user.approvalLimit.toLocaleString()}
+                            Limit: ${(user.approvalLimit ?? 0).toLocaleString()}
                           </div>
                         )}
                       </td>
@@ -456,7 +485,8 @@ export default function UserManagementPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setSelectedUser(user)}
+                            onClick={() => handleViewUser(user)}
+                            className="hover:bg-blue-50"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
@@ -464,6 +494,7 @@ export default function UserManagementPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleEditUser(user.id)}
+                            className="hover:bg-green-50"
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -474,6 +505,7 @@ export default function UserManagementPage() {
                               handleUserAction(user.id, 'toggle_status')
                             }
                             disabled={isProcessing}
+                            className="hover:bg-yellow-50"
                           >
                             {user.status === 'active' ? (
                               <XCircle className="h-4 w-4" />
@@ -491,250 +523,16 @@ export default function UserManagementPage() {
           </CardContent>
         </Card>
 
-        {/* User Detail/Edit Modal */}
-        {selectedUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-2xl">
-              <CardHeader>
-                <CardTitle>
-                  {selectedUser.editing ? 'Edit User' : 'User Details'} -{' '}
-                  {selectedUser.name}
-                </CardTitle>
-                <CardDescription>
-                  {selectedUser.editing
-                    ? 'Update user role and permissions'
-                    : 'Complete user information and management options'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {selectedUser.editing ? (
-                  <UserEditForm
-                    user={selectedUser}
-                    onSave={(data: any) =>
-                      handleUserAction(selectedUser.id, 'update_role', data)
-                    }
-                    onCancel={() => setSelectedUser(null)}
-                    isProcessing={isProcessing}
-                  />
-                ) : (
-                  <UserDetailsView
-                    user={selectedUser}
-                    onClose={() => setSelectedUser(null)}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </div>
+        {/* User Modal */}
+        {showUserModal && (
+          <UserModal
+            isOpen={showUserModal}
+            onClose={handleCloseModal}
+            onSave={handleSaveUser}
+            user={selectedUser}
+            isProcessing={isProcessing}
+          />
         )}
-
-        {/* Add User Modal */}
-        {showAddUser && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" 
-            style={{zIndex: 9999}}
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowAddUser(false);
-              }
-            }}
-          >
-            <Card className="w-full max-w-2xl bg-white">
-              <CardHeader>
-                <CardTitle>{selectedUser ? 'Edit User' : 'Add New User'}</CardTitle>
-                <CardDescription>
-                  {selectedUser ? 'Update user account and role assignment' : 'Create a new user account with role assignment'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <UserEditForm
-                  user={selectedUser}
-                  onSave={(data: any) => handleUserAction(selectedUser?.id || '', selectedUser ? 'update_role' : 'add', data)}
-                  onCancel={() => {
-                    setShowAddUser(false);
-                    setSelectedUser(null);
-                  }}
-                  isProcessing={isProcessing}
-                />
-              </CardContent>
-            </Card>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// User Edit Form Component
-function UserEditForm({ user, onSave, onCancel, isProcessing }: any) {
-  const [formData, setFormData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    role: user?.role || 'requester',
-    orgId: user?.orgId || 'org_cdc',
-    approvalLimit: user?.approvalLimit || 0,
-  });
-
-  // Update form data when user prop changes
-  useEffect(() => {
-    setFormData({
-      name: user?.name || '',
-      email: user?.email || '',
-      role: user?.role || 'requester',
-      orgId: user?.orgId || 'org_cdc',
-      approvalLimit: user?.approvalLimit || 0,
-    });
-  }, [user]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Name *
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Email *
-          </label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={e => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Role *
-        </label>
-        <select
-          value={formData.role}
-          onChange={e =>
-            setFormData({ ...formData, role: e.target.value as UserRole })
-          }
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {roleOptions.map(role => (
-            <option key={role.value} value={role.value}>
-              {role.label} - {role.description}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Organization ID
-        </label>
-        <input
-          type="text"
-          value={formData.orgId}
-          onChange={e => setFormData({ ...formData, orgId: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-
-      {formData.role === 'approver' && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Approval Limit ($)
-          </label>
-          <input
-            type="number"
-            value={formData.approvalLimit}
-            onChange={e =>
-              setFormData({
-                ...formData,
-                approvalLimit: Number(e.target.value),
-              })
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            min="0"
-          />
-        </div>
-      )}
-
-      <div className="flex space-x-3 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isProcessing}>
-          {isProcessing ? 'Saving...' : user ? 'Update User' : 'Add User'}
-        </Button>
-      </div>
-    </form>
-  );
-}
-
-// User Details View Component
-function UserDetailsView({ user, onClose }: any) {
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium text-gray-500">Name</label>
-          <p className="text-gray-900">{user.name}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-500">Email</label>
-          <p className="text-gray-900">{user.email}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-500">Role</label>
-          <p className="text-gray-900">{user?.role}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-500">Status</label>
-          <p className="text-gray-900">{user.status}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-500">
-            Organization
-          </label>
-          <p className="text-gray-900">{user.orgId}</p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-500">
-            Approval Limit
-          </label>
-          <p className="text-gray-900">
-            ${user.approvalLimit.toLocaleString()}
-          </p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-500">
-            Last Login
-          </label>
-          <p className="text-gray-900">
-            {user.lastLogin ? formatDate(user.lastLogin) : 'Never'}
-          </p>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-gray-500">Created</label>
-          <p className="text-gray-900">{formatDate(user.createdAt)}</p>
-        </div>
-      </div>
-
-      <div className="flex space-x-3 pt-4 border-t">
-        <Button onClick={onClose} className="flex-1">
-          Close
-        </Button>
       </div>
     </div>
   );

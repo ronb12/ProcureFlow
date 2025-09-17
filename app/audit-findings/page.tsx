@@ -4,13 +4,11 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  mockAuditFindings, 
   mockAuditPackageStatuses, 
   getFindingsForCardholder, 
   getSeverityColor, 
   getStatusColor,
-  type AuditFinding,
-  type CardholderResponse
+  type AuditFinding
 } from '@/lib/audit-findings';
 
 export default function AuditFindingsPage() {
@@ -290,7 +288,7 @@ export default function AuditFindingsPage() {
                   </label>
                   <select
                     value={responseType}
-                    onChange={(e) => setResponseType(e.target.value as any)}
+                    onChange={(e) => setResponseType(e.target.value as 'acknowledge' | 'dispute' | 'resolve' | 'request_extension')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="acknowledge">Acknowledge Finding</option>

@@ -44,7 +44,9 @@ export function useAuth() {
       setDebugRole(null);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   return {

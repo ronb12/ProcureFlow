@@ -23,11 +23,14 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+interface NotificationTypes {
+  [key: string]: boolean;
+}
+
 export default function NotificationsPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const {
-    notifications,
     preferences,
     loading: notificationsLoading,
     updatePreferences,
@@ -106,7 +109,7 @@ export default function NotificationsPage() {
     try {
       await updatePreferences(localPreferences);
       toast.success('Notification preferences saved successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to save notification preferences');
     } finally {
       setIsSaving(false);
@@ -118,7 +121,7 @@ export default function NotificationsPage() {
       ...prev,
       types: {
         ...prev.types,
-        [type]: !(prev.types as any)[type],
+        [type]: !(prev.types as NotificationTypes)[type],
       },
     }));
   };
@@ -335,7 +338,7 @@ export default function NotificationsPage() {
                     <input
                       type="checkbox"
                       checked={
-                        (localPreferences.types as any)[type.key] || false
+                        (localPreferences.types as NotificationTypes)[type.key] || false
                       }
                       onChange={() => handleTypeToggle(type.key)}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -354,7 +357,7 @@ export default function NotificationsPage() {
                 Quiet Hours
               </CardTitle>
               <CardDescription>
-                Set times when you don't want to receive notifications
+                Set times when you don&apos;t want to receive notifications
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

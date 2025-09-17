@@ -11,7 +11,7 @@ import {
   UserCredential,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { auth, db } from './firebase';
+import { auth, getFirestoreConnection, resetFirestoreConnection } from './firebase';
 import { User, UserRole } from './types';
 
 // Auth providers
@@ -80,6 +80,10 @@ export async function signOutUser(): Promise<void> {
   return signOut(auth);
 }
 
+// Debouncing mechanism to prevent rapid calls
+let getUserPromise: Promise<User | null> | null = null;
+let lastUserId: string | null = null;
+
 // Get current user with custom claims
 export async function getCurrentUser(): Promise<User | null> {
   const firebaseUser = auth.currentUser;
@@ -88,32 +92,82 @@ export async function getCurrentUser(): Promise<User | null> {
     return null;
   }
 
+  // If we're already fetching the same user, return the existing promise
+  if (getUserPromise && lastUserId === firebaseUser.uid) {
+    return getUserPromise;
+  }
+
+  // Create new promise for this user
+  getUserPromise = fetchUserData(firebaseUser);
+  lastUserId = firebaseUser.uid;
+  
+  try {
+    const result = await getUserPromise;
+    return result;
+  } finally {
+    // Clear the promise after completion
+    if (lastUserId === firebaseUser.uid) {
+      getUserPromise = null;
+      lastUserId = null;
+    }
+  }
+}
+
+async function fetchUserData(firebaseUser: FirebaseUser): Promise<User | null> {
   console.log('Firebase user found:', firebaseUser.uid, firebaseUser.email);
 
-  try {
-    // Get user document from Firestore
-    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-    console.log('User document exists:', userDoc.exists());
+  let retryCount = 0;
+  const maxRetries = 3;
 
-    if (!userDoc.exists()) {
-      // Try to create user document if it doesn't exist
-      console.log('User document not found, attempting to create...');
-      try {
-        await createUserDocument(firebaseUser);
-        // Retry getting the user document
-        const retryDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (retryDoc.exists()) {
-          const userData = retryDoc.data();
+  while (retryCount < maxRetries) {
+    try {
+      // Ensure Firestore connection before making calls
+      const firestoreDb = await getFirestoreConnection();
+      
+      // Get user document from Firestore with timeout
+      const userDoc = await Promise.race([
+        getDoc(doc(firestoreDb, 'users', firebaseUser.uid)),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Firestore timeout')), 8000)
+        )
+      ]) as { exists(): boolean; data(): Record<string, any> };
+    
+      console.log('User document exists:', userDoc.exists());
+
+      if (!userDoc.exists()) {
+        // Try to create user document if it doesn't exist
+        console.log('User document not found, attempting to create...');
+        try {
+          await createUserDocument(firebaseUser);
+          // Retry getting the user document
+          const retryDoc = await getDoc(doc(firestoreDb, 'users', firebaseUser.uid));
+          if (retryDoc.exists()) {
+            const userData = retryDoc.data();
+            return {
+              id: firebaseUser.uid,
+              ...userData,
+              createdAt: userData.createdAt?.toDate() || new Date(),
+              updatedAt: userData.updatedAt?.toDate() || new Date(),
+            } as User;
+          }
+        } catch (createError) {
+          console.error('Error creating user document:', createError);
+          // Return a minimal user object to prevent infinite loops
           return {
             id: firebaseUser.uid,
-            ...userData,
-            createdAt: userData.createdAt?.toDate() || new Date(),
-            updatedAt: userData.updatedAt?.toDate() || new Date(),
+            name:
+              firebaseUser.displayName ||
+              firebaseUser.email?.split('@')[0] ||
+              'User',
+            email: firebaseUser.email || '',
+            role: 'requester',
+            orgId: '',
+            approvalLimit: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
           } as User;
         }
-      } catch (createError) {
-        console.error('Error creating user document:', createError);
-        // Return a minimal user object to prevent infinite loops
+        // If we get here, return a minimal user object instead of null
         return {
           id: firebaseUser.uid,
           name:
@@ -128,99 +182,111 @@ export async function getCurrentUser(): Promise<User | null> {
           updatedAt: new Date(),
         } as User;
       }
-      // If we get here, return a minimal user object instead of null
-      return {
-        id: firebaseUser.uid,
-        name:
-          firebaseUser.displayName ||
-          firebaseUser.email?.split('@')[0] ||
-          'User',
-        email: firebaseUser.email || '',
-        role: 'requester',
-        orgId: '',
-        approvalLimit: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as User;
-    }
 
-    const userData = userDoc.data();
-    
-    // For demo users, always ensure the correct role is set
-    if (firebaseUser.email && firebaseUser.email.includes('@procureflow.demo')) {
-      let correctRole = 'requester';
-      let correctOrgId = 'org_cdc';
-      let correctApprovalLimit = 0;
+      const userData = userDoc.data();
       
-      if (firebaseUser.email === 'admin@procureflow.demo') {
-        correctRole = 'admin';
-        correctApprovalLimit = 100000;
-      } else if (firebaseUser.email === 'approver@procureflow.demo') {
-        correctRole = 'approver';
-        correctApprovalLimit = 10000;
-      } else if (firebaseUser.email === 'cardholder@procureflow.demo') {
-        correctRole = 'cardholder';
-        correctApprovalLimit = 0;
-      } else if (firebaseUser.email === 'auditor@procureflow.demo') {
-        correctRole = 'auditor';
-        correctApprovalLimit = 0;
-      } else if (firebaseUser.email === 'requester@procureflow.demo') {
-        correctRole = 'requester';
-        correctApprovalLimit = 0;
-      } else if (firebaseUser.email === 'test@procureflow.demo') {
-        correctRole = 'requester';
-        correctApprovalLimit = 5000;
-      }
-      
-      // If the role is incorrect, update it
-      if (userData.role !== correctRole) {
-        console.log(`Updating user role from ${userData.role} to ${correctRole} for ${firebaseUser.email}`);
-        try {
-          await setDoc(doc(db, 'users', firebaseUser.uid), {
-            ...userData,
-            role: correctRole,
-            orgId: correctOrgId,
-            approvalLimit: correctApprovalLimit,
-            updatedAt: new Date(),
-          });
-          console.log(`Successfully updated user role to ${correctRole}`);
-        } catch (updateError) {
-          console.error('Error updating user role:', updateError);
+      // For demo users, always ensure the correct role is set
+      if (firebaseUser.email && firebaseUser.email.includes('@procureflow.demo')) {
+        let correctRole = 'requester';
+        const correctOrgId = 'org_cdc';
+        let correctApprovalLimit = 0;
+        
+        if (firebaseUser.email === 'admin@procureflow.demo') {
+          correctRole = 'admin';
+          correctApprovalLimit = 100000;
+        } else if (firebaseUser.email === 'approver@procureflow.demo') {
+          correctRole = 'approver';
+          correctApprovalLimit = 10000;
+        } else if (firebaseUser.email === 'cardholder@procureflow.demo') {
+          correctRole = 'cardholder';
+          correctApprovalLimit = 0;
+        } else if (firebaseUser.email === 'auditor@procureflow.demo') {
+          correctRole = 'auditor';
+          correctApprovalLimit = 0;
+        } else if (firebaseUser.email === 'requester@procureflow.demo') {
+          correctRole = 'requester';
+          correctApprovalLimit = 0;
+        } else if (firebaseUser.email === 'test@procureflow.demo') {
+          correctRole = 'requester';
+          correctApprovalLimit = 5000;
         }
+        
+        // If the role is incorrect, update it
+        if (userData.role !== correctRole) {
+          console.log(`Updating user role from ${userData.role} to ${correctRole} for ${firebaseUser.email}`);
+          try {
+            await setDoc(doc(firestoreDb, 'users', firebaseUser.uid), {
+              ...userData,
+              role: correctRole,
+              orgId: correctOrgId,
+              approvalLimit: correctApprovalLimit,
+              updatedAt: new Date(),
+            });
+            console.log(`Successfully updated user role to ${correctRole}`);
+          } catch (updateError) {
+            console.error('Error updating user role:', updateError);
+          }
+        }
+        
+        return {
+          id: firebaseUser.uid,
+          ...userData,
+          role: correctRole,
+          orgId: correctOrgId,
+          approvalLimit: correctApprovalLimit,
+          createdAt: userData.createdAt?.toDate() || new Date(),
+          updatedAt: new Date(),
+        } as User;
       }
       
       return {
         id: firebaseUser.uid,
         ...userData,
-        role: correctRole,
-        orgId: correctOrgId,
-        approvalLimit: correctApprovalLimit,
         createdAt: userData.createdAt?.toDate() || new Date(),
-        updatedAt: new Date(),
+        updatedAt: userData.updatedAt?.toDate() || new Date(),
       } as User;
+    } catch (error) {
+      console.error(`Error getting current user (attempt ${retryCount + 1}/${maxRetries}):`, error);
+      
+      retryCount++;
+      
+      if (retryCount < maxRetries) {
+        // Reset Firestore connection and retry
+        console.log('Resetting Firestore connection and retrying...');
+        resetFirestoreConnection();
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        continue;
+      } else {
+        // All retries failed, return a minimal user object
+        console.error('All retries failed, returning minimal user object');
+        return {
+          id: firebaseUser.uid,
+          name:
+            firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          email: firebaseUser.email || '',
+          role: 'requester',
+          orgId: '',
+          approvalLimit: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as User;
+      }
     }
-    
-    return {
-      id: firebaseUser.uid,
-      ...userData,
-      createdAt: userData.createdAt?.toDate() || new Date(),
-      updatedAt: userData.updatedAt?.toDate() || new Date(),
-    } as User;
-  } catch (error) {
-    console.error('Error getting current user:', error);
-    // Return a minimal user object instead of null to prevent auth loops
-    return {
-      id: firebaseUser.uid,
-      name:
-        firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-      email: firebaseUser.email || '',
-      role: 'requester',
-      orgId: '',
-      approvalLimit: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as User;
   }
+  
+  // This should never be reached, but just in case
+  return {
+    id: firebaseUser.uid,
+    name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+    email: firebaseUser.email || '',
+    role: 'requester',
+    orgId: '',
+    approvalLimit: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as User;
 }
 
 // Get user custom claims from Firebase Auth
@@ -295,118 +361,149 @@ export async function createUserDocument(
   firebaseUser: FirebaseUser,
   additionalData: Partial<User> = {}
 ): Promise<void> {
-  const userRef = doc(db, 'users', firebaseUser.uid);
-  const userSnap = await getDoc(userRef);
+  try {
+    const firestoreDb = await getFirestoreConnection();
+    const userRef = doc(firestoreDb, 'users', firebaseUser.uid);
+    const userSnap = await getDoc(userRef);
 
-  // Determine role based on email for demo users (always update)
-  let role = 'requester'; // Default role
-  let orgId = 'org_cdc'; // Default org
-  let approvalLimit = 0;
-
-  if (firebaseUser.email) {
-    if (firebaseUser.email === 'admin@procureflow.demo') {
-      role = 'admin';
-      approvalLimit = 100000;
-    } else if (firebaseUser.email === 'approver@procureflow.demo') {
-      role = 'approver';
-      approvalLimit = 10000;
-    } else if (firebaseUser.email === 'cardholder@procureflow.demo') {
-      role = 'cardholder';
-      approvalLimit = 0;
-    } else if (firebaseUser.email === 'auditor@procureflow.demo') {
-      role = 'auditor';
-      approvalLimit = 0;
-    } else if (firebaseUser.email === 'requester@procureflow.demo') {
-      role = 'requester';
-      approvalLimit = 0;
-    } else if (firebaseUser.email === 'test@procureflow.demo') {
-      role = 'requester';
-      approvalLimit = 5000;
-    }
-  }
-
-  // Always update the user document with the correct role for demo users
-  if (firebaseUser.email && firebaseUser.email.includes('@procureflow.demo')) {
-    console.log(`Updating user role for ${firebaseUser.email} to ${role}`);
-    try {
-      await setDoc(userRef, {
-        name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-        email: firebaseUser.email || '',
-        role: role,
-        orgId: orgId,
-        approvalLimit: approvalLimit,
-        createdAt: userSnap.exists() ? userSnap.data()?.createdAt || new Date() : new Date(),
-        updatedAt: new Date(),
-        ...additionalData,
-      });
-      console.log(`Successfully updated user role to ${role}`);
-      return;
-    } catch (error) {
-      console.error('Error updating user document:', error);
-      throw error;
-    }
-  }
-
-  if (!userSnap.exists()) {
-    const { displayName, email } = firebaseUser;
-    const createdAt = new Date();
-
-    // Determine role based on email for demo users
+    // Determine role based on email for demo users (always update)
     let role = 'requester'; // Default role
-    let orgId = 'org_cdc'; // Default org
+    const orgId = 'org_cdc'; // Default org
     let approvalLimit = 0;
 
-    if (email) {
-      if (email === 'admin@procureflow.demo') {
+    if (firebaseUser.email) {
+      if (firebaseUser.email === 'admin@procureflow.demo') {
         role = 'admin';
         approvalLimit = 100000;
-      } else if (email === 'approver@procureflow.demo') {
+      } else if (firebaseUser.email === 'approver@procureflow.demo') {
         role = 'approver';
         approvalLimit = 10000;
-      } else if (email === 'cardholder@procureflow.demo') {
+      } else if (firebaseUser.email === 'cardholder@procureflow.demo') {
         role = 'cardholder';
         approvalLimit = 0;
-      } else if (email === 'auditor@procureflow.demo') {
+      } else if (firebaseUser.email === 'auditor@procureflow.demo') {
         role = 'auditor';
         approvalLimit = 0;
-      } else if (email === 'requester@procureflow.demo') {
+      } else if (firebaseUser.email === 'requester@procureflow.demo') {
         role = 'requester';
         approvalLimit = 0;
-      } else if (email === 'test@procureflow.demo') {
+      } else if (firebaseUser.email === 'test@procureflow.demo') {
         role = 'requester';
         approvalLimit = 5000;
       }
     }
 
-    try {
-      await setDoc(userRef, {
-        name: displayName || email?.split('@')[0] || 'User',
-        email: email || '',
-        role: role,
-        orgId: orgId,
-        approvalLimit: approvalLimit,
-        createdAt,
-        updatedAt: createdAt,
-        ...additionalData,
-      });
-    } catch (error) {
-      console.error('Error creating user document:', error);
-      throw error;
+    // Always update the user document with the correct role for demo users
+    if (firebaseUser.email && firebaseUser.email.includes('@procureflow.demo')) {
+      console.log(`Updating user role for ${firebaseUser.email} to ${role}`);
+      try {
+        await setDoc(userRef, {
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          email: firebaseUser.email || '',
+          role: role,
+          orgId: orgId,
+          approvalLimit: approvalLimit,
+          createdAt: userSnap.exists() ? userSnap.data()?.createdAt || new Date() : new Date(),
+          updatedAt: new Date(),
+          ...additionalData,
+        });
+        console.log(`Successfully updated user role to ${role}`);
+        return;
+      } catch (error) {
+        console.error('Error updating user document:', error);
+        throw error;
+      }
     }
+
+    if (!userSnap.exists()) {
+      const { displayName, email } = firebaseUser;
+      const createdAt = new Date();
+
+      // Determine role based on email for demo users
+      let role = 'requester'; // Default role
+      const orgId = 'org_cdc'; // Default org
+      let approvalLimit = 0;
+
+      if (email) {
+        if (email === 'admin@procureflow.demo') {
+          role = 'admin';
+          approvalLimit = 100000;
+        } else if (email === 'approver@procureflow.demo') {
+          role = 'approver';
+          approvalLimit = 10000;
+        } else if (email === 'cardholder@procureflow.demo') {
+          role = 'cardholder';
+          approvalLimit = 0;
+        } else if (email === 'auditor@procureflow.demo') {
+          role = 'auditor';
+          approvalLimit = 0;
+        } else if (email === 'requester@procureflow.demo') {
+          role = 'requester';
+          approvalLimit = 0;
+        } else if (email === 'test@procureflow.demo') {
+          role = 'requester';
+          approvalLimit = 5000;
+        }
+      }
+
+      try {
+        await setDoc(userRef, {
+          name: displayName || email?.split('@')[0] || 'User',
+          email: email || '',
+          role: role,
+          orgId: orgId,
+          approvalLimit: approvalLimit,
+          createdAt,
+          updatedAt: createdAt,
+          ...additionalData,
+        });
+      } catch (error) {
+        console.error('Error creating user document:', error);
+        throw error;
+      }
+    }
+  } catch (error) {
+    console.error('Error in createUserDocument:', error);
+    throw error;
   }
 }
 
-// Auth state change listener
+// Auth state change listener with debouncing
+let authStateTimeout: NodeJS.Timeout | null = null;
+let lastAuthState: string | null = null;
+
 export function onAuthStateChange(
   callback: (user: User | null) => void
 ): () => void {
   return onAuthStateChanged(auth, async firebaseUser => {
-    if (firebaseUser) {
-      const user = await getCurrentUser();
-      callback(user);
-    } else {
-      callback(null);
+    const currentUserId = firebaseUser?.uid || 'null';
+    
+    // Clear any existing timeout
+    if (authStateTimeout) {
+      clearTimeout(authStateTimeout);
     }
+    
+    // If it's the same user, don't process again
+    if (lastAuthState === currentUserId) {
+      return;
+    }
+    
+    lastAuthState = currentUserId;
+    
+    // Debounce auth state changes to prevent rapid calls
+    authStateTimeout = setTimeout(async () => {
+      try {
+        if (firebaseUser) {
+          const user = await getCurrentUser();
+          callback(user);
+        } else {
+          callback(null);
+        }
+      } catch (error) {
+        console.error('Error in auth state change:', error);
+        callback(null);
+      }
+    }, 100); // 100ms debounce
   });
 }
 

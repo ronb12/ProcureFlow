@@ -59,11 +59,11 @@ class NotificationService {
 
   // Send notification if user preferences allow it
   private async sendNotificationIfAllowed(
-    notification: Omit<any, 'id' | 'createdAt'>
+    notification: Omit<Record<string, unknown>, 'id' | 'createdAt'>
   ) {
-    if (this.shouldSendNotification(notification.userId, notification.type)) {
+    if (this.shouldSendNotification(notification.userId as string, notification.type as string)) {
       try {
-        await createNotification(notification);
+        await createNotification(notification as any);
         console.log(
           `Notification sent to user ${notification.userId}: ${notification.title}`
         );
@@ -246,7 +246,7 @@ class NotificationService {
   // Bulk notifications for multiple users
   public async notifyMultipleUsers(
     userIds: string[],
-    notification: Omit<any, 'id' | 'createdAt' | 'userId'>
+    notification: Omit<Record<string, unknown>, 'id' | 'createdAt' | 'userId'>
   ) {
     const promises = userIds.map(userId =>
       this.sendNotificationIfAllowed({ ...notification, userId })
@@ -257,7 +257,7 @@ class NotificationService {
   // Notify all users with a specific role
   public async notifyUsersByRole(
     role: string,
-    notification: Omit<any, 'id' | 'createdAt' | 'userId'>
+    notification: Omit<Record<string, unknown>, 'id' | 'createdAt' | 'userId'>
   ) {
     // This would typically query the database for users with the specified role
     // For now, we'll just log it

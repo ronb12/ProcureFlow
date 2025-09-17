@@ -16,25 +16,15 @@ import {
 import {
   Building2,
   Search,
-  Filter,
   MapPin,
   Phone,
   Mail,
-  Globe,
   Star,
   FileText,
   Calendar,
   ArrowLeft,
   Plus,
   X,
-  CheckCircle,
-  AlertTriangle,
-  Clock,
-  Shield,
-  ExternalLink,
-  RefreshCw,
-  UserCheck,
-  Ban,
 } from 'lucide-react';
 
 interface Vendor {
@@ -106,7 +96,7 @@ interface VerificationStep {
   checkedDate: Date;
   checkedBy: string;
   notes: string;
-  samData?: any;
+  samData?: Record<string, unknown>;
 }
 
 interface ExclusionCheck {
@@ -531,7 +521,7 @@ export default function VendorsPage() {
             Access Denied
           </h1>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access the vendor database.
+            You don&apos;t have permission to access the vendor database.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Return to Dashboard
@@ -693,7 +683,7 @@ export default function VendorsPage() {
         preferences: { preferred: false, paymentTerms: 'Net 30', deliveryMethod: 'Standard', notes: '' },
       });
       toast.success('Vendor added successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to add vendor');
     } finally {
       setIsSubmitting(false);
@@ -1130,7 +1120,7 @@ export default function VendorsPage() {
                       <label className="text-sm font-medium text-gray-500">Vendor Type</label>
                       <select
                         value={newVendor.type}
-                        onChange={(e) => setNewVendor({...newVendor, type: e.target.value as any})}
+                        onChange={(e) => setNewVendor({...newVendor, type: e.target.value as 'supplier' | 'contractor' | 'service_provider'})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="supplier">Supplier</option>
@@ -1310,7 +1300,7 @@ export default function VendorsPage() {
                       <label className="text-sm font-medium text-gray-500">Contract Type</label>
                       <select
                         value={newVendor.contracts[0].contractType}
-                        onChange={(e) => setNewVendor({...newVendor, contracts: [{...newVendor.contracts[0], contractType: e.target.value as any}]})}
+                        onChange={(e) => setNewVendor({...newVendor, contracts: [{...newVendor.contracts[0], contractType: e.target.value as 'GSA' | 'IDIQ' | 'BPA' | 'Other'}]})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="GSA">GSA Schedule</option>

@@ -9,7 +9,7 @@ import { UserRole } from '@/lib/types';
 
 export default function DebugPage() {
   const { user, loading, switchRole, debugRole } = useAuth();
-  const [firebaseUser, setFirebaseUser] = useState<any>(null);
+  const [firebaseUser, setFirebaseUser] = useState<Record<string, unknown> | null>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [testMode, setTestMode] = useState(false);
 
@@ -48,7 +48,7 @@ export default function DebugPage() {
           )}`
         );
       }
-      setFirebaseUser(firebaseUser);
+      setFirebaseUser(firebaseUser as any);
     });
 
     return unsubscribe;
@@ -62,7 +62,7 @@ export default function DebugPage() {
   };
 
   const clearDebugRole = () => {
-    switchRole(null as any); // This will clear the debug role
+    switchRole(null); // This will clear the debug role
     addDebugInfo('Debug role cleared - using actual user role');
   };
 

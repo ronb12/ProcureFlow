@@ -3,9 +3,8 @@
 import { useAuth } from '@/hooks/use-auth';
 import { signOutUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
-import { Button } from './button';
 import { NotificationDropdown } from './notification-dropdown';
-import { LogOut, User, Settings, Menu, X, MessageSquare } from 'lucide-react';
+import { LogOut, User, Settings, Menu, X } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 

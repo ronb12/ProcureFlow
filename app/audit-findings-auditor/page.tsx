@@ -2,15 +2,12 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   mockAuditFindings, 
-  mockAuditPackageStatuses, 
-  getFindingsForCardholder, 
   getSeverityColor, 
   getStatusColor,
-  type AuditFinding,
-  type CardholderResponse
+  type AuditFinding
 } from '@/lib/audit-findings';
 
 export default function AuditFindingsAuditorPage() {
@@ -55,15 +52,6 @@ export default function AuditFindingsAuditorPage() {
     setResponseText('');
   };
 
-  const getOverallStatusColor = (status: string) => {
-    switch (status) {
-      case 'resolved': return 'bg-green-100 text-green-800';
-      case 'findings_issued': return 'bg-yellow-100 text-yellow-800';
-      case 'cardholder_response': return 'bg-blue-100 text-blue-800';
-      case 'disputed': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -318,7 +306,7 @@ export default function AuditFindingsAuditorPage() {
                   </label>
                   <select
                     value={responseType}
-                    onChange={(e) => setResponseType(e.target.value as any)}
+                    onChange={(e) => setResponseType(e.target.value as 'accept' | 'reject' | 'escalate')}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="accept">Accept Response</option>

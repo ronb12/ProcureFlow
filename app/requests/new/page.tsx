@@ -12,11 +12,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ItemTable } from '@/components/ui/item-table';
-import { MoneyInput } from '@/components/ui/money-input';
+// import { MoneyInput } from '@/components/ui/money-input';
 import { FileDropzone } from '@/components/ui/file-dropzone';
 import { CreateRequestData, RequestItem } from '@/lib/types';
 import { notificationService } from '@/lib/notification-service';
-import { ArrowLeft, Save, Send, Building2 } from 'lucide-react';
+import { ArrowLeft, Save, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface Facility {
@@ -288,7 +288,7 @@ export default function NewRequestPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDraft, setIsDraft] = useState(false);
+  // const [isDraft, setIsDraft] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState<
@@ -368,7 +368,7 @@ export default function NewRequestPage() {
     );
   }
 
-  const handleInputChange = (field: keyof CreateRequestData | 'facilityId' | 'installationId', value: any) => {
+  const handleInputChange = (field: keyof CreateRequestData | 'facilityId' | 'installationId', value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 

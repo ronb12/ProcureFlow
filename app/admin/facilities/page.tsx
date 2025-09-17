@@ -16,10 +16,8 @@ import {
 import {
   Building2,
   Plus,
-  Edit,
   Trash2,
   Search,
-  Filter,
   MapPin,
   Users,
   Phone,
@@ -148,8 +146,6 @@ export default function AdminFacilitiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [showAddForm, setShowAddForm] = useState(false);
-  const [showEditForm, setShowEditForm] = useState(false);
-  const [editingFacility, setEditingFacility] = useState<Facility | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newFacility, setNewFacility] = useState<Partial<Facility>>({
     name: '',
@@ -190,7 +186,7 @@ export default function AdminFacilitiesPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600">You don't have permission to access this page.</p>
+          <p className="text-gray-600">You don&apos;t have permission to access this page.</p>
         </div>
       </div>
     );
@@ -249,7 +245,7 @@ export default function AdminFacilitiesPage() {
       });
       setShowAddForm(false);
       toast.success('Facility added successfully');
-    } catch (error) {
+    } catch {
       toast.error('Failed to add facility');
     } finally {
       setIsSubmitting(false);

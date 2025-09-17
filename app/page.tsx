@@ -61,7 +61,7 @@ export default function HomePage() {
         router.push('/login');
       }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, originalUser]);
 
   if (loading) {
     return (

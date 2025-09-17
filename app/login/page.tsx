@@ -136,7 +136,7 @@ export default function LoginPage() {
           router.push('/dashboard');
       }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, originalUser]);
 
   // Close role dropdown when clicking outside
   useEffect(() => {
@@ -181,11 +181,11 @@ export default function LoginPage() {
         toast.success('Signed in successfully');
       }
       // Redirect will be handled by the useEffect above based on user role
-    } catch (error: any) {
+    } catch (error) {
       console.error('Auth error:', error);
-      const errorMessage =
-        error.message ||
-        (isSignUp ? 'Failed to create account' : 'Failed to sign in');
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (isSignUp ? 'Failed to create account' : 'Failed to sign in');
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -203,11 +203,11 @@ export default function LoginPage() {
         toast.success('Signed in with Google');
       }
       // Redirect will be handled by the useEffect above based on user role
-    } catch (error: any) {
+    } catch (error) {
       console.error('Google auth error:', error);
-      const errorMessage =
-        error.message ||
-        (isSignUp
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (isSignUp
           ? 'Failed to create account with Google'
           : 'Failed to sign in with Google');
       toast.error(errorMessage);
@@ -227,11 +227,11 @@ export default function LoginPage() {
         toast.success('Signed in with Microsoft');
       }
       // Redirect will be handled by the useEffect above based on user role
-    } catch (error: any) {
+    } catch (error) {
       console.error('Microsoft auth error:', error);
-      const errorMessage =
-        error.message ||
-        (isSignUp
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (isSignUp
           ? 'Failed to create account with Microsoft'
           : 'Failed to sign in with Microsoft');
       toast.error(errorMessage);

@@ -46,7 +46,7 @@ export default function AuditWorkflowPage() {
                 <div className="flex-1">
                   <h3 className="font-semibold text-gray-900">Purchase Reconciliation</h3>
                   <p className="text-sm text-gray-600">
-                    When a cardholder completes purchase reconciliation, the system creates a record in the <code className="bg-gray-100 px-1 rounded">purchases</code> collection with status "reconciled". This is the optimal time for auditing as all documentation is complete.
+                    When a cardholder completes purchase reconciliation, the system creates a record in the <code className="bg-gray-100 px-1 rounded">purchases</code> collection with status &quot;reconciled&quot;. This is the optimal time for auditing as all documentation is complete.
                   </p>
                   <div className="mt-2 p-3 bg-gray-50 rounded text-xs font-mono">
                     Collection: purchases<br/>
@@ -65,10 +65,10 @@ export default function AuditWorkflowPage() {
                     The audit system automatically queries the purchases collection for reconciled packages (primary) and purchased packages (preliminary for high-risk items).
                   </p>
                   <div className="mt-2 p-3 bg-gray-50 rounded text-xs font-mono">
-                    Query: purchases.where('status', 'in', ['reconciled', 'purchased'])<br/>
+                    Query: purchases.where(&apos;status&apos;, &apos;in&apos;, [&apos;reconciled&apos;, &apos;purchased&apos;])<br/>
                     Order: status desc, createdAt desc<br/>
                     Priority: Reconciled packages first<br/>
-                    Filter: auditStatus != 'resolved'
+                    Filter: auditStatus != &apos;resolved&apos;
                   </div>
                 </div>
               </div>
@@ -157,7 +157,7 @@ export default function AuditWorkflowPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium">Review Cardholder Response</p>
-                      <p className="text-xs text-gray-600">Evaluate cardholder's response to findings</p>
+                      <p className="text-xs text-gray-600">Evaluate cardholder&apos;s response to findings</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
@@ -278,7 +278,7 @@ export default function AuditWorkflowPage() {
                 <div className="space-y-2">
                   <div className="p-3 border rounded">
                     <p className="font-medium text-sm">Accept</p>
-                    <p className="text-xs text-gray-600">Auditor accepts cardholder's response and resolves finding</p>
+                    <p className="text-xs text-gray-600">Auditor accepts cardholder&apos;s response and resolves finding</p>
                   </div>
                   <div className="p-3 border rounded">
                     <p className="font-medium text-sm">Reject</p>

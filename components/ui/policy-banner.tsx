@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, XCircle, Info } from 'lucide-react';
+import { AlertTriangle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PolicyCheck } from '@/lib/types';
 

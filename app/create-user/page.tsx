@@ -10,13 +10,13 @@ import { Timestamp } from 'firebase/firestore';
 
 export default function CreateUserPage() {
   const { user, loading } = useAuth();
-  const [firebaseUser, setFirebaseUser] = useState<any>(null);
+  const [firebaseUser, setFirebaseUser] = useState<Record<string, unknown> | null>(null);
   const [status, setStatus] = useState<string>('Checking...');
-  const [userDoc, setUserDoc] = useState<any>(null);
+  const [userDoc, setUserDoc] = useState<Record<string, unknown> | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async firebaseUser => {
-      setFirebaseUser(firebaseUser);
+      setFirebaseUser(firebaseUser as any);
 
       if (firebaseUser) {
         setStatus('Firebase user found, checking Firestore document...');
@@ -50,9 +50,10 @@ export default function CreateUserPage() {
             setStatus('User document created successfully!');
             setUserDoc(userData);
           }
-        } catch (error: any) {
+        } catch (error) {
           console.error('Error:', error);
-          setStatus(`Error: ${error.message}`);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          setStatus(`Error: ${errorMessage}`);
         }
       } else {
         setStatus('No Firebase user found');
@@ -77,9 +78,9 @@ export default function CreateUserPage() {
           <p>User: {firebaseUser ? 'Found' : 'Not found'}</p>
           {firebaseUser && (
             <div className="mt-2 text-sm">
-              <p>UID: {firebaseUser.uid}</p>
-              <p>Email: {firebaseUser.email}</p>
-              <p>Display Name: {firebaseUser.displayName || 'None'}</p>
+              <p>UID: {(firebaseUser as any).uid}</p>
+              <p>Email: {(firebaseUser as any).email}</p>
+              <p>Display Name: {(firebaseUser as any).displayName || 'None'}</p>
             </div>
           )}
         </div>

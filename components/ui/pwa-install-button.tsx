@@ -8,6 +8,10 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+interface WindowWithDeferredPrompt extends Window {
+  deferredPrompt?: BeforeInstallPromptEvent;
+}
+
 export function PWAInstallButton() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
@@ -16,7 +20,6 @@ export function PWAInstallButton() {
 
   useEffect(() => {
     let checkInterval: NodeJS.Timeout;
-    let fallbackTimer: NodeJS.Timeout;
 
     // Check if app is already installed
     const checkIfInstalled = () => {
@@ -33,7 +36,7 @@ export function PWAInstallButton() {
 
     // Check if deferred prompt is already available from PWAProvider
     const checkDeferredPrompt = () => {
-      const globalPrompt = (window as any).deferredPrompt;
+      const globalPrompt = (window as WindowWithDeferredPrompt).deferredPrompt;
       if (globalPrompt && !deferredPrompt) {
         setDeferredPrompt(globalPrompt as BeforeInstallPromptEvent);
         setShowInstallButton(true);
@@ -75,7 +78,7 @@ export function PWAInstallButton() {
     }
 
     // Fallback: Show install button after a delay if beforeinstallprompt doesn't fire
-    fallbackTimer = setTimeout(() => {
+    const fallbackTimer = setTimeout(() => {
       setShowInstallButton(prev => {
         if (!prev && !deferredPrompt && !isInstalled) {
           console.log('PWA install button fallback - showing button');

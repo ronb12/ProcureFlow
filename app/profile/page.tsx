@@ -22,7 +22,6 @@ import {
   Save,
   ArrowLeft,
   Edit3,
-  Check,
   X,
 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
@@ -99,9 +98,10 @@ export default function ProfilePage() {
 
       // Refresh user data to show updated information
       await refreshUser();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating profile:', error);
-      toast.error(`Failed to update profile: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to update profile: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }

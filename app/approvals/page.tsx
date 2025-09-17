@@ -15,6 +15,29 @@ import { StatusBadge } from '@/components/ui/status-badge';
 import { AppHeader } from '@/components/ui/app-header';
 import { formatCurrency, formatDate, calculateBusinessDays } from '@/lib/utils';
 import { RequestStatus } from '@/lib/types';
+
+// Define proper types for request data
+interface Requester {
+  name: string;
+  email: string;
+}
+
+interface RequestData {
+  id: string;
+  vendor: string;
+  justification: string;
+  needBy: Date;
+  accountingCode: string;
+  status: RequestStatus;
+  createdAt: Date;
+  total: number;
+  requester: Requester;
+  priority: string;
+  daysPending: number;
+  approvedAt?: Date;
+  deniedAt?: Date;
+  returnedAt?: Date;
+}
 import {
   CheckCircle,
   XCircle,
@@ -84,7 +107,7 @@ export default function ApprovalsPage() {
   // Use original user role for access control, not debug role
   const actualRole = originalUser?.role || user?.role;
   const [requests, setRequests] = useState(mockPendingRequests);
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RequestData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [approvalAction, setApprovalAction] = useState<'approve' | 'deny' | 'return' | null>(null);
@@ -94,7 +117,7 @@ export default function ApprovalsPage() {
 
   // Calculate processed requests today
   const processedToday = requests.filter(req => {
-    const reqWithTimestamps = req as any; // Type assertion for dynamic properties
+    const reqWithTimestamps = req as Record<string, unknown>; // Type assertion for dynamic properties
     if (!reqWithTimestamps.approvedAt && !reqWithTimestamps.deniedAt && !reqWithTimestamps.returnedAt) return false;
     
     const today = new Date();
@@ -103,7 +126,7 @@ export default function ApprovalsPage() {
     const processedDate = reqWithTimestamps.approvedAt || reqWithTimestamps.deniedAt || reqWithTimestamps.returnedAt;
     if (!processedDate) return false;
     
-    const processed = new Date(processedDate);
+    const processed = new Date(processedDate as Date);
     processed.setHours(0, 0, 0, 0);
     
     return processed.getTime() === today.getTime();
@@ -165,7 +188,7 @@ export default function ApprovalsPage() {
             Access Denied
           </h1>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access the approvals page.
+            You don&apos;t have permission to access the approvals page.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Return to Dashboard
@@ -227,7 +250,7 @@ export default function ApprovalsPage() {
       setApprovalComment('');
       setDenyReason('');
       setReturnReason('');
-    } catch (error) {
+    } catch {
       toast.error('Failed to process approval');
     } finally {
       setIsProcessing(false);
@@ -253,12 +276,14 @@ export default function ApprovalsPage() {
     const reason = approvalAction === 'deny' ? denyReason : 
                    approvalAction === 'return' ? returnReason : undefined;
 
-    handleApprovalAction(
-      selectedRequest.id,
-      approvalAction,
-      approvalComment,
-      reason
-    );
+    if (selectedRequest) {
+      handleApprovalAction(
+        selectedRequest.id,
+        approvalAction,
+        approvalComment,
+        reason
+      );
+    }
   };
 
   const getPriorityColor = (priority: string) => {

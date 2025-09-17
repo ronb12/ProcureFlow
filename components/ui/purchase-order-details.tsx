@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from './card';
-import { StatusBadge } from './status-badge';
+// import { StatusBadge } from './status-badge';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { PurchaseOrder } from '@/lib/types';
 import {

@@ -105,7 +105,7 @@ export function ItemTable({
       {items.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <p>No items added yet.</p>
-          <p className="text-sm">Click "Add Item" to get started.</p>
+          <p className="text-sm">Click &quot;Add Item&quot; to get started.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -118,7 +118,7 @@ export function ItemTable({
             <div className="col-span-1"></div>
           </div>
 
-          {items.map((item, index) => (
+          {items.map((item) => (
             <div key={item.id} className="grid grid-cols-12 gap-4 items-start">
               <div className="col-span-2">
                 <input

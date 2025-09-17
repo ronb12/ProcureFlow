@@ -8,9 +8,6 @@ import { AppHeader } from '@/components/ui/app-header';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { PurchaseOrderDetails } from '@/components/ui/purchase-order-details';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -19,7 +16,6 @@ import {
   FileText,
   Search,
   Filter,
-  Plus,
   Eye,
   Download,
   Mail,
@@ -293,7 +289,7 @@ export default function PurchaseOrdersPage() {
             Access Denied
           </h1>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access purchase orders.
+            You don&apos;t have permission to access purchase orders.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Return to Dashboard
@@ -351,7 +347,7 @@ export default function PurchaseOrdersPage() {
         po.id === poId
           ? {
               ...po,
-              status: newStatus as any,
+              status: newStatus as 'draft' | 'sent' | 'acknowledged' | 'shipped' | 'delivered' | 'cancelled',
               updatedAt: new Date(),
               ...(newStatus === 'sent' && { sentAt: new Date() }),
               ...(newStatus === 'acknowledged' && {

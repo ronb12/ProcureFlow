@@ -16,7 +16,6 @@ import {
   Shield,
   ExternalLink,
   RefreshCw,
-  UserCheck,
   Ban,
   X,
   ArrowRight,
@@ -27,8 +26,8 @@ import toast from 'react-hot-toast';
 interface VendorVerificationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onVendorAdded: (vendor: any) => void;
-  user: any;
+  onVendorAdded: (vendor: Record<string, unknown>) => void;
+  user: Record<string, unknown>;
 }
 
 interface VerificationStep {
@@ -37,7 +36,7 @@ interface VerificationStep {
   checkedDate?: Date;
   checkedBy?: string;
   notes?: string;
-  samData?: any;
+  samData?: Record<string, unknown>;
 }
 
 interface ExclusionCheck {
@@ -57,7 +56,7 @@ export function VendorVerificationModal({
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationSteps, setVerificationSteps] = useState<VerificationStep[]>([]);
   const [exclusionChecks, setExclusionChecks] = useState<ExclusionCheck[]>([]);
-  const [contractingOfficerNotes, setContractingOfficerNotes] = useState('');
+  // const [contractingOfficerNotes, setContractingOfficerNotes] = useState('');
   const [vendorData, setVendorData] = useState({
     name: '',
     type: 'supplier' as const,
@@ -135,7 +134,7 @@ export function VendorVerificationModal({
           step: 'SAM.gov Registration Check',
           status: 'passed',
           checkedDate: new Date(),
-          checkedBy: user?.name || 'Purchase Cardholder',
+          checkedBy: (user?.name as string | undefined) ?? 'Purchase Cardholder',
           notes: 'Vendor verified in SAM.gov with active registration (Manual verification)',
           samData: samResults,
         },
@@ -143,14 +142,14 @@ export function VendorVerificationModal({
           step: 'CAGE Code Verification',
           status: 'passed',
           checkedDate: new Date(),
-          checkedBy: user?.name || 'Purchase Cardholder',
+          checkedBy: (user?.name as string | undefined) ?? 'Purchase Cardholder',
           notes: `CAGE code ${samResults.cageCode} verified and active (Manual verification)`,
         },
         {
           step: 'DUNS Number Verification',
           status: 'passed',
           checkedDate: new Date(),
-          checkedBy: user?.name || 'Purchase Cardholder',
+          checkedBy: (user?.name as string | undefined) ?? 'Purchase Cardholder',
           notes: `DUNS number ${samResults.dunsNumber} verified and active (Manual verification)`,
         },
       ]);
@@ -348,7 +347,7 @@ export function VendorVerificationModal({
                   <label className="text-sm font-medium text-gray-700">Vendor Type</label>
                   <select
                     value={vendorData.type}
-                    onChange={(e) => setVendorData({...vendorData, type: e.target.value as any})}
+                    onChange={(e) => setVendorData({...vendorData, type: e.target.value as 'supplier'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="supplier">Supplier</option>
@@ -545,8 +544,8 @@ export function VendorVerificationModal({
                         <p className="text-sm text-gray-600">{step.notes}</p>
                         {step.samData && (
                           <div className="mt-2 text-xs text-gray-500">
-                            <p>Registration Status: {step.samData.registrationStatus}</p>
-                            <p>Expiration: {step.samData.expirationDate}</p>
+                            <p>Registration Status: {step.samData.registrationStatus as string}</p>
+                            <p>Expiration: {step.samData.expirationDate as string}</p>
                           </div>
                         )}
                       </div>

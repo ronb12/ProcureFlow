@@ -7,11 +7,13 @@ service cloud.firestore {
     }
     
     function getUserRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      // Try custom claims first, fallback to document read
+      return request.auth.token.role != null ? request.auth.token.role : get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
     }
     
     function getUserOrgId() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.orgId;
+      // Try custom claims first, fallback to document read
+      return request.auth.token.orgId != null ? request.auth.token.orgId : get(/databases/$(database)/documents/users/$(request.auth.uid)).data.orgId;
     }
     
     function isAdmin() {

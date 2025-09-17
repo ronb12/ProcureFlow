@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Request, PurchaseOrder, Purchase, Approval, Attachment } from './types';
+import { Request, PurchaseOrder, Purchase } from './types';
 
 // DOD MWR Audit Package Requirements
 export const MWR_AUDIT_REQUIREMENTS = {
@@ -285,7 +285,7 @@ export class AuditPackageBuilder {
       passed: boolean;
       compliant: boolean;
       issues: string[];
-      [key: string]: any;
+      [key: string]: unknown;
     }
   ): this {
     (this.auditPackage.complianceChecks as any)[checkType] = {

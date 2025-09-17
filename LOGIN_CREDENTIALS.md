@@ -91,3 +91,4 @@ Login with the specific role user credentials:
 5. **Check you can't access** `/purchases` or `/admin` pages
 
 **The key is using the correct role-specific login credentials!** 🎉
+

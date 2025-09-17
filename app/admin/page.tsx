@@ -7,13 +7,9 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
-import { StatusBadge } from '@/components/ui/status-badge';
 import { AppHeader } from '@/components/ui/app-header';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { UserRole } from '@/lib/types';
 import {
   Settings,
@@ -54,75 +50,77 @@ const mockUsers = [
     id: '3',
     name: 'Bob Johnson',
     email: 'bob.johnson@mwr.com',
-    role: 'cardholder' as UserRole,
+    role: 'approver' as UserRole,
     status: 'active',
     lastLogin: new Date('2024-01-18'),
     createdAt: new Date('2024-01-03'),
   },
   {
     id: '4',
-    name: 'Alice Johnson',
-    email: 'alice.johnson@mwr.com',
-    role: 'approver' as UserRole,
-    status: 'active',
-    lastLogin: new Date('2024-01-17'),
+    name: 'Alice Brown',
+    email: 'alice.brown@mwr.com',
+    role: 'cardholder' as UserRole,
+    status: 'inactive',
+    lastLogin: new Date('2024-01-15'),
     createdAt: new Date('2024-01-04'),
   },
   {
     id: '5',
-    name: 'Charlie Brown',
-    email: 'charlie.brown@mwr.com',
+    name: 'Charlie Wilson',
+    email: 'charlie.wilson@mwr.com',
     role: 'auditor' as UserRole,
-    status: 'inactive',
-    lastLogin: new Date('2024-01-10'),
+    status: 'active',
+    lastLogin: new Date('2024-01-17'),
     createdAt: new Date('2024-01-05'),
   },
 ];
 
-const mockSystemStats = {
-  totalUsers: 5,
-  activeUsers: 4,
-  totalRequests: 24,
-  pendingApprovals: 3,
-  totalValue: 15600.0,
-  avgProcessingTime: 2.5,
-};
-
 const mockOrganizations = [
   {
-    id: '1',
-    name: 'MWR Headquarters',
-    code: 'MWR-HQ',
+    id: 'org_1',
+    name: 'Fort Jackson MWR',
+    code: 'FJ-MWR',
+    location: 'Columbia, SC',
+    userCount: 45,
     status: 'active',
-    userCount: 2,
-    requestCount: 12,
   },
   {
-    id: '2',
-    name: 'Base Operations',
-    code: 'BASE-OPS',
+    id: 'org_2',
+    name: 'Camp Lejeune MWR',
+    code: 'CL-MWR',
+    location: 'Jacksonville, NC',
+    userCount: 38,
     status: 'active',
-    userCount: 2,
-    requestCount: 8,
   },
   {
-    id: '3',
-    name: 'Support Services',
-    code: 'SUPPORT',
+    id: 'org_3',
+    name: 'Norfolk Naval Station MWR',
+    code: 'NN-MWR',
+    location: 'Norfolk, VA',
+    userCount: 52,
     status: 'active',
-    userCount: 1,
-    requestCount: 4,
   },
 ];
+
+const mockStats = {
+  totalUsers: 135,
+  activeUsers: 128,
+  totalOrganizations: 12,
+  pendingApprovals: 23,
+  totalRequests: 456,
+  completedRequests: 398,
+  totalPurchases: 234,
+  reconciledPurchases: 198,
+  auditPackages: 45,
+  resolvedAudits: 38,
+};
 
 export default function AdminPage() {
   const router = useRouter();
   const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
-  const [users, setUsers] = useState(mockUsers);
-  const [organizations, setOrganizations] = useState(mockOrganizations);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [users] = useState(mockUsers);
+  const [organizations] = useState(mockOrganizations);
 
   // Handle authentication redirect
   useEffect(() => {
@@ -140,27 +138,21 @@ export default function AdminPage() {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecting to login...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
-  // Check if user has admin permissions
-  if (user?.role !== 'admin') {
+  // Check if user has admin role
+  const actualRole = user.role;
+  if (!actualRole || !['admin'].includes(actualRole)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Access Denied
           </h1>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access the admin page.
+            You don&apos;t have permission to access the admin page.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Return to Dashboard
@@ -170,197 +162,81 @@ export default function AdminPage() {
     );
   }
 
-  const handleUserAction = async (userId: string, action: string) => {
-    setIsProcessing(true);
-    try {
+  const handleUserAction = async (
+    action: string,
+    _userId: string,
+    _data?: Record<string, unknown>
+  ) => {
+    // Suppress unused parameter warnings
+    void _userId;
+    void _data;
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       if (action === 'toggle_status') {
-        setUsers(prev =>
-          prev.map(u =>
-            u.id === userId
-              ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' }
-              : u
-          )
-        );
         toast.success('User status updated');
       } else if (action === 'delete') {
-        setUsers(prev => prev.filter(u => u.id !== userId));
         toast.success('User deleted');
       }
 
-      setSelectedUser(null);
-    } catch (error) {
-      toast.error('Failed to process user action');
-    } finally {
-      setIsProcessing(false);
-    }
+    return;
   };
 
-  const handleAddUser = () => {
-    console.log('Add User clicked');
-    toast.success('Add User functionality - would open user creation form');
-  };
-
-  const handleAddOrganization = () => {
-    console.log('Add Organization clicked');
-    toast.success('Add Organization functionality - would open organization creation form');
-  };
-
-  const handleEditOrganization = (orgId: string) => {
-    console.log('Edit Organization clicked:', orgId);
-    toast.success('Edit Organization functionality - would open organization edit form');
-  };
-
-  const handleViewOrganization = (orgId: string) => {
-    console.log('View Organization clicked:', orgId);
-    toast.success('View Organization functionality - would show organization details');
-  };
-
-  const handleExportSettings = () => {
-    console.log('Export Settings clicked');
-    toast.success('Export Settings functionality - would download settings file');
-  };
-
-  const handleImportSettings = () => {
-    console.log('Import Settings clicked');
-    toast.success('Import Settings functionality - would open file upload dialog');
-  };
-
-  const handleSaveSettings = () => {
-    console.log('Save Settings clicked');
-    toast.success('Settings saved successfully');
-  };
-
-  const handleEditUser = () => {
-    console.log('Edit User clicked');
-    toast.success('Edit User functionality - would open user edit form');
-  };
-
-  const getRoleColor = (role: UserRole) => {
-    switch (role) {
-      case 'admin':
-        return 'text-red-600 bg-red-50';
-      case 'approver':
-        return 'text-blue-600 bg-blue-50';
-      case 'cardholder':
-        return 'text-green-600 bg-green-50';
-      case 'auditor':
-        return 'text-purple-600 bg-purple-50';
-      case 'requester':
-        return 'text-gray-600 bg-gray-50';
-      default:
-        return 'text-gray-600 bg-gray-50';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    return status === 'active'
-      ? 'text-green-600 bg-green-50'
-      : 'text-red-600 bg-red-50';
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <AppHeader />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Manage users, organizations, and system settings.
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <div className="mb-8">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              {[
-                { id: 'overview', name: 'Overview', icon: BarChart3 },
-                { id: 'users', name: 'Users', icon: Users },
-                { id: 'organizations', name: 'Organizations', icon: Settings },
-                { id: 'settings', name: 'System Settings', icon: Shield },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`${
-                    activeTab === tab.id
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center`}
-                >
-                  <tab.icon className="h-4 w-4 mr-2" />
-                  {tab.name}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-
-        {/* Overview Tab */}
-        {activeTab === 'overview' && (
+  const renderOverviewTab = () => (
           <div className="space-y-6">
-            {/* Stats */}
+      {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <Users className="h-8 w-8 text-blue-600" />
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">
-                        Total Users
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {mockSystemStats.totalUsers}
-                      </p>
+                <p className="text-sm font-medium text-gray-600">Total Users</p>
+                <p className="text-2xl font-bold text-gray-900">{mockStats.totalUsers}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <Shield className="h-8 w-8 text-green-600" />
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Shield className="h-6 w-6 text-green-600" />
+              </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">
-                        Active Users
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {mockSystemStats.activeUsers}
-                      </p>
+                <p className="text-sm font-medium text-gray-600">Active Users</p>
+                <p className="text-2xl font-bold text-gray-900">{mockStats.activeUsers}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <BarChart3 className="h-8 w-8 text-purple-600" />
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <BarChart3 className="h-6 w-6 text-purple-600" />
+              </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">
-                        Total Requests
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {mockSystemStats.totalRequests}
-                      </p>
+                <p className="text-sm font-medium text-gray-600">Organizations</p>
+                <p className="text-2xl font-bold text-gray-900">{mockStats.totalOrganizations}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center">
-                    <AlertTriangle className="h-8 w-8 text-yellow-600" />
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-yellow-600" />
+              </div>
                     <div className="ml-4">
-                      <p className="text-sm font-medium text-gray-500">
-                        Pending Approvals
-                      </p>
-                      <p className="text-2xl font-bold text-gray-900">
-                        {mockSystemStats.pendingApprovals}
-                      </p>
+                <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
+                <p className="text-2xl font-bold text-gray-900">{mockStats.pendingApprovals}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -369,73 +245,50 @@ export default function AdminPage() {
 
             {/* Recent Activity */}
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>
-                  Latest system events and user actions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">
-                        New user registered: Alice Johnson
-                      </p>
-                      <p className="text-xs text-gray-500">2 hours ago</p>
+        <CardContent className="p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                <span className="text-sm text-gray-600">New user registered: Jane Doe</span>
                     </div>
+              <span className="text-xs text-gray-500">{formatDate(new Date())}</span>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">
-                        Request #3 approved by John Smith
-                      </p>
-                      <p className="text-xs text-gray-500">4 hours ago</p>
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                <span className="text-sm text-gray-600">Purchase request approved</span>
                     </div>
+              <span className="text-xs text-gray-500">{formatDate(new Date())}</span>
                   </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">
-                        System maintenance completed
-                      </p>
-                      <p className="text-xs text-gray-500">1 day ago</p>
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
+                <span className="text-sm text-gray-600">Audit package created</span>
                     </div>
+              <span className="text-xs text-gray-500">{formatDate(new Date())}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
-        )}
+  );
 
-        {/* Users Tab */}
-        {activeTab === 'users' && (
+  const renderUsersTab = () => (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">
-                User Management
-              </h2>
-              <div className="flex space-x-3">
-                <Button
-                  variant="outline"
-                  onClick={() => router.push('/admin/users')}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Manage Users
-                </Button>
-                <Button onClick={handleAddUser}>
+        <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
+        <Button>
                   <Plus className="h-4 w-4 mr-2" />
                   Add User
                 </Button>
-              </div>
             </div>
 
             <Card>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+            <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -456,33 +309,34 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {users.map(user => (
-                        <tr key={user.id} className="hover:bg-gray-50">
+                {users.map((user) => (
+                  <tr key={user.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {user.name}
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                            <span className="text-sm font-medium text-gray-700">
+                              {user.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
                               </div>
-                              <div className="text-sm text-gray-500">
-                                {user.email}
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                          <div className="text-sm text-gray-500">{user.email}</div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded-full ${getRoleColor(
-                                user?.role
-                              )}`}
-                            >
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
                               {user.role}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                                user.status
-                              )}`}
-                            >
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        user.status === 'active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
                               {user.status}
                             </span>
                           </td>
@@ -494,27 +348,21 @@ export default function AdminPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setSelectedUser(user)}
+                          onClick={() => handleUserAction('view', user.id)}
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() =>
-                                  handleUserAction(user.id, 'toggle_status')
-                                }
-                                disabled={isProcessing}
+                          onClick={() => handleUserAction('edit', user.id)}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() =>
-                                  handleUserAction(user.id, 'delete')
-                                }
-                                disabled={isProcessing}
+                          onClick={() => handleUserAction('delete', user.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -528,65 +376,51 @@ export default function AdminPage() {
               </CardContent>
             </Card>
           </div>
-        )}
+  );
 
-        {/* Organizations Tab */}
-        {activeTab === 'organizations' && (
+  const renderOrganizationsTab = () => (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Organizations
-              </h2>
-              <Button onClick={handleAddOrganization}>
+        <h3 className="text-lg font-semibold text-gray-900">Organization Management</h3>
+        <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Organization
               </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {organizations.map(org => (
+        {organizations.map((org) => (
                 <Card key={org.id}>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{org.name}</CardTitle>
-                    <CardDescription>Code: {org.code}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Status:</span>
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                            org.status
-                          )}`}
-                        >
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-gray-900">{org.name}</h4>
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  org.status === 'active' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
                           {org.status}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Users:</span>
-                        <span>{org.userCount}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Requests:</span>
-                        <span>{org.requestCount}</span>
-                      </div>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">
+                  <strong>Code:</strong> {org.code}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Location:</strong> {org.location}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Users:</strong> {org.userCount}
+                </p>
                     </div>
                     <div className="mt-4 flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="flex-1"
-                        onClick={() => handleEditOrganization(org.id)}
-                      >
+                <Button variant="outline" size="sm">
+                  <Eye className="h-4 w-4 mr-1" />
+                  View
+                </Button>
+                <Button variant="outline" size="sm">
                         <Edit className="h-4 w-4 mr-1" />
                         Edit
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewOrganization(org.id)}
-                      >
-                        <Eye className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardContent>
@@ -594,195 +428,132 @@ export default function AdminPage() {
               ))}
             </div>
           </div>
-        )}
+  );
 
-        {/* Settings Tab */}
-        {activeTab === 'settings' && (
+  const renderSettingsTab = () => (
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-gray-900">
-              System Settings
-            </h2>
+      <h3 className="text-lg font-semibold text-gray-900">System Settings</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
-                <CardHeader>
-                  <CardTitle>General Settings</CardTitle>
-                  <CardDescription>Basic system configuration</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+        <CardContent className="p-6">
+          <h4 className="text-md font-semibold text-gray-900 mb-4">General Settings</h4>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      System Name
-                    </label>
-                    <input
-                      type="text"
-                      defaultValue="ProcureFlow"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                <p className="text-sm font-medium text-gray-900">System Maintenance Mode</p>
+                <p className="text-sm text-gray-500">Enable maintenance mode to restrict access</p>
+              </div>
+              <Button variant="outline" size="sm">
+                Toggle
+              </Button>
                   </div>
+            <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Max File Upload Size (MB)
-                    </label>
-                    <input
-                      type="number"
-                      defaultValue="10"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                <p className="text-sm font-medium text-gray-900">Email Notifications</p>
+                <p className="text-sm text-gray-500">Send email notifications for system events</p>
+              </div>
+              <Button variant="outline" size="sm">
+                Configure
+              </Button>
                   </div>
+            <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Request Timeout (Days)
-                    </label>
-                    <input
-                      type="number"
-                      defaultValue="30"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                <p className="text-sm font-medium text-gray-900">Audit Logging</p>
+                <p className="text-sm text-gray-500">Enable detailed audit logging</p>
+              </div>
+              <Button variant="outline" size="sm">
+                Configure
+              </Button>
+            </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardHeader>
-                  <CardTitle>Security Settings</CardTitle>
-                  <CardDescription>
-                    Authentication and security configuration
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+        <CardContent className="p-6">
+          <h4 className="text-md font-semibold text-gray-900 mb-4">Data Management</h4>
+          <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Require 2FA
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Force two-factor authentication for all users
-                      </p>
+                <p className="text-sm font-medium text-gray-900">Export Data</p>
+                <p className="text-sm text-gray-500">Export all system data to CSV</p>
                     </div>
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Session Timeout
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Auto-logout after inactivity
-                      </p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-700">
-                        Audit Logging
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Log all user actions
-                      </p>
-                    </div>
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <Button variant="outline" onClick={handleExportSettings}>
-                <Download className="h-4 w-4 mr-2" />
-                Export Settings
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-1" />
+                Export
               </Button>
-              <Button variant="outline" onClick={handleImportSettings}>
-                <Upload className="h-4 w-4 mr-2" />
-                Import Settings
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                <p className="text-sm font-medium text-gray-900">Import Data</p>
+                <p className="text-sm text-gray-500">Import data from CSV file</p>
+                    </div>
+              <Button variant="outline" size="sm">
+                <Upload className="h-4 w-4 mr-1" />
+                Import
               </Button>
-              <Button onClick={handleSaveSettings}>Save Changes</Button>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                <p className="text-sm font-medium text-gray-900">Backup Database</p>
+                <p className="text-sm text-gray-500">Create a backup of the database</p>
+                    </div>
+              <Button variant="outline" size="sm">
+                <Download className="h-4 w-4 mr-1" />
+                Backup
+              </Button>
             </div>
           </div>
-        )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 
-        {/* User Detail Modal */}
-        {selectedUser && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-2xl">
-              <CardHeader>
-                <CardTitle>User Details - {selectedUser.name}</CardTitle>
-                <CardDescription>
-                  Complete user information and management options
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Name
-                    </label>
-                    <p className="text-gray-900">{selectedUser.name}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Email
-                    </label>
-                    <p className="text-gray-900">{selectedUser.email}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Role
-                    </label>
-                    <p className="text-gray-900">{selectedUser.role}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Status
-                    </label>
-                    <p className="text-gray-900">{selectedUser.status}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Last Login
-                    </label>
-                    <p className="text-gray-900">
-                      {formatDate(selectedUser.lastLogin)}
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AppHeader />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="mt-2 text-gray-600">
+            Manage users, organizations, and system settings
                     </p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Created
-                    </label>
-                    <p className="text-gray-900">
-                      {formatDate(selectedUser.createdAt)}
-                    </p>
-                  </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 mb-8">
+          <nav className="-mb-px flex space-x-8">
+            {[
+              { id: 'overview', name: 'Overview', icon: BarChart3 },
+              { id: 'users', name: 'Users', icon: Users },
+              { id: 'organizations', name: 'Organizations', icon: Shield },
+              { id: 'settings', name: 'Settings', icon: Settings },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  } whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm flex items-center`}
+                >
+                  <Icon className="h-4 w-4 mr-2" />
+                  {tab.name}
+                </button>
+              );
+            })}
+          </nav>
                 </div>
 
-                <div className="flex space-x-3 pt-4 border-t">
-                  <Button
-                    onClick={() => setSelectedUser(null)}
-                    className="flex-1"
-                  >
-                    Close
-                  </Button>
-                  <Button variant="outline" onClick={handleEditUser}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit User
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        {/* Tab Content */}
+        {activeTab === 'overview' && renderOverviewTab()}
+        {activeTab === 'users' && renderUsersTab()}
+        {activeTab === 'organizations' && renderOrganizationsTab()}
+        {activeTab === 'settings' && renderSettingsTab()}
       </div>
     </div>
   );

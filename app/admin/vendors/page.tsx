@@ -7,31 +7,16 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Building2,
   Plus,
   Edit,
   Trash2,
   Search,
-  Filter,
   MapPin,
   Phone,
   Mail,
-  Globe,
   Star,
   AlertCircle,
   CheckCircle,
@@ -205,9 +190,8 @@ export default function VendorsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
-  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
 
   // Handle authentication redirect
   useEffect(() => {
@@ -245,7 +229,7 @@ export default function VendorsPage() {
             Access Denied
           </h1>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access the vendor management page.
+            You don&apos;t have permission to access the vendor management page.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Return to Dashboard

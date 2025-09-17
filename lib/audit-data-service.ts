@@ -177,13 +177,12 @@ export class AuditDataService {
   }
 
   // Calculate audit status based on package data and findings
-  private static calculateAuditStatus(purchaseData: any, findings: AuditFinding[]): 'pending_audit' | 'under_review' | 'findings_issued' | 'resolved' | 'non_compliant' | 'disputed' | 'escalated' {
+  private static calculateAuditStatus(purchaseData: Record<string, unknown>, findings: AuditFinding[]): 'pending_audit' | 'under_review' | 'findings_issued' | 'resolved' | 'non_compliant' | 'disputed' | 'escalated' {
     if (findings.length === 0) {
       return 'pending_audit';
     }
     
     const openFindings = findings.filter(f => f.status === 'open');
-    const resolvedFindings = findings.filter(f => f.status === 'resolved');
     
     if (openFindings.length === 0) {
       return 'resolved';
@@ -197,12 +196,12 @@ export class AuditDataService {
   }
 
   // Calculate audit score based on compliance checks and findings
-  private static calculateAuditScore(purchaseData: any, findings: AuditFinding[]): number {
+  private static calculateAuditScore(purchaseData: Record<string, unknown>, findings: AuditFinding[]): number {
     let score = 100;
     
     // Deduct points for compliance issues
     const complianceChecks = {
-      microPurchaseLimit: (purchaseData.finalTotal || 0) <= 10000,
+      microPurchaseLimit: ((purchaseData.finalTotal as number) || 0) <= 10000,
       splitPurchaseDetection: !purchaseData.suspectedSplit,
       blockedMerchantCheck: !purchaseData.blockedMerchant,
       vendorApproval: !!purchaseData.vendorApproved,
@@ -303,7 +302,7 @@ export class AuditDataService {
       }
       
       await this.updateAuditFinding(findingId, {
-        status: newStatus as any,
+        status: newStatus as 'open' | 'resolved' | 'disputed' | 'acknowledged' | 'in_progress',
         auditorResponse: {
           id: docRef.id,
           ...responseData

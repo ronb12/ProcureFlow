@@ -2,6 +2,10 @@
 
 import { useEffect } from 'react';
 
+interface WindowWithDeferredPrompt extends Window {
+  deferredPrompt?: Event | null;
+}
+
 export function PWAProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Register service worker
@@ -22,7 +26,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
       // Prevent the default install prompt and store for custom handling
       e.preventDefault();
       // Store the event for PWAInstallButton to use
-      (window as any).deferredPrompt = e;
+      (window as WindowWithDeferredPrompt).deferredPrompt = e;
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -31,7 +35,7 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     const handleAppInstalled = () => {
       console.log('PWA was installed');
       // Clear the deferred prompt
-      (window as any).deferredPrompt = null;
+      (window as WindowWithDeferredPrompt).deferredPrompt = null;
     };
 
     window.addEventListener('appinstalled', handleAppInstalled);
@@ -46,7 +50,6 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     // Handle online/offline status
     const handleOnline = () => {
       console.log('App is online');
-      // Show online indicator
     };
 
     const handleOffline = () => {

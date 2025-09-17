@@ -5,8 +5,44 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { AppHeader } from '@/components/ui/app-header';
 
+// Define proper types for audit packages
+interface Facility {
+  name: string;
+  code: string;
+  address: string;
+  installation: string;
+  state: string;
+  zipCode: string;
+}
+
+interface AuditPackage {
+  id: string;
+  requestId: string;
+  status: string;
+  auditScore: number;
+  totalIssues: number;
+  criticalIssues: number;
+  createdAt: string;
+  updatedAt: string;
+  cardholder: string;
+  cardholderId: string;
+  cardholderEmail: string;
+  cardholderPhone: string;
+  approver: string;
+  approverId: string;
+  vendor: string;
+  vendorId: string;
+  amount: number;
+  description: string;
+  facility: Facility;
+  documents: string[];
+  complianceChecks: string[];
+  issues: any[];
+  attachments: any[];
+}
+
 // Mock data
-const mockAuditPackages = [
+const mockAuditPackages: AuditPackage[] = [
   {
     id: '1',
     requestId: 'REQ-2024-001',
@@ -48,7 +84,9 @@ const mockAuditPackages = [
       'Blocked merchant check: PASSED',
       'Vendor approval status: PASSED',
       'Delivery address validation: PASSED'
-    ]
+    ],
+    issues: [],
+    attachments: []
   },
   {
     id: '2',
@@ -91,7 +129,9 @@ const mockAuditPackages = [
       'Blocked merchant check: PASSED',
       'Vendor approval status: PASSED',
       'Delivery address validation: FAILED'
-    ]
+    ],
+    issues: [],
+    attachments: []
   },
   {
     id: '3',
@@ -134,7 +174,9 @@ const mockAuditPackages = [
       'Blocked merchant check: PASSED',
       'Vendor approval status: PASSED',
       'Delivery address validation: PASSED'
-    ]
+    ],
+    issues: [],
+    attachments: []
   },
   {
     id: '4',
@@ -177,7 +219,9 @@ const mockAuditPackages = [
       'Blocked merchant check: PASSED',
       'Vendor approval status: PASSED',
       'Delivery address validation: PASSED'
-    ]
+    ],
+    issues: [],
+    attachments: []
   },
   {
     id: '5',
@@ -220,7 +264,9 @@ const mockAuditPackages = [
       'Blocked merchant check: FAILED',
       'Vendor approval status: FAILED',
       'Delivery address validation: FAILED'
-    ]
+    ],
+    issues: [],
+    attachments: []
   }
 ];
 
@@ -240,13 +286,18 @@ const getStatusColor = (status: string) => {
   }
 };
 
+interface AuditPackage {
+  requestId: string;
+  [key: string]: unknown;
+}
+
 export default function StaticAuditPackagesPage() {
-  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [selectedPackage, setSelectedPackage] = useState<AuditPackage | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [filteredPackages, setFilteredPackages] = useState(mockAuditPackages);
+  const [filteredPackages, setFilteredPackages] = useState<AuditPackage[]>(mockAuditPackages);
   const [currentFilter, setCurrentFilter] = useState('all');
 
-  const handleViewPackage = (pkg: any) => {
+  const handleViewPackage = (pkg: AuditPackage) => {
     console.log('View package clicked:', pkg.requestId);
     setSelectedPackage(pkg);
     setShowModal(true);
@@ -492,7 +543,7 @@ export default function StaticAuditPackagesPage() {
         }
         groups[facility].push(pkg);
         return groups;
-      }, {} as Record<string, any[]>);
+      }, {} as Record<string, AuditPackage[]>);
 
       Object.entries(facilityGroups).forEach(([facility, packages]) => {
         const facilityCompliant = packages.filter(pkg => pkg.auditScore >= 80).length;
@@ -699,7 +750,7 @@ export default function StaticAuditPackagesPage() {
     setSelectedPackage(null);
   };
 
-  const handleDownloadPackage = async (pkg: any) => {
+  const handleDownloadPackage = async (pkg: AuditPackage) => {
     console.log('Download package clicked:', pkg.requestId);
     
     try {
@@ -916,15 +967,6 @@ export default function StaticAuditPackagesPage() {
     window.location.href = '/dashboard';
   };
 
-  const handleGoToRequests = () => {
-    console.log('Go to requests clicked');
-    window.location.href = '/requests';
-  };
-
-  const handleGoToPurchases = () => {
-    console.log('Go to purchases clicked');
-    window.location.href = '/purchases';
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">

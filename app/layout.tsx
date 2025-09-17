@@ -4,6 +4,7 @@ import './globals.css';
 import { Providers } from './providers';
 import { PWAProvider } from './pwa-provider';
 import { PWAInstallButton } from '@/components/ui/pwa-install-button';
+import { ConnectionStatus } from '@/components/ui/connection-status';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -47,6 +48,7 @@ export default function RootLayout({
           <Providers>
             {children}
             <PWAInstallButton />
+            <ConnectionStatus />
           </Providers>
         </PWAProvider>
       </body>

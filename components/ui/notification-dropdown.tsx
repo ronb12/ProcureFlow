@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/hooks/use-notifications';
 import {
   Bell,
-  Check,
   CheckCheck,
   Trash2,
   Settings,

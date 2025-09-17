@@ -196,3 +196,4 @@
 2. Check that "Enable Test Mode" is clicked
 3. Verify the role buttons are clickable
 4. Check browser console for errors
+

@@ -279,10 +279,10 @@ export interface ComplianceMetrics {
 }
 
 // Helper Functions
-export function calculateComplianceMetrics(packages: any[]): ComplianceMetrics {
+export function calculateComplianceMetrics(packages: Record<string, unknown>[]): ComplianceMetrics {
   const totalPackages = packages.length;
   const auditedPackages = packages.filter(pkg => pkg.auditStatus !== 'pending_audit').length;
-  const compliantPackages = packages.filter(pkg => pkg.auditStatus === 'resolved' && pkg.auditScore >= 80).length;
+  const compliantPackages = packages.filter(pkg => pkg.auditStatus === 'resolved' && (pkg.auditScore as number) >= 80).length;
   const nonCompliantPackages = packages.filter(pkg => pkg.auditStatus === 'non_compliant').length;
   const pendingAudit = packages.filter(pkg => pkg.auditStatus === 'pending_audit').length;
   
@@ -294,13 +294,13 @@ export function calculateComplianceMetrics(packages: any[]): ComplianceMetrics {
     pendingAudit,
     complianceRate: totalPackages > 0 ? (compliantPackages / totalPackages) * 100 : 0,
     averageAuditTime: 24, // Mock data - would be calculated from actual audit times
-    criticalFindings: packages.reduce((sum, pkg) => sum + (pkg.criticalIssues || 0), 0),
-    resolvedFindings: packages.reduce((sum, pkg) => sum + (pkg.resolvedIssues || 0), 0),
-    openFindings: packages.reduce((sum, pkg) => sum + (pkg.openIssues || 0), 0)
+    criticalFindings: packages.reduce((sum, pkg) => sum + ((pkg.criticalIssues as number) || 0), 0),
+    resolvedFindings: packages.reduce((sum, pkg) => sum + ((pkg.resolvedIssues as number) || 0), 0),
+    openFindings: packages.reduce((sum, pkg) => sum + ((pkg.openIssues as number) || 0), 0)
   };
 }
 
-export function shouldTriggerAudit(purchasePackage: any, triggers: AuditTrigger[]): boolean {
+export function shouldTriggerAudit(purchasePackage: Record<string, unknown>, triggers: AuditTrigger[]): boolean {
   return triggers.some(trigger => {
     if (!trigger.isActive) return false;
     
@@ -319,13 +319,13 @@ export function shouldTriggerAudit(purchasePackage: any, triggers: AuditTrigger[
   });
 }
 
-function evaluateCondition(purchasePackage: any, condition: string): boolean {
+function evaluateCondition(purchasePackage: Record<string, unknown>, condition: string): boolean {
   // Simplified condition evaluation - in real app would use a proper expression evaluator
   const conditions: Record<string, boolean> = {
     'purchase_status == "Purchased"': purchasePackage.status === 'Purchased',
     'purchase_status == "Reconciled"': purchasePackage.status === 'Reconciled',
-    'amount > 2000': purchasePackage.amount > 2000,
-    'amount > 1000': purchasePackage.amount > 1000,
+    'amount > 2000': (purchasePackage.amount as number) > 2000,
+    'amount > 1000': (purchasePackage.amount as number) > 1000,
     'new_vendor': !purchasePackage.vendorApproved,
     'high_risk_category': purchasePackage.category === 'high_risk'
   };
@@ -333,7 +333,7 @@ function evaluateCondition(purchasePackage: any, condition: string): boolean {
   return conditions[condition] || false;
 }
 
-function evaluateRiskCondition(purchasePackage: any, condition: string): boolean {
+function evaluateRiskCondition(purchasePackage: Record<string, unknown>, condition: string): boolean {
   const riskFactors = condition.split(' OR ');
   return riskFactors.some(factor => evaluateCondition(purchasePackage, factor.trim()));
 }

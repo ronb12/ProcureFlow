@@ -406,6 +406,7 @@ export default function CreatePurchaseOrderPage() {
   
   // New vendor verification state
   const [showNewVendorForm, setShowNewVendorForm] = useState(false);
+  const [vendorVerificationComplete, setVendorVerificationComplete] = useState(false);
   const [newVendorData, setNewVendorData] = useState({
     name: '',
     contact: '',
@@ -419,7 +420,7 @@ export default function CreatePurchaseOrderPage() {
     duns: '',
     taxId: '',
   });
-  const [vendorVerificationComplete, setVendorVerificationComplete] = useState(false);
+  // const [vendorVerificationComplete] = useState(false);
   
   const [dodFields, setDodFields] = useState({
     contractNumber: '',
@@ -498,7 +499,7 @@ export default function CreatePurchaseOrderPage() {
             Access Denied
           </h1>
           <p className="text-gray-600 mb-4">
-            You don't have permission to create purchase orders.
+            You don&apos;t have permission to create purchase orders.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Return to Dashboard
@@ -543,7 +544,7 @@ export default function CreatePurchaseOrderPage() {
   };
 
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
-  const tax = 0; // DOD MWR is federal government - tax exempt
+  // const tax = 0; // DOD MWR is federal government - tax exempt
   const total = subtotal; // No tax for federal government
 
   const handleVerifyNewVendor = async () => {
@@ -622,7 +623,7 @@ export default function CreatePurchaseOrderPage() {
       }
       
       router.push('/purchases');
-    } catch (error) {
+    } catch {
       toast.error('Failed to process purchase order');
     } finally {
       setIsSubmitting(false);

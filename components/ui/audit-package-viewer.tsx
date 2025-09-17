@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from './button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
 import { StatusBadge } from './status-badge';
-import { AuditPackage, MWR_AUDIT_REQUIREMENTS } from '@/lib/audit-package';
+import { AuditPackage } from '@/lib/audit-package';
 import {
   CheckCircle,
   XCircle,
@@ -18,7 +18,18 @@ import {
   CheckCircle2,
   Info
 } from 'lucide-react';
-import { formatDate, formatCurrency } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
+
+interface Document {
+  present: boolean;
+  compliant: boolean;
+  complete: boolean;
+}
+
+interface ComplianceCheck {
+  compliant: boolean;
+  passed: boolean;
+}
 
 interface AuditPackageViewerProps {
   auditPackage: AuditPackage;
@@ -64,14 +75,14 @@ export function AuditPackageViewer({
     }
   };
 
-  const getDocumentStatus = (doc: any) => {
+  const getDocumentStatus = (doc: Document) => {
     if (!doc.present) return { status: 'missing', color: 'red', icon: XCircle };
     if (!doc.compliant) return { status: 'non-compliant', color: 'red', icon: XCircle };
     if (!doc.complete) return { status: 'incomplete', color: 'yellow', icon: AlertTriangle };
     return { status: 'complete', color: 'green', icon: CheckCircle };
   };
 
-  const getComplianceStatus = (check: any) => {
+  const getComplianceStatus = (check: ComplianceCheck) => {
     if (!check.compliant) return { status: 'failed', color: 'red', icon: XCircle };
     if (!check.passed) return { status: 'warning', color: 'yellow', icon: AlertTriangle };
     return { status: 'passed', color: 'green', icon: CheckCircle };

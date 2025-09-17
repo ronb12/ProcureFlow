@@ -86,7 +86,7 @@ export function generateId(): string {
   return Math.random().toString(36).substr(2, 9);
 }
 
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -97,7 +97,7 @@ export function debounce<T extends (...args: any[]) => any>(
   };
 }
 
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -208,7 +208,7 @@ export function flatten<T>(array: T[][]): T[] {
   return array.reduce((flat, toFlatten) => flat.concat(toFlatten), []);
 }
 
-export function omit<T extends Record<string, any>, K extends keyof T>(
+export function omit<T extends Record<string, unknown>, K extends keyof T>(
   obj: T,
   keys: K[]
 ): Omit<T, K> {
@@ -217,7 +217,7 @@ export function omit<T extends Record<string, any>, K extends keyof T>(
   return result;
 }
 
-export function pick<T extends Record<string, any>, K extends keyof T>(
+export function pick<T extends Record<string, unknown>, K extends keyof T>(
   obj: T,
   keys: K[]
 ): Pick<T, K> {
@@ -230,7 +230,7 @@ export function pick<T extends Record<string, any>, K extends keyof T>(
   return result;
 }
 
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
   if (value == null) return true;
   if (typeof value === 'string') return value.trim().length === 0;
   if (Array.isArray(value)) return value.length === 0;
@@ -238,7 +238,7 @@ export function isEmpty(value: any): boolean {
   return false;
 }
 
-export function isNotEmpty(value: any): boolean {
+export function isNotEmpty(value: unknown): boolean {
   return !isEmpty(value);
 }
 

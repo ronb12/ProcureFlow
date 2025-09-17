@@ -22,11 +22,8 @@ import {
   FileText,
   Download,
   Search,
-  Filter,
-  Calendar,
   DollarSign,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 // Mock audit data
 const mockAuditData = [
@@ -134,8 +131,8 @@ export default function AuditPage() {
   
   // Use original user role for access control, not debug role
   const actualRole = originalUser?.role || user?.role;
-  const [auditData, setAuditData] = useState(mockAuditData);
-  const [selectedAudit, setSelectedAudit] = useState<any>(null);
+  const [auditData] = useState(mockAuditData);
+  const [selectedAudit, setSelectedAudit] = useState<Record<string, unknown> | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [auditStatusFilter, setAuditStatusFilter] = useState('all');
@@ -176,7 +173,7 @@ export default function AuditPage() {
             Access Denied
           </h1>
           <p className="text-gray-600 mb-4">
-            You don't have permission to access the audit page.
+            You don&apos;t have permission to access the audit page.
           </p>
           <Button onClick={() => router.push('/dashboard')}>
             Return to Dashboard
@@ -467,7 +464,7 @@ export default function AuditPage() {
             <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               <CardHeader>
                 <CardTitle>
-                  Audit Details - Request #{selectedAudit.requestId}
+                  Audit Details - Request #{selectedAudit.requestId as string}
                 </CardTitle>
                 <CardDescription>
                   Complete audit information for this procurement request.
@@ -484,31 +481,31 @@ export default function AuditPage() {
                         <span className="font-medium text-gray-500">
                           Vendor:
                         </span>{' '}
-                        {selectedAudit.vendor}
+                        {selectedAudit.vendor as string}
                       </div>
                       <div>
                         <span className="font-medium text-gray-500">
                           Total:
                         </span>{' '}
-                        {formatCurrency(selectedAudit.total)}
+                        {formatCurrency(selectedAudit.total as number)}
                       </div>
                       <div>
                         <span className="font-medium text-gray-500">
                           Status:
                         </span>{' '}
-                        <StatusBadge status={selectedAudit.status} />
+                        <StatusBadge status={selectedAudit.status as any} />
                       </div>
                       <div>
                         <span className="font-medium text-gray-500">
                           Created:
                         </span>{' '}
-                        {formatDate(selectedAudit.createdAt)}
+                        {formatDate(selectedAudit.createdAt as string)}
                       </div>
                       <div>
                         <span className="font-medium text-gray-500">
                           Completed:
                         </span>{' '}
-                        {formatDate(selectedAudit.completedAt)}
+                        {formatDate(selectedAudit.completedAt as string)}
                       </div>
                     </div>
                   </div>
@@ -521,22 +518,22 @@ export default function AuditPage() {
                         <span className="font-medium text-gray-500">
                           Requester:
                         </span>{' '}
-                        {selectedAudit.requester.name} (
-                        {selectedAudit.requester.email})
+                        {(selectedAudit.requester as any).name} (
+                        {(selectedAudit.requester as any).email})
                       </div>
                       <div>
                         <span className="font-medium text-gray-500">
                           Cardholder:
                         </span>{' '}
-                        {selectedAudit.cardholder.name} (
-                        {selectedAudit.cardholder.email})
+                        {(selectedAudit.cardholder as any).name} (
+                        {(selectedAudit.cardholder as any).email})
                       </div>
                       <div>
                         <span className="font-medium text-gray-500">
                           Approver:
                         </span>{' '}
-                        {selectedAudit.approver.name} (
-                        {selectedAudit.approver.email})
+                        {(selectedAudit.approver as any).name} (
+                        {(selectedAudit.approver as any).email})
                       </div>
                     </div>
                   </div>
@@ -547,22 +544,22 @@ export default function AuditPage() {
                     Audit Results
                   </h4>
                   <div className="flex items-center space-x-2 mb-3">
-                    {getAuditStatusIcon(selectedAudit.auditStatus)}
+                    {getAuditStatusIcon(selectedAudit.auditStatus as string)}
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${getAuditStatusColor(
-                        selectedAudit.auditStatus
+                        selectedAudit.auditStatus as string
                       )}`}
                     >
-                      {selectedAudit.auditStatus.toUpperCase()}
+                      {(selectedAudit.auditStatus as string).toUpperCase()}
                     </span>
                   </div>
-                  {selectedAudit.violations.length > 0 && (
+                  {(selectedAudit.violations as any[]).length > 0 && (
                     <div className="mb-3">
                       <h5 className="font-medium text-red-600 mb-2">
                         Violations Found:
                       </h5>
                       <ul className="text-sm text-red-600 ml-4 list-disc">
-                        {selectedAudit.violations.map(
+                        {(selectedAudit.violations as any[]).map(
                           (violation: string, index: number) => (
                             <li key={index}>{violation}</li>
                           )
@@ -575,7 +572,7 @@ export default function AuditPage() {
                       Audit Notes:
                     </h5>
                     <p className="text-sm text-gray-600">
-                      {selectedAudit.notes}
+                      {selectedAudit.notes as string}
                     </p>
                   </div>
                 </div>

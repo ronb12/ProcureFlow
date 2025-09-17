@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -310,11 +309,11 @@ export default function RequestsPage() {
   // Use original user role for debugging
   const actualRole = originalUser?.role || user?.role;
   console.log('RequestsPage - User:', user?.email, 'Actual Role:', actualRole, 'Effective Role:', user?.role);
-  const [requests, setRequests] = useState(mockRequests);
+  const [requests] = useState(mockRequests);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [facilityFilter, setFacilityFilter] = useState('all');
-  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedRequest, setSelectedRequest] = useState<Record<string, unknown> | null>(null);
 
   if (loading) {
     return (
@@ -515,7 +514,7 @@ export default function RequestsPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Request #{selectedRequest.id}
+                  Request #{selectedRequest.id as string}
                 </h2>
                 <Button
                   variant="outline"
@@ -542,7 +541,7 @@ export default function RequestsPage() {
                             Vendor
                           </label>
                           <p className="text-gray-900">
-                            {selectedRequest.vendor}
+                            {selectedRequest.vendor as string}
                           </p>
                         </div>
                         <div>
@@ -550,7 +549,7 @@ export default function RequestsPage() {
                             Need By Date
                           </label>
                           <p className="text-gray-900">
-                            {formatDate(selectedRequest.needBy)}
+                            {formatDate(selectedRequest.needBy as string)}
                           </p>
                         </div>
                         <div>
@@ -558,7 +557,7 @@ export default function RequestsPage() {
                             Status
                           </label>
                           <div className="mt-1">
-                            <StatusBadge status={selectedRequest.status} />
+                            <StatusBadge status={selectedRequest.status as any} />
                           </div>
                         </div>
                         <div>
@@ -566,7 +565,7 @@ export default function RequestsPage() {
                             Total Amount
                           </label>
                           <p className="text-lg font-semibold text-gray-900">
-                            {formatCurrency(selectedRequest.total)}
+                            {formatCurrency(selectedRequest.total as number)}
                           </p>
                         </div>
                       </div>
@@ -575,7 +574,7 @@ export default function RequestsPage() {
                           Justification
                         </label>
                         <p className="text-gray-900 mt-1">
-                          {selectedRequest.justification}
+                          {selectedRequest.justification as string}
                         </p>
                       </div>
                     </CardContent>
@@ -599,12 +598,12 @@ export default function RequestsPage() {
                               </span>
                             </div>
                             <div className="text-sm text-gray-500 mt-1">
-                              Qty: 1 × {formatCurrency(selectedRequest.total)}
+                              Qty: 1 × {formatCurrency(selectedRequest.total as number)}
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="font-semibold text-gray-900">
-                              {formatCurrency(selectedRequest.total)}
+                              {formatCurrency(selectedRequest.total as number)}
                             </div>
                           </div>
                         </div>
@@ -644,14 +643,14 @@ export default function RequestsPage() {
                         <label className="text-sm font-medium text-gray-500">
                           Request ID
                         </label>
-                        <p className="text-gray-900">#{selectedRequest.id}</p>
+                        <p className="text-gray-900">#{selectedRequest.id as string}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500">
                           Created Date
                         </label>
                         <p className="text-gray-900">
-                          {formatDate(selectedRequest.createdAt)}
+                          {formatDate(selectedRequest.createdAt as string)}
                         </p>
                       </div>
                     </CardContent>

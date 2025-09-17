@@ -7,8 +7,7 @@ import {
   COMPREHENSIVE_AUDIT_RULES, 
   AUDIT_TRIGGERS, 
   AUDIT_SCHEDULES,
-  calculateComplianceMetrics,
-  type ComplianceMetrics
+  calculateComplianceMetrics
 } from '@/lib/audit-workflow';
 
 export default function AuditCompliancePage() {
@@ -86,7 +85,7 @@ export default function AuditCompliancePage() {
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setSelectedTab(tab.id as any)}
+                  onClick={() => setSelectedTab(tab.id as 'overview' | 'rules' | 'triggers' | 'schedules')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
                     selectedTab === tab.id
                       ? 'border-blue-500 text-blue-600'

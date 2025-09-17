@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { PWAInstallButton } from '@/components/ui/pwa-install-button';
 import { AppHeader } from '@/components/ui/app-header';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {

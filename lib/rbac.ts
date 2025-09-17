@@ -165,7 +165,8 @@ export class RBAC {
   }
 
   // Check if user can manage users in organization
-  static canManageOrgUsers(user: User | null, orgId: string): boolean {
+  static canManageOrgUsers(user: User | null, _orgId: string): boolean {
+    void _orgId; // Suppress unused parameter warning
     if (!user) return false;
     if (user.role === 'admin') return true;
 

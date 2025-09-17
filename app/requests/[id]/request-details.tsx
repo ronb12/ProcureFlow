@@ -27,6 +27,54 @@ import {
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
+// Define proper types for request data
+interface RequestItem {
+  id: string;
+  sku: string;
+  desc: string;
+  qty: number;
+  estUnitPrice: number;
+  lineTotal: number;
+}
+
+interface Person {
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+interface Attachment {
+  id: string;
+  name: string;
+  size: string;
+  uploadedAt: Date;
+  url?: string;
+}
+
+interface Comment {
+  id: string;
+  author: string;
+  content: string;
+  timestamp: Date;
+}
+
+interface RequestData {
+  id: string;
+  vendor: string;
+  justification: string;
+  needBy: Date;
+  accountingCode: string;
+  status: string;
+  createdAt: Date;
+  total: number;
+  items: RequestItem[];
+  requester: Person;
+  approver: Person;
+  cardholder: Person;
+  attachments: Attachment[];
+  comments: Comment[];
+}
+
 // Mock data - in real app this would come from API
 const mockRequest = {
   id: '1',
@@ -175,7 +223,7 @@ interface RequestDetailsProps {
 export function RequestDetails({ requestId }: RequestDetailsProps) {
   const router = useRouter();
   const { user } = useAuth();
-  const [request, setRequest] = useState<any>(mockRequest);
+  const [request, setRequest] = useState<RequestData>(mockRequest as RequestData);
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
@@ -193,7 +241,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
       'Returned',
       'Denied',
     ];
-    const randomStatus = statuses[parseInt(requestId) % statuses.length] as any;
+    const randomStatus = statuses[parseInt(requestId) % statuses.length] as 'Pending' | 'Approved' | 'Rejected' | 'Denied';
 
     setRequest({
       ...mockRequest,
@@ -208,13 +256,13 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      setRequest((prev: any) => ({
+      setRequest((prev) => ({
         ...prev,
-        status: newStatus as any,
+        status: newStatus as 'pending' | 'approved' | 'rejected' | 'cancelled',
       }));
 
       toast.success(`Request ${action} successfully`);
-    } catch (error) {
+    } catch {
       toast.error(`Failed to ${action} request`);
     } finally {
       setIsProcessing(false);
@@ -396,7 +444,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
                 {request.vendor} • {formatDate(request.createdAt)}
               </p>
             </div>
-            <StatusBadge status={request.status} />
+            <StatusBadge status={request.status as any} />
           </div>
         </div>
 
@@ -486,7 +534,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
                       </tr>
                     </thead>
                     <tbody>
-                      {request.items.map((item: any, index: number) => (
+                      {request.items.map((item, index: number) => (
                         <tr
                           key={item.id || `${item.sku}-${index}`}
                           className="border-b hover:bg-gray-50"
@@ -525,7 +573,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
                         <td className="py-3 px-4 text-right font-bold text-gray-900">
                           {formatCurrency(
                             request.items.reduce(
-                              (sum: number, item: any) =>
+                              (sum: number, item) =>
                                 sum +
                                 (item.lineTotal ||
                                   item.qty * item.estUnitPrice),
@@ -544,7 +592,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
                         <td className="py-3 px-4 text-right font-bold text-gray-900">
                           {formatCurrency(
                             request.items.reduce(
-                              (sum: number, item: any) =>
+                              (sum: number, item) =>
                                 sum +
                                 (item.lineTotal ||
                                   item.qty * item.estUnitPrice),
@@ -624,7 +672,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {request.attachments.map((attachment: any) => (
+                    {request.attachments.map((attachment) => (
                       <div
                         key={attachment.id}
                         className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
@@ -666,7 +714,7 @@ export function RequestDetails({ requestId }: RequestDetailsProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {request.comments.map((comment: any) => (
+                    {request.comments.map((comment) => (
                       <div key={comment.id} className="flex space-x-3">
                         <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                           <span className="text-gray-600 text-sm font-medium">

@@ -15,9 +15,10 @@ import { ItemTable } from '@/components/ui/item-table';
 // import { MoneyInput } from '@/components/ui/money-input';
 import { FileDropzone } from '@/components/ui/file-dropzone';
 import { CreateRequestData, RequestItem } from '@/lib/types';
-import { notificationService } from '@/lib/notification-service';
 import { ArrowLeft, Save, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface Facility {
   id: string;
@@ -412,41 +413,34 @@ export default function NewRequestPage() {
 
     setIsSubmitting(true);
     try {
-      // TODO: Implement actual API call to create request
-      console.log('Creating request:', { ...formData, isDraft });
-
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Generate a mock request ID for notifications
-      const requestId = `req_${Date.now()}`;
-
-      if (!isDraft && user) {
-        // Send notification for request creation
-        await notificationService.notifyRequestCreated(
-          user.id,
-          requestId,
-          formData.vendor || 'Unknown Vendor',
-          formData.totalEstimate || 0
-        );
-
-        // Check if approval is needed and notify approvers
-        if (
-          formData.totalEstimate &&
-          formData.totalEstimate > (user.approvalLimit || 0)
-        ) {
-          // In a real app, this would query for approvers
-          console.log('Request exceeds approval limit, would notify approvers');
-        }
+      if (!user || !user.orgId) throw new Error('A valid organization is required');
+      if (attachments.length > 0) {
+        throw new Error('Attachment upload is not available yet. Remove attachments before saving.');
       }
-
-      toast.success(
-        isDraft ? 'Request saved as draft' : 'Request submitted successfully'
-      );
-      router.push('/dashboard');
+      // Persist the actual request before reporting success. Never fabricate IDs.
+      await addDoc(collection(db, 'requests'), {
+        orgId: user.orgId,
+        requesterId: user.id,
+        requesterName: user.name,
+        requesterEmail: user.email,
+        installationId: formData.installationId || '',
+        facilityId: formData.facilityId || '',
+        vendor: formData.vendor?.trim() || '',
+        justification: formData.justification?.trim() || '',
+        accountingCode: formData.accountingCode?.trim() || '',
+        needBy: formData.needBy || new Date(),
+        items: formData.items || [],
+        totalEstimate: formData.totalEstimate || 0,
+        suspectedSplit: false,
+        status: isDraft ? 'Draft' : 'Submitted',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      toast.success(isDraft ? 'Request saved as draft' : 'Request submitted successfully');
+      router.push('/requests');
     } catch (error) {
       console.error('Error creating request:', error);
-      toast.error('Failed to create request');
+      toast.error(error instanceof Error ? error.message : 'Failed to save request');
     } finally {
       setIsSubmitting(false);
     }

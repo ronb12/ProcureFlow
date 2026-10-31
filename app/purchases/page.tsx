@@ -47,6 +47,9 @@ import {
   Ban,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '@/lib/firebase';
 
 // Enhanced mock data with analytics and financial controls
 const mockPurchases = [
@@ -277,7 +280,37 @@ export default function PurchasesPage() {
   
   // Use original user role for access control, not debug role
   const actualRole = originalUser?.role || user?.role;
-  const [purchases, setPurchases] = useState(mockPurchases);
+  const [purchases, setPurchases] = useState<any[]>([]);
+  const [purchaseError, setPurchaseError] = useState('');
+  useEffect(() => {
+    if (!user?.id || !user.orgId || !['cardholder', 'admin'].includes(actualRole || '')) return;
+    const q = query(collection(db, 'requests'), where('orgId', '==', user.orgId));
+    return onSnapshot(q, snapshot => {
+      setPurchases(snapshot.docs.filter(doc =>
+        ['Approved', 'Cardholder Purchasing', 'Purchased', 'Reconciled', 'Closed'].includes(doc.data().status)
+      ).map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id, requestId: doc.id,
+          vendor: data.vendor || '', total: data.totalEstimate || 0,
+          status: data.status as RequestStatus,
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+          needBy: data.needBy?.toDate?.() || new Date(data.needBy || Date.now()),
+          items: (data.items || []).map((item: any) => ({
+            name: item.desc || item.description || '', qty: item.qty || 0,
+            price: item.estUnitPrice || 0
+          })),
+          requester: {name: data.requesterName || 'Requester', email: data.requesterEmail || ''},
+          cardNumber: 'Not stored', purchaseDate: data.purchasedAt?.toDate?.() || null,
+          receipt: null, category: 'general', justification: data.justification || '',
+        };
+      }));
+      setPurchaseError('');
+    }, error => {
+      console.error('Unable to load purchasing queue:', error);
+      setPurchaseError('Unable to load purchase records. Check your connection and permissions.');
+    });
+  }, [user?.id, user?.orgId, actualRole]);
   const [selectedPurchase, setSelectedPurchase] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
@@ -419,57 +452,28 @@ export default function PurchasesPage() {
     purchaseId: string,
     action: 'mark_purchased' | 'upload_receipt' | 'reconcile'
   ) => {
+    if (action !== 'mark_purchased') {
+      toast.error('Receipt upload and reconciliation are not connected yet; nothing was saved.');
+      return;
+    }
+    const purchase = purchases.find(p => p.id === purchaseId);
+    if (!purchase) return;
+    const orderNumber = window.prompt('Enter the confirmed purchase order number:');
+    if (!orderNumber?.trim()) return;
     setIsProcessing(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      if (action === 'mark_purchased') {
-        setPurchases(prev =>
-          prev.map(purchase =>
-            purchase.id === purchaseId
-              ? ({
-                  ...purchase,
-                  status: 'Purchased' as RequestStatus,
-                  purchaseDate: new Date(),
-                } as any)
-              : purchase
-          )
-        );
-        toast.success('Purchase marked as completed');
-      } else if (action === 'upload_receipt') {
-        if (receiptFile) {
-          setPurchases(prev =>
-            prev.map(purchase =>
-              purchase.id === purchaseId
-                ? ({
-                    ...purchase,
-                    receipt: {
-                      name: receiptFile.name,
-                      size: `${(receiptFile.size / 1024).toFixed(0)} KB`,
-                      uploadedAt: new Date(),
-                    },
-                  } as any)
-                : purchase
-            )
-          );
-          toast.success('Receipt uploaded successfully');
-          setReceiptFile(null);
-        }
-      } else if (action === 'reconcile') {
-        setPurchases(prev =>
-          prev.map(purchase =>
-            purchase.id === purchaseId
-              ? ({ ...purchase, status: 'Reconciled' as RequestStatus } as any)
-              : purchase
-          )
-        );
-        toast.success('Purchase reconciled successfully');
-      }
-
+      const recordPurchase = httpsCallable(functions, 'recordPurchase');
+      await recordPurchase({
+        reqId: purchase.requestId,
+        orderNumber: orderNumber.trim(),
+        finalTotal: Number(purchase.total),
+        tax: 0,
+        purchasedAt: new Date().toISOString(),
+      });
+      toast.success('Purchase recorded successfully');
       setSelectedPurchase(null);
     } catch (error) {
-      toast.error('Failed to process purchase action');
+      toast.error(error instanceof Error ? error.message : 'Purchase was not recorded');
     } finally {
       setIsProcessing(false);
     }
@@ -508,11 +512,10 @@ export default function PurchasesPage() {
   };
 
   const handleDocumentUpload = (file: File, documentType: string) => {
-    // Simulate document upload
-    toast.success(`${documentType} uploaded successfully`);
+    toast.error(`${documentType} upload is not connected. The document was not saved.`);
     
     if (documentType === 'receipt') {
-      setReconciliationData(prev => ({ ...prev, receiptUploaded: true }));
+      // Only a verified upload may change receiptUploaded to true.
     }
   };
 
@@ -1080,52 +1083,7 @@ export default function PurchasesPage() {
   };
 
   const handleReconciliationSubmit = async () => {
-    if (!reconciliationData.receiptUploaded) {
-      toast.error('Receipt must be uploaded before reconciliation');
-      return;
-    }
-    
-    if (!reconciliationData.accountingCode || !reconciliationData.costCenter) {
-      toast.error('Accounting code and cost center are required');
-      return;
-    }
-
-    if (reconciliationData.receiptAmount === 0) {
-      toast.error('Receipt amount must be entered for price verification');
-      return;
-    }
-
-    if (!reconciliationData.priceMatch && !reconciliationData.overageApproved) {
-      toast.error('Price discrepancy must be approved before reconciliation');
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      // Simulate reconciliation processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setPurchases(prev => 
-        prev.map(p => 
-          p.id === reconcilingPurchase.id 
-            ? { 
-                ...p, 
-                status: 'Reconciled' as RequestStatus,
-                reconciliationDate: new Date(),
-                reconciliationData: { ...reconciliationData }
-              }
-            : p
-        )
-      );
-      
-      toast.success('Purchase reconciled successfully!');
-      setShowReconciliation(false);
-      setReconcilingPurchase(null);
-    } catch (error) {
-      toast.error('Failed to reconcile purchase');
-    } finally {
-      setIsProcessing(false);
-    }
+    toast.error('Reconciliation cannot be submitted until receipt storage and audit verification are connected.');
   };
 
   const getStatusIcon = (status: RequestStatus) => {
@@ -1180,6 +1138,7 @@ export default function PurchasesPage() {
     <div className="min-h-screen bg-gray-50">
       <AppHeader />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {purchaseError && <p role="alert" className="mb-4 text-red-600">{purchaseError}</p>}
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">

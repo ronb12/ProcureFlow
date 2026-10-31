@@ -19,7 +19,7 @@ const storage = getStorage();
 
 // State transition function
 export const stateTransition = onCall(async request => {
-  const { reqId, targetState, payload, comment } = request.data;
+  const { reqId, targetState, comment } = request.data || {};
   const uid = request.auth?.uid;
 
   if (!uid) {
@@ -39,6 +39,15 @@ export const stateTransition = onCall(async request => {
 
     const user = userDoc.data();
     const requestData = requestDoc.data();
+    if (!user || !requestData || (requestData.orgId !== user.orgId && user.role !== 'admin')) {
+      throw new HttpsError('permission-denied', 'Cross-organization transitions are forbidden');
+    }
+    if (requestData.requesterId === uid && ['Approved', 'Denied', 'Returned'].includes(targetState)) {
+      throw new HttpsError('permission-denied', 'Requesters cannot approve their own requests');
+    }
+    if (typeof comment !== 'undefined' && (typeof comment !== 'string' || comment.length > 2000)) {
+      throw new HttpsError('invalid-argument', 'Invalid transition comment');
+    }
     const currentState = requestData?.status as RequestStatus;
 
     // Validate transition
@@ -73,14 +82,16 @@ export const stateTransition = onCall(async request => {
     }
 
     // Update request status
-    await db
-      .collection('requests')
-      .doc(reqId)
-      .update({
-        status: targetState,
-        updatedAt: new Date(),
-        ...payload,
-      });
+    // Compare-and-swap prevents a race from silently overwriting another review.
+    await db.runTransaction(async tx => {
+      const ref = db.collection('requests').doc(reqId);
+      const current = await tx.get(ref);
+      if (current.data()?.status !== currentState) {
+        throw new HttpsError('aborted', 'Request changed; refresh before retrying');
+      }
+      tx.update(ref, { status: targetState, updatedAt: new Date(),
+        lastTransitionComment: comment || '' });
+    });
 
     // Create audit event
     await auditEvent({
@@ -92,20 +103,11 @@ export const stateTransition = onCall(async request => {
         from: currentState,
         to: targetState,
         comment,
-        payload,
       },
     });
 
-    // Generate purchase order if transitioning to Cardholder Purchasing
-    if (targetState === 'Cardholder Purchasing' && currentState === 'Approved') {
-      try {
-        await generatePurchaseOrder(reqId, requestData, user);
-      } catch (poError) {
-        console.error('Purchase order generation error:', poError);
-        // Don't fail the state transition if PO generation fails
-        // Just log the error and continue
-      }
-    }
+    // Purchase orders must be created from verified vendor/delivery data.
+    // Never generate a fabricated address or card information as a side effect.
 
     // Send notification
     await sendNotification({
@@ -122,53 +124,61 @@ export const stateTransition = onCall(async request => {
   }
 });
 
-// Create approval function
+// Create and apply an approval decision atomically. The client cannot change
+// request status, user roles or approval limits through this callable.
 export const createApproval = onCall(async request => {
-  const { reqId, action, comment } = request.data;
   const uid = request.auth?.uid;
-
-  if (!uid) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in is required');
+  const { reqId, action, comment } = request.data || {};
+  if (typeof reqId !== 'string' || !reqId ||
+      !['Approved', 'Denied', 'Returned'].includes(action) ||
+      (comment !== undefined && (typeof comment !== 'string' || comment.length > 2000))) {
+    throw new HttpsError('invalid-argument', 'Invalid approval decision');
   }
-
-  try {
-    // Get user data
-    const userDoc = await db.collection('users').doc(uid).get();
-    if (!userDoc.exists) {
-      throw new HttpsError('not-found', 'User not found');
-    }
-
-    const user = userDoc.data();
-    if (!['approver', 'admin'].includes(user?.role)) {
-      throw new HttpsError(
-        'permission-denied',
-        'User not authorized to create approvals'
-      );
-    }
-
-    // Create approval document
-    const approvalRef = await db.collection('approvals').add({
-      reqId,
-      approverId: uid,
-      action,
-      comment,
-      timestamp: new Date(),
-    });
-
-    // Create audit event
-    await auditEvent({
-      entity: 'approval',
-      entityId: approvalRef.id,
-      actorUid: uid,
-      action: 'created',
-      details: { reqId, action, comment },
-    });
-
-    return { success: true, approvalId: approvalRef.id };
-  } catch (error) {
-    console.error('Create approval error:', error);
-    throw error;
+  const userDoc = await db.collection('users').doc(uid).get();
+  const user = userDoc.data();
+  if (!user || !['approver', 'admin'].includes(user.role)) {
+    throw new HttpsError('permission-denied', 'Approver access is required');
   }
+  const reqRef = db.collection('requests').doc(reqId);
+  const approvalRef = db.collection('approvals').doc();
+  const auditRef = db.collection('audit').doc();
+  await db.runTransaction(async transaction => {
+    const reqDoc = await transaction.get(reqRef);
+    if (!reqDoc.exists) throw new HttpsError('not-found', 'Request not found');
+    const data = reqDoc.data()!;
+    if (data.orgId !== user.orgId && user.role !== 'admin') {
+      throw new HttpsError('permission-denied', 'Cannot approve another organization\'s request');
+    }
+    if (data.requesterId === uid) {
+      throw new HttpsError('permission-denied', 'Requesters cannot approve their own requests');
+    }
+    if (!['Submitted', 'AO Review'].includes(data.status)) {
+      throw new HttpsError('failed-precondition', 'Request is not pending approval');
+    }
+    if (action === 'Approved' && user.role !== 'admin' &&
+        (typeof user.approvalLimit !== 'number' || data.totalEstimate > user.approvalLimit)) {
+      throw new HttpsError('permission-denied', 'Approval limit exceeded');
+    }
+    transaction.update(reqRef, {
+      status: action,
+      updatedAt: new Date(),
+      reviewedBy: uid,
+      reviewComment: comment || '',
+      ...(action === 'Approved' ? { approvedAt: new Date() } :
+         action === 'Denied' ? { deniedAt: new Date() } : { returnedAt: new Date() }),
+    });
+    transaction.create(approvalRef, {
+      reqId, orgId: data.orgId, approverId: uid, action,
+      comment: comment || '', timestamp: new Date(),
+    });
+    transaction.create(auditRef, {
+      entity: 'approval', entityId: approvalRef.id, actorUid: uid,
+      action: 'created', at: new Date(),
+      details: { reqId, from: data.status, to: action, comment: comment || '' },
+    });
+  });
+  return { success: true, approvalId: approvalRef.id };
 });
 
 // Record purchase function

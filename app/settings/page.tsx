@@ -14,6 +14,8 @@ import {
 import { AppHeader } from '@/components/ui/app-header';
 import { ArrowLeft, User, Bell, Shield, Globe } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -35,6 +37,22 @@ export default function SettingsPage() {
       router.push('/login');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getDoc(doc(db, 'notificationPreferences', user.id)).then(snapshot => {
+      if (!snapshot.exists()) return;
+      const value = snapshot.data();
+      setSettings(previous => ({
+        ...previous,
+        emailNotifications: value.emailNotifications ?? previous.emailNotifications,
+        pushNotifications: value.pushNotifications ?? previous.pushNotifications,
+        weeklyDigest: value.weeklyDigest ?? previous.weeklyDigest,
+        language: value.language ?? previous.language,
+        timezone: value.timezone ?? previous.timezone,
+      }));
+    }).catch(error => console.error('Settings could not be loaded:', error));
+  }, [user?.id]);
 
   if (loading) {
     return (
@@ -58,8 +76,10 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!user?.id) throw new Error('Not signed in');
+      await setDoc(doc(db, 'notificationPreferences', user.id), {
+        ...settings, userId: user.id, updatedAt: serverTimestamp(),
+      }, { merge: true });
       toast.success('Settings saved successfully');
     } catch {
       toast.error('Failed to save settings');

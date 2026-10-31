@@ -47,6 +47,9 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '@/lib/firebase';
 
 // Mock data for pending approvals
 const mockPendingRequests = [
@@ -106,7 +109,38 @@ export default function ApprovalsPage() {
   
   // Use original user role for access control, not debug role
   const actualRole = originalUser?.role || user?.role;
-  const [requests, setRequests] = useState(mockPendingRequests);
+  const [requests, setRequests] = useState<RequestData[]>([]);
+  const [requestError, setRequestError] = useState('');
+  useEffect(() => {
+    if (!user?.id || !user.orgId || !['approver', 'admin'].includes(actualRole || '')) return;
+    const q = query(collection(db, 'requests'), where('orgId', '==', user.orgId));
+    return onSnapshot(q, snapshot => {
+      setRequests(snapshot.docs.map(record => {
+        const data = record.data();
+        const createdAt = data.createdAt?.toDate?.() || new Date();
+        return {
+          id: record.id,
+          vendor: data.vendor || '',
+          justification: data.justification || '',
+          needBy: data.needBy?.toDate?.() || new Date(data.needBy || Date.now()),
+          accountingCode: data.accountingCode || '',
+          status: data.status as RequestStatus,
+          createdAt,
+          total: data.totalEstimate || 0,
+          requester: { name: data.requesterName || 'Requester', email: data.requesterEmail || '' },
+          priority: data.priority || 'medium',
+          daysPending: calculateBusinessDays(createdAt),
+          approvedAt: data.approvedAt?.toDate?.(),
+          deniedAt: data.deniedAt?.toDate?.(),
+          returnedAt: data.returnedAt?.toDate?.(),
+        };
+      }));
+      setRequestError('');
+    }, error => {
+      console.error('Unable to load approvals', error);
+      setRequestError('Unable to load approval requests. Check your connection and permissions.');
+    });
+  }, [user?.id, user?.orgId, actualRole]);
   const [selectedRequest, setSelectedRequest] = useState<RequestData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
@@ -206,33 +240,14 @@ export default function ApprovalsPage() {
   ) => {
     setIsProcessing(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Update request status
-      const now = new Date();
-      setRequests(prev =>
-        prev.map(req =>
-          req.id === requestId
-            ? {
-                ...req,
-                status:
-                  action === 'approve'
-                    ? 'Approved'
-                    : action === 'deny'
-                      ? 'Denied'
-                      : 'Returned',
-                approvalComment: comments,
-                approvalReason: reason,
-                approvedBy: user?.name || 'Approver',
-                ...(action === 'approve' && { approvedAt: now }),
-                ...(action === 'deny' && { deniedAt: now }),
-                ...(action === 'return' && { returnedAt: now }),
-              }
-            : req
-        )
-      );
-
+      if (!user) throw new Error('Sign in to approve a request');
+      if (reason && action !== 'approve' && !reason.trim()) throw new Error('A reason is required');
+      const createApproval = httpsCallable(functions, 'createApproval');
+      await createApproval({
+        reqId: requestId,
+        action: action === 'approve' ? 'Approved' : action === 'deny' ? 'Denied' : 'Returned',
+        comment: [reason, comments].filter(Boolean).join(': '),
+      });
       toast.success(
         `Request ${
           action === 'approve'
@@ -250,8 +265,8 @@ export default function ApprovalsPage() {
       setApprovalComment('');
       setDenyReason('');
       setReturnReason('');
-    } catch {
-      toast.error('Failed to process approval');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to process approval');
     } finally {
       setIsProcessing(false);
     }
@@ -380,6 +395,7 @@ export default function ApprovalsPage() {
           </Card>
         </div>
 
+        {requestError && <p role="alert" className="mb-4 text-red-600">{requestError}</p>}
         {/* Requests List */}
         <div className="space-y-4">
           {pendingRequests.length === 0 ? (

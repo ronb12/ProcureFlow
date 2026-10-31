@@ -64,14 +64,19 @@ service cloud.firestore {
       return status in ['Draft', 'Returned'];
     }
     
-    // Users collection
+    // User roles, organizations and limits are assigned only by trusted administrators.
     match /users/{userId} {
-      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
-      allow create: if isSignedIn() && request.auth.uid == userId;
-      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow read: if isSignedIn() && (isSelf(userId) || isAdmin());
+      allow create: if isAdmin() || (isSelf(userId)
+        && request.resource.data.role == 'requester'
+        && request.resource.data.orgId == 'org_cdc'
+        && request.resource.data.approvalLimit == 0);
+      allow update: if isAdmin() || (isSelf(userId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['name', 'updatedAt']));
       allow delete: if isAdmin();
     }
-    
+
     // Organizations collection
     match /orgs/{orgId} {
       allow read: if isSignedIn() && (isSameOrg(orgId) || isAdmin());
@@ -84,64 +89,64 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
-    // Requests collection
+    // Enforce tenant isolation and ownership at the database boundary.
     match /requests/{requestId} {
-      allow create: if isRequester(); // Only requesters and admins can create requests
-      allow read: if isSignedIn();
-      allow update: if isSignedIn() && (
-        // Requester can edit only in Draft/Returned
-        (resource.data.requesterId == request.auth.uid && canEditRequest(resource.data.status)) ||
-        // Approver can update during AO Review
-        (isApprover() && resource.data.status == 'AO Review') ||
-        // Cardholder can update during Cardholder Purchasing
-        (isCardholder() && resource.data.status == 'Cardholder Purchasing') ||
-        // Admin can update anything
-        isAdmin()
+      allow create: if isRequester()
+        && request.resource.data.requesterId == request.auth.uid
+        && isSameOrg(request.resource.data.orgId)
+        && request.resource.data.status in ['Draft', 'Submitted'];
+      allow read: if isSignedIn()
+        && (isAdmin() || isSameOrg(resource.data.orgId));
+      // Approval, purchase and reconciliation transitions require server functions.
+      allow update: if isAdmin() || (
+        isSignedIn()
+        && resource.data.requesterId == request.auth.uid
+        && isSameOrg(resource.data.orgId)
+        && resource.data.status in ['Draft', 'Returned']
+        && request.resource.data.status in ['Draft', 'Submitted']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'vendor', 'justification', 'needBy', 'accountingCode', 'items',
+          'totalEstimate', 'status', 'updatedAt', 'facilityId', 'installationId'
+        ])
       );
       allow delete: if isAdmin() && resource.data.status in ['Draft', 'Returned'];
-      
-      // Items subcollection
+
       match /items/{itemId} {
-        allow read, write: if isSignedIn();
+        allow read: if isSignedIn() && (isAdmin() ||
+          isSameOrg(get(/databases/$(database)/documents/requests/$(requestId)).data.orgId));
+        allow write: if false;
       }
     }
-    
-    // Approvals collection
+
     match /approvals/{approvalId} {
-      allow create, read: if isApprover() || isAdmin();
+      allow read: if isApprover() || isAuditor();
+      allow write: if false; // Must be created by audited Cloud Functions.
     }
-    
-    // Purchases collection
+
     match /purchases/{purchaseId} {
-      allow create, read, update: if isCardholder() || isAdmin();
+      allow read: if isSignedIn() && (isAdmin() || (
+        (isCardholder() || isAuditor()) && isSameOrg(resource.data.orgId)
+      ));
+      allow write: if false; // Prevent bypassing the state machine.
     }
-    
-    // Purchase Orders collection
+
     match /purchaseOrders/{poId} {
-      allow create: if isSignedIn(); // Server-side functions can create
-      allow read: if isSignedIn() && (
-        // Cardholder can read their own POs
-        (isCardholder() && resource.data.cardholder.id == request.auth.uid) ||
-        // Admin can read all POs
-        isAdmin() ||
-        // Requester can read POs for their requests
-        (isRequester() && resource.data.reqId != null)
-      );
-      allow update: if isSignedIn() && (
-        // Cardholder can update their own POs
-        (isCardholder() && resource.data.cardholder.id == request.auth.uid) ||
-        // Admin can update all POs
-        isAdmin()
-      );
-      allow delete: if isAdmin();
+      allow read: if isSignedIn() && (isAdmin() || (
+        isSameOrg(resource.data.orgId) && (
+          isCardholder() || isAuditor() || resource.data.requesterId == request.auth.uid
+        )
+      ));
+      allow write: if false; // Created and transitioned by trusted functions.
     }
-    
-    // Attachments collection
+
     match /attachments/{attachmentId} {
-      allow create, read: if isSignedIn();
+      allow read: if isSignedIn() && (isAdmin() || isSameOrg(resource.data.orgId));
+      allow create: if isSignedIn() && isSameOrg(request.resource.data.orgId)
+        && request.resource.data.uploadedBy == request.auth.uid;
+      allow update: if false;
       allow delete: if isAdmin();
     }
-    
+
     // Cycles collection
     match /cycles/{cycleId} {
       allow read: if isSignedIn();
@@ -179,14 +184,16 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    // Notifications collection
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn(); // Server-side functions can create
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if false; // Trusted backend notifications only.
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['read', 'readAt']);
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
-    
+
     // Notification preferences collection
     match /notificationPreferences/{userId} {
       allow read, write: if isSignedIn() && request.auth.uid == userId;
@@ -203,7 +210,8 @@ service cloud.firestore {
       );
       allow create: if isSignedIn() && (
         // User can only send messages as themselves
-        resource.data.senderId == request.auth.uid
+        request.resource.data.senderId == request.auth.uid
+        && request.auth.uid in request.resource.data.participants
       );
       allow update: if isSignedIn() && (
         // User can update their own messages (for read status, etc.)
@@ -232,6 +240,7 @@ service cloud.firestore {
         request.auth.uid in resource.data.participants
       );
       allow update: if isSignedIn() && (
+        request.resource.data.participants == resource.data.participants &&
         // User can update threads they participate in
         request.auth.uid in resource.data.participants ||
         // Admin can update any thread
@@ -254,8 +263,8 @@ service cloud.firestore {
         isAdmin()
       );
       allow create: if isSignedIn() && (
-        // User can create attachments for messages they're sending
-        resource.data.senderId == request.auth.uid
+        request.resource.data.senderId == request.auth.uid
+        && request.auth.uid in request.resource.data.participants
       );
       allow update: if isSignedIn() && (
         // User can update their own attachments

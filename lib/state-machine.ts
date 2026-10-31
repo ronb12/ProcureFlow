@@ -329,8 +329,10 @@ export class RequestStateMachine {
     }
 
     // Check if user can approve amount (if applicable)
-    if (to === 'Approved' && context?.amount && context?.approvalLimit) {
-      if (context.amount > context.approvalLimit && userRole !== 'admin') {
+    if (to === 'Approved' && userRole !== 'admin') {
+      if (typeof context?.amount !== 'number' ||
+          typeof context?.approvalLimit !== 'number' ||
+          context.amount > context.approvalLimit) {
         return {
           valid: false,
           reason: `Amount ${context.amount} exceeds approval limit ${context.approvalLimit}`,

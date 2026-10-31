@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,8 @@ import {
   Download,
   Edit,
 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Mock data - in real app this would come from API
 const mockRequests = [
@@ -309,7 +310,33 @@ export default function RequestsPage() {
   // Use original user role for debugging
   const actualRole = originalUser?.role || user?.role;
   console.log('RequestsPage - User:', user?.email, 'Actual Role:', actualRole, 'Effective Role:', user?.role);
-  const [requests] = useState(mockRequests);
+  const [requests, setRequests] = useState<any[]>([]);
+  const [requestError, setRequestError] = useState('');
+  useEffect(() => {
+    if (!user?.id || !user.orgId) return;
+    const q = query(collection(db, 'requests'), where('orgId', '==', user.orgId));
+    return onSnapshot(q, snapshot => {
+      const records = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          vendor: data.vendor || '',
+          total: data.totalEstimate || 0,
+          status: data.status || 'Draft',
+          createdAt: data.createdAt?.toDate?.() || new Date(),
+          needBy: data.needBy?.toDate?.() || new Date(data.needBy || Date.now()),
+          justification: data.justification || '',
+          facility: { id: data.facilityId || '', name: data.facilityId || 'Unassigned', code: data.installationId || '' },
+          items: data.items || [],
+        };
+      });
+      setRequests(records);
+      setRequestError('');
+    }, error => {
+      console.error('Unable to load requests', error);
+      setRequestError('Unable to load requests. Check your connection and permissions.');
+    });
+  }, [user?.id, user?.orgId]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [facilityFilter, setFacilityFilter] = useState('all');
@@ -435,6 +462,7 @@ export default function RequestsPage() {
           </div>
         </div>
 
+        {requestError && <p role="alert" className="mb-4 text-red-600">{requestError}</p>}
         {/* Requests List */}
         <div className="space-y-4">
           {filteredRequests.length === 0 ? (
@@ -490,10 +518,8 @@ export default function RequestsPage() {
                       {request.status === 'Draft' && (
                         <Button
                           size="sm"
-                          onClick={() => {
-                            // TODO: Navigate to edit request
-                            toast('Edit request coming soon');
-                          }}
+                          disabled
+                          title="Request editing is not available yet"
                         >
                           Edit
                         </Button>
@@ -621,12 +647,12 @@ export default function RequestsPage() {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {selectedRequest.status === 'Draft' && (
-                        <Button className="w-full" variant="outline">
+                        <Button className="w-full" variant="outline" disabled title="Request editing is not available yet">
                           <Edit className="h-4 w-4 mr-2" />
                           Edit Request
                         </Button>
                       )}
-                      <Button className="w-full" variant="outline">
+                      <Button className="w-full" variant="outline" disabled title="PDF export is not available yet">
                         <Download className="h-4 w-4 mr-2" />
                         Export PDF
                       </Button>

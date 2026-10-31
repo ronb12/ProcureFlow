@@ -185,60 +185,6 @@ async function fetchUserData(firebaseUser: FirebaseUser): Promise<User | null> {
 
       const userData = userDoc.data();
       
-      // For demo users, always ensure the correct role is set
-      if (firebaseUser.email && firebaseUser.email.includes('@procureflow.demo')) {
-        let correctRole = 'requester';
-        const correctOrgId = 'org_cdc';
-        let correctApprovalLimit = 0;
-        
-        if (firebaseUser.email === 'admin@procureflow.demo') {
-          correctRole = 'admin';
-          correctApprovalLimit = 100000;
-        } else if (firebaseUser.email === 'approver@procureflow.demo') {
-          correctRole = 'approver';
-          correctApprovalLimit = 10000;
-        } else if (firebaseUser.email === 'cardholder@procureflow.demo') {
-          correctRole = 'cardholder';
-          correctApprovalLimit = 0;
-        } else if (firebaseUser.email === 'auditor@procureflow.demo') {
-          correctRole = 'auditor';
-          correctApprovalLimit = 0;
-        } else if (firebaseUser.email === 'requester@procureflow.demo') {
-          correctRole = 'requester';
-          correctApprovalLimit = 0;
-        } else if (firebaseUser.email === 'test@procureflow.demo') {
-          correctRole = 'requester';
-          correctApprovalLimit = 5000;
-        }
-        
-        // If the role is incorrect, update it
-        if (userData.role !== correctRole) {
-          console.log(`Updating user role from ${userData.role} to ${correctRole} for ${firebaseUser.email}`);
-          try {
-            await setDoc(doc(firestoreDb, 'users', firebaseUser.uid), {
-              ...userData,
-              role: correctRole,
-              orgId: correctOrgId,
-              approvalLimit: correctApprovalLimit,
-              updatedAt: new Date(),
-            });
-            console.log(`Successfully updated user role to ${correctRole}`);
-          } catch (updateError) {
-            console.error('Error updating user role:', updateError);
-          }
-        }
-        
-        return {
-          id: firebaseUser.uid,
-          ...userData,
-          role: correctRole,
-          orgId: correctOrgId,
-          approvalLimit: correctApprovalLimit,
-          createdAt: userData.createdAt?.toDate() || new Date(),
-          updatedAt: new Date(),
-        } as User;
-      }
-      
       return {
         id: firebaseUser.uid,
         ...userData,
@@ -357,120 +303,29 @@ export function canApproveAmount(user: User | null, amount: number): boolean {
 }
 
 // Create user document in Firestore (called after successful auth)
+// New users receive the lowest privilege. Elevated roles and tenant assignments
+// must be provisioned by trusted administrative code, never inferred from email.
 export async function createUserDocument(
   firebaseUser: FirebaseUser,
-  additionalData: Partial<User> = {}
+  _additionalData: Partial<User> = {}
 ): Promise<void> {
-  try {
-    const firestoreDb = await getFirestoreConnection();
-    const userRef = doc(firestoreDb, 'users', firebaseUser.uid);
-    const userSnap = await getDoc(userRef);
+  void _additionalData;
+  const firestoreDb = await getFirestoreConnection();
+  const userRef = doc(firestoreDb, 'users', firebaseUser.uid);
+  const userSnap = await getDoc(userRef);
+  if (userSnap.exists()) return;
 
-    // Determine role based on email for demo users (always update)
-    let role = 'requester'; // Default role
-    const orgId = 'org_cdc'; // Default org
-    let approvalLimit = 0;
-
-    if (firebaseUser.email) {
-      if (firebaseUser.email === 'admin@procureflow.demo') {
-        role = 'admin';
-        approvalLimit = 100000;
-      } else if (firebaseUser.email === 'approver@procureflow.demo') {
-        role = 'approver';
-        approvalLimit = 10000;
-      } else if (firebaseUser.email === 'cardholder@procureflow.demo') {
-        role = 'cardholder';
-        approvalLimit = 0;
-      } else if (firebaseUser.email === 'auditor@procureflow.demo') {
-        role = 'auditor';
-        approvalLimit = 0;
-      } else if (firebaseUser.email === 'requester@procureflow.demo') {
-        role = 'requester';
-        approvalLimit = 0;
-      } else if (firebaseUser.email === 'test@procureflow.demo') {
-        role = 'requester';
-        approvalLimit = 5000;
-      }
-    }
-
-    // Always update the user document with the correct role for demo users
-    if (firebaseUser.email && firebaseUser.email.includes('@procureflow.demo')) {
-      console.log(`Updating user role for ${firebaseUser.email} to ${role}`);
-      try {
-        await setDoc(userRef, {
-          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-          email: firebaseUser.email || '',
-          role: role,
-          orgId: orgId,
-          approvalLimit: approvalLimit,
-          createdAt: userSnap.exists() ? userSnap.data()?.createdAt || new Date() : new Date(),
-          updatedAt: new Date(),
-          ...additionalData,
-        });
-        console.log(`Successfully updated user role to ${role}`);
-        return;
-      } catch (error) {
-        console.error('Error updating user document:', error);
-        throw error;
-      }
-    }
-
-    if (!userSnap.exists()) {
-      const { displayName, email } = firebaseUser;
-      const createdAt = new Date();
-
-      // Determine role based on email for demo users
-      let role = 'requester'; // Default role
-      const orgId = 'org_cdc'; // Default org
-      let approvalLimit = 0;
-
-      if (email) {
-        if (email === 'admin@procureflow.demo') {
-          role = 'admin';
-          approvalLimit = 100000;
-        } else if (email === 'approver@procureflow.demo') {
-          role = 'approver';
-          approvalLimit = 10000;
-        } else if (email === 'cardholder@procureflow.demo') {
-          role = 'cardholder';
-          approvalLimit = 0;
-        } else if (email === 'auditor@procureflow.demo') {
-          role = 'auditor';
-          approvalLimit = 0;
-        } else if (email === 'requester@procureflow.demo') {
-          role = 'requester';
-          approvalLimit = 0;
-        } else if (email === 'test@procureflow.demo') {
-          role = 'requester';
-          approvalLimit = 5000;
-        }
-      }
-
-      try {
-        await setDoc(userRef, {
-          name: displayName || email?.split('@')[0] || 'User',
-          email: email || '',
-          role: role,
-          orgId: orgId,
-          approvalLimit: approvalLimit,
-          createdAt,
-          updatedAt: createdAt,
-          ...additionalData,
-        });
-      } catch (error) {
-        console.error('Error creating user document:', error);
-        throw error;
-      }
-    }
-  } catch (error) {
-    console.error('Error in createUserDocument:', error);
-    throw error;
-  }
+  const createdAt = new Date();
+  await setDoc(userRef, {
+    name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+    email: firebaseUser.email || '',
+    role: 'requester',
+    orgId: 'org_cdc', // Demo tenant; production enrollment must use invitations.
+    approvalLimit: 0,
+    createdAt,
+    updatedAt: createdAt,
+  });
 }
-
-// Auth state change listener with debouncing
-let authStateTimeout: NodeJS.Timeout | null = null;
-let lastAuthState: string | null = null;
 
 export function onAuthStateChange(
   callback: (user: User | null) => void

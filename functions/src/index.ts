@@ -181,91 +181,52 @@ export const createApproval = onCall(async request => {
   return { success: true, approvalId: approvalRef.id };
 });
 
-// Record purchase function
+// Create a purchase only from an authorized, in-progress request.
 export const recordPurchase = onCall(async request => {
-  const { reqId, orderNumber, finalTotal, tax, purchasedAt, receiptFileName } =
-    request.data;
   const uid = request.auth?.uid;
-
-  if (!uid) {
-    throw new HttpsError('unauthenticated', 'User must be authenticated');
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in is required');
+  const { reqId, orderNumber, finalTotal, tax, purchasedAt } = request.data || {};
+  const purchasedDate = new Date(purchasedAt);
+  if (typeof reqId !== 'string' || !reqId ||
+      typeof orderNumber !== 'string' || orderNumber.trim().length < 2 ||
+      !Number.isFinite(finalTotal) || finalTotal <= 0 ||
+      !Number.isFinite(tax) || tax < 0 || tax > finalTotal ||
+      !Number.isFinite(purchasedDate.valueOf())) {
+    throw new HttpsError('invalid-argument', 'Valid purchase fields are required');
   }
-
-  try {
-    // Get user data
-    const userDoc = await db.collection('users').doc(uid).get();
-    if (!userDoc.exists) {
-      throw new HttpsError('not-found', 'User not found');
-    }
-
-    const user = userDoc.data();
-    if (!['cardholder', 'admin'].includes(user?.role)) {
-      throw new HttpsError(
-        'permission-denied',
-        'User not authorized to record purchases'
-      );
-    }
-
-    // Get request data
-    const requestDoc = await db.collection('requests').doc(reqId).get();
-    if (!requestDoc.exists) {
-      throw new HttpsError('not-found', 'Request not found');
-    }
-
-    const requestData = requestDoc.data();
-    if (requestData?.status !== 'Cardholder Purchasing') {
-      throw new HttpsError(
-        'failed-precondition',
-        'Request must be in Cardholder Purchasing status'
-      );
-    }
-
-    // Upload receipt if provided
-    let receiptUrl = '';
-    if (receiptFileName && user?.orgId) {
-      const bucket = storage.bucket();
-      const fileName = `receipts/${user.orgId}/${reqId}/${receiptFileName}`;
-      // const file = bucket.file(fileName);
-
-      // Generate signed URL for upload (this would be done client-side)
-      receiptUrl = `gs://${bucket.name}/${fileName}`;
-    }
-
-    // Create purchase document
-    const purchaseRef = await db.collection('purchases').add({
-      reqId,
-      cardholderId: uid,
-      merchant: requestData.vendor,
-      orderNumber,
-      finalTotal,
-      tax,
-      purchasedAt: new Date(purchasedAt),
-      receiptUrl,
-      receiptFileName,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-
-    // Update request status
-    await db.collection('requests').doc(reqId).update({
-      status: 'Purchased',
-      updatedAt: new Date(),
-    });
-
-    // Create audit event
-    await auditEvent({
-      entity: 'purchase',
-      entityId: purchaseRef.id,
-      actorUid: uid,
-      action: 'created',
-      details: { reqId, orderNumber, finalTotal, tax },
-    });
-
-    return { success: true, purchaseId: purchaseRef.id, receiptUrl };
-  } catch (error) {
-    console.error('Record purchase error:', error);
-    throw error;
+  const userSnapshot = await db.collection('users').doc(uid).get();
+  const user = userSnapshot.data();
+  if (!user || !['cardholder','admin'].includes(user.role)) {
+    throw new HttpsError('permission-denied', 'Cardholder access required');
   }
+  const reqRef = db.collection('requests').doc(reqId);
+  const purchaseRef = db.collection('purchases').doc();
+  const auditRef = db.collection('audit').doc();
+  await db.runTransaction(async tx => {
+    const reqSnapshot = await tx.get(reqRef);
+    const req = reqSnapshot.data();
+    if (!req) throw new HttpsError('not-found', 'Request not found');
+    if (req.orgId !== user.orgId && user.role !== 'admin') {
+      throw new HttpsError('permission-denied', 'Cross-organization purchasing forbidden');
+    }
+    if (req.requesterId === uid) {
+      throw new HttpsError('permission-denied', 'Cannot purchase your own request');
+    }
+    if (req.status !== 'Cardholder Purchasing') {
+      throw new HttpsError('failed-precondition', 'Request is not ready for purchasing');
+    }
+    tx.create(purchaseRef, {
+      reqId, orgId: req.orgId, cardholderId: uid, merchant: req.vendor,
+      orderNumber: orderNumber.trim(), finalTotal, tax,
+      purchasedAt: purchasedDate, status: 'purchased',
+      receiptUrl: '', createdAt: new Date(), updatedAt: new Date(),
+    });
+    tx.update(reqRef, { status: 'Purchased', updatedAt: new Date() });
+    tx.create(auditRef, { entity: 'purchase', entityId: purchaseRef.id,
+      actorUid: uid, action: 'created', at: new Date(),
+      details: { reqId, orderNumber: orderNumber.trim(), finalTotal, tax } });
+  });
+  return { success: true, purchaseId: purchaseRef.id };
 });
 
 // Export cycle CSV function

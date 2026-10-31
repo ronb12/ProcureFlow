@@ -1,0 +1,32 @@
+name: Validate ProcureFlow changes
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-and-regressions:
+    runs-on: ubuntu-latest
+    env:
+      PUPPETEER_SKIP_DOWNLOAD: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - name: Unit and security regression tests
+        run: npx vitest run
+      - name: TypeScript type check
+        run: npm run type-check
+      - name: Firebase Functions compile
+        run: |
+          cd functions
+          npm ci
+          npm run build

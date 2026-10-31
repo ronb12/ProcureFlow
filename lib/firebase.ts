@@ -112,53 +112,17 @@ export async function ensureFirestoreConnection(): Promise<void> {
 }
 
 async function performConnection(): Promise<void> {
-  const db = getFirestoreInstance();
-  
-  try {
-    // First, try to disable network to reset any corrupted state
-    try {
-      await disableNetwork(db);
-    } catch (disableError) {
-      // Ignore disable errors - network might already be disabled
-      console.log('Network disable skipped:', disableError);
-    }
-
-    // Wait a moment before re-enabling
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Enable network with timeout
-    await Promise.race([
-      enableNetwork(db),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Connection timeout')), 5000)
-      )
-    ]);
-
-    console.log('Firestore connection established');
-    connectionState.isConnected = true;
-    connectionState.retryCount = 0;
-  } catch (error) {
-    console.error(`Failed to establish Firestore connection (attempt ${connectionState.retryCount + 1}/${connectionState.maxRetries}):`, error);
-    
-    connectionState.retryCount++;
-    
-    if (connectionState.retryCount < connectionState.maxRetries) {
-      // Wait before retrying with exponential backoff
-      const delay = Math.min(1000 * Math.pow(2, connectionState.retryCount - 1), 5000);
-      await new Promise(resolve => setTimeout(resolve, delay));
-      
-      // Reset connection state and retry
-      connectionState.isConnected = false;
-      return performConnection();
-    } else {
-      connectionState.isConnected = false;
-      throw new Error(`Failed to establish Firestore connection after ${connectionState.maxRetries} attempts`);
-    }
-  }
+  // Do not disable an active connection during sign-in or concurrent queries.
+  // The Firestore SDK manages connectivity and retry automatically.
+  const firestoreDb = getFirestoreInstance();
+  await enableNetwork(firestoreDb);
+  connectionState.isConnected = true;
+  connectionState.retryCount = 0;
 }
 
 export async function getFirestoreConnection(): Promise<Firestore> {
-  await ensureFirestoreConnection();
+  // Constructing a Firestore reference is safe offline; individual reads/writes
+  // report real network errors instead of disrupting the SDK's global network.
   return getFirestoreInstance();
 }
 

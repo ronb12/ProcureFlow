@@ -25,6 +25,8 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function SystemSettingsPage() {
   const router = useRouter();
@@ -46,6 +48,21 @@ export default function SystemSettingsPage() {
       router.push('/login');
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    if (!user?.id || user.role !== 'admin') return;
+    getDoc(doc(db, 'settings', 'global')).then(snapshot => {
+      if (!snapshot.exists()) return;
+      const value = snapshot.data();
+      setSettings(previous => ({
+        maintenanceMode: value.maintenanceMode ?? previous.maintenanceMode,
+        emailNotifications: value.emailNotifications ?? previous.emailNotifications,
+        auditLogging: true,
+        autoBackup: value.autoBackup ?? previous.autoBackup,
+        sessionTimeout: value.sessionTimeout ?? previous.sessionTimeout,
+      }));
+    }).catch(error => console.error('System settings could not be loaded:', error));
+  }, [user?.id, user?.role]);
 
   if (loading) {
     return (
@@ -87,36 +104,21 @@ export default function SystemSettingsPage() {
   };
 
   const handleAction = async (action: string) => {
+    if (action !== 'save_settings') {
+      toast.error('This maintenance operation is not connected to a backend and has not run.');
+      return;
+    }
     setIsProcessing(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      switch (action) {
-        case 'save_settings':
-          toast.success('Settings saved successfully');
-          break;
-        case 'export_data':
-          toast.success('Data export started');
-          break;
-        case 'backup_database':
-          toast.success('Database backup initiated');
-          break;
-        case 'restore_database':
-          toast.success('Database restore completed');
-          break;
-        case 'clear_cache':
-          toast.success('Cache cleared successfully');
-          break;
-        case 'restart_services':
-          toast.success('Services restarted');
-          break;
-        default:
-          toast.success(`${action} completed`);
-      }
+      await setDoc(doc(db, 'settings', 'global'), {
+        ...settings,
+        auditLogging: true,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+      toast.success('Settings saved; backend enforcement must be verified separately.');
     } catch (error) {
-      console.error('Error:', error);
-      toast.error(`Failed to complete ${action}`);
+      console.error('Settings save failed:', error);
+      toast.error('Failed to save settings');
     } finally {
       setIsProcessing(false);
     }

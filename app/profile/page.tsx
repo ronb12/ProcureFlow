@@ -86,9 +86,7 @@ export default function ProfilePage() {
       // Update user document in Firestore
       const userRef = doc(db, 'users', user.id);
       await updateDoc(userRef, {
-        name: formData.name,
-        orgId: formData.orgId,
-        approvalLimit: formData.approvalLimit,
+        name: formData.name.trim(),
         updatedAt: Timestamp.now(),
       });
 
@@ -272,15 +270,7 @@ export default function ProfilePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Organization ID
                   </label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={formData.orgId}
-                      onChange={e => handleInputChange('orgId', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter organization ID"
-                    />
-                  ) : (
+                  {(
                     <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md flex items-center space-x-2">
                       <Building className="h-4 w-4 text-gray-400" />
                       <span className="text-gray-600">
@@ -302,6 +292,8 @@ export default function ProfilePage() {
                       <input
                         type="number"
                         value={formData.approvalLimit}
+                        disabled
+                        title="Only administrators can change approval limits"
                         onChange={e =>
                           handleInputChange(
                             'approvalLimit',

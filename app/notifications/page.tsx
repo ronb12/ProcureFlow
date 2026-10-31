@@ -68,7 +68,7 @@ export default function NotificationsPage() {
         emailNotifications: preferences.emailNotifications,
         pushNotifications: preferences.pushNotifications,
         weeklyDigest: preferences.weeklyDigest,
-        types: { ...localPreferences.types, ...preferences.types },
+        types: { ...preferences.types },
         quietHours: preferences.quietHours || {
           enabled: false,
           start: '22:00',
@@ -76,7 +76,7 @@ export default function NotificationsPage() {
         },
       });
     }
-  }, [preferences, localPreferences.types]);
+  }, [preferences]);
 
   // Handle authentication redirect
   useEffect(() => {

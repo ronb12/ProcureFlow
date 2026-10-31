@@ -613,18 +613,11 @@ export default function CreatePurchaseOrderPage() {
 
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      if (action === 'save') {
-        toast.success('Purchase order saved as draft');
-      } else {
-        toast.success('Purchase order sent to vendor');
-      }
-      
-      router.push('/purchases');
-    } catch {
-      toast.error('Failed to process purchase order');
+      throw new Error(action === 'save'
+        ? 'Purchase-order persistence has not been configured. Draft was not saved.'
+        : 'Vendor delivery has not been configured. No purchase order was sent.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to process purchase order');
     } finally {
       setIsSubmitting(false);
     }

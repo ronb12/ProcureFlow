@@ -170,32 +170,12 @@ export default function MessagesPage() {
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedThread) return;
-    
-    // In real app, this would send to Firebase
-    console.log('Sending message:', {
-      threadId: selectedThread,
-      content: newMessage,
-      senderId: currentUser.id
-    });
-    
-    setNewMessage('');
+    window.alert('Messaging is not yet connected. Your message was not sent.');
   };
 
   const handleComposeMessage = () => {
     if (!composeTo || !composeSubject || !composeMessage) return;
-    
-    // In real app, this would create new thread and send message
-    console.log('Composing message:', {
-      to: composeTo,
-      subject: composeSubject,
-      content: composeMessage,
-      type: composeType
-    });
-    
-    setShowCompose(false);
-    setComposeTo('');
-    setComposeSubject('');
-    setComposeMessage('');
+    window.alert('Messaging is not yet connected. Your message was not sent.');
   };
 
   const getPriorityColor = (priority: string) => {

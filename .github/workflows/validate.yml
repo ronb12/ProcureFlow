@@ -2,7 +2,11 @@ name: Validate ProcureFlow changes
 on:
   pull_request:
   push:
-    branches: [main, 'fix/**']
+    branches: [main]
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   code-and-regressions:

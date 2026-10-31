@@ -119,7 +119,8 @@ service cloud.firestore {
     }
 
     match /approvals/{approvalId} {
-      allow read: if isApprover() || isAuditor();
+      allow read: if (isApprover() || isAuditor()) &&
+        (isAdmin() || isSameOrg(resource.data.orgId));
       allow write: if false; // Must be created by audited Cloud Functions.
     }
 
@@ -149,8 +150,8 @@ service cloud.firestore {
 
     // Cycles collection
     match /cycles/{cycleId} {
-      allow read: if isSignedIn();
-      allow write: if isAdmin() || isCardholder();
+      allow read: if isSignedIn() && (isAdmin() || isSameOrg(resource.data.orgId));
+      allow write: if false;
     }
     
     // Audit collection (immutable)
@@ -160,30 +161,23 @@ service cloud.firestore {
       allow update, delete: if false; // Immutable
     }
     
-    // Audit Packages collection
+    // Auditors see only their tenant's documents; exports are backend-generated.
     match /auditPackages/{packageId} {
-      allow read: if isAuditor() || isAdmin();
-      allow create: if isAuditor() || isAdmin();
-      allow update: if isAuditor() || isAdmin();
+      allow read: if isAuditor() && (isAdmin() || isSameOrg(resource.data.orgId));
+      allow create: if isAuditor() && isSameOrg(request.resource.data.orgId);
+      allow update: if isAuditor() && isSameOrg(resource.data.orgId)
+        && request.resource.data.orgId == resource.data.orgId;
       allow delete: if isAdmin();
     }
-    
-    // Audit Package Exports collection
     match /auditExports/{exportId} {
-      allow read: if isAuditor() || isAdmin();
-      allow create: if isAuditor() || isAdmin();
-      allow update: if isAuditor() || isAdmin();
-      allow delete: if isAdmin();
+      allow read: if isAuditor() && (isAdmin() || isSameOrg(resource.data.orgId));
+      allow write: if false;
     }
-    
-    // Compliance Checks collection
     match /complianceChecks/{checkId} {
-      allow read: if isAuditor() || isAdmin();
-      allow create: if isAuditor() || isAdmin();
-      allow update: if isAuditor() || isAdmin();
-      allow delete: if isAdmin();
+      allow read: if isAuditor() && (isAdmin() || isSameOrg(resource.data.orgId));
+      allow write: if false;
     }
-    
+
     match /notifications/{notificationId} {
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow create: if false; // Trusted backend notifications only.
